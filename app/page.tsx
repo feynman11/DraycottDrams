@@ -3,14 +3,11 @@
 import { WhiskyMap } from "@/components/whisky/whisky-map";
 import { WhiskyLibrary } from "@/components/whisky/whisky-library";
 import { Header } from "@/components/layout/header";
-import { AIButton } from "@/components/ai/ai-button";
-import { SommelierPanel } from "@/components/ai/sommelier-panel";
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
 export default function HomePage() {
   const [viewMode, setViewMode] = useState<'map' | 'library'>('map');
-  const [showSommelier, setShowSommelier] = useState(false);
   const [showAtlasBox, setShowAtlasBox] = useState(true);
 
   // Load atlas box preference from localStorage on mount
@@ -55,16 +52,6 @@ export default function HomePage() {
         ) : (
           <WhiskyLibrary />
         )}
-
-        <AIButton
-          onClick={() => setShowSommelier(!showSommelier)}
-          isOpen={showSommelier}
-        />
-
-        <SommelierPanel
-          isOpen={showSommelier}
-          onClose={() => setShowSommelier(false)}
-        />
       </main>
     </div>
   );

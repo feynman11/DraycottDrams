@@ -31,17 +31,25 @@ export const users = pgTable("users", {
 
 export const whiskies = pgTable("whiskies", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  name: text("name").notNull(),
-  distillery: text("distillery").notNull(),
-  region: text("region").notNull(),
+  gathering: integer("gathering").notNull(),
+  theme: text("theme").notNull(),
+  date: timestamp("date", { mode: "date" }).notNull(),
+  provider: text("provider").notNull(),
   country: text("country").notNull(),
-  type: text("type").notNull(),
+  region: text("region").notNull(),
+  distillery: text("distillery").notNull(),
+  variety: text("variety").notNull(),
   abv: decimal("abv", { precision: 4, scale: 1 }).notNull(),
+  host: text("host").notNull(),
+  notes: text("notes"),
+  // Legacy fields kept for backward compatibility (optional)
+  name: text("name"),
+  type: text("type"),
   age: integer("age"),
   priceRange: text("price_range"),
-  description: text("description").notNull(),
-  tastingNotes: jsonb("tasting_notes").$type<string[]>().notNull(),
-  coordinates: jsonb("coordinates").$type<[number, number]>().notNull(), // [longitude, latitude]
+  description: text("description"),
+  tastingNotes: jsonb("tasting_notes").$type<string[]>(),
+  coordinates: jsonb("coordinates").$type<[number, number]>(),
   flavorProfile: jsonb("flavor_profile").$type<{
     peat: number;
     fruit: number;
@@ -49,7 +57,7 @@ export const whiskies = pgTable("whiskies", {
     spice: number;
     wood: number;
     sweetness: number;
-  }>().notNull(),
+  }>(),
   imageUrl: text("image_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

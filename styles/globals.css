@@ -54,3 +54,27 @@
     color: var(--color-foreground);
   }
 }
+
+/* MapLibre GL / MapTiler styles */
+.maplibregl-popup-content {
+  background-color: #0f172a;
+  border: 1px solid #d97706;
+  border-radius: 4px;
+  padding: 8px 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.maplibregl-popup-tip {
+  border-top-color: #0f172a;
+}
+
+.whisky-popup-content {
+  color: #e2e8f0;
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}

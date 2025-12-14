@@ -23,11 +23,12 @@ export function WhiskyCard({ whisky, onClick }: WhiskyCardProps) {
           <span className="text-xs text-slate-500">{whisky.abv}% ABV</span>
         </div>
         <h3 className="text-xl font-bold text-slate-100 group-hover:text-amber-400 transition-colors mb-1">
-          {whisky.name}
+          {whisky.distillery}
         </h3>
-        <p className="text-sm text-slate-400 mb-4">{whisky.distillery}</p>
+        <p className="text-sm text-slate-400 mb-2">{whisky.variety}</p>
+        <p className="text-xs text-slate-500 mb-4">Provided by {whisky.provider}</p>
         <div className="mt-auto pt-4 border-t border-slate-800 flex justify-between items-center">
-          <span className="text-xs text-slate-500">{whisky.type}</span>
+          <span className="text-xs text-slate-500">{whisky.country}</span>
           <span className="text-amber-600 font-bold text-sm">View Details →</span>
         </div>
       </div>

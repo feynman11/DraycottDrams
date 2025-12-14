@@ -56,6 +56,13 @@ APP_URL="http://localhost:3000"
 ```
 Application URL (can be used for generating absolute URLs).
 
+### MapTiler (Maps)
+```env
+NEXT_PUBLIC_MAPTILER_API_KEY="your-maptiler-api-key"
+```
+API key for MapTiler map tiles. Obtain from [MapTiler Cloud](https://cloud.maptiler.com/). 
+If not provided, the map will use a demo style (limited functionality).
+
 ## Generating Secrets
 
 ### NEXTAUTH_SECRET
@@ -108,6 +115,7 @@ GEMINI_API_KEY="AIzaSyabcdefghijklmnopqrstuvwxyz"
 
 # Optional
 APP_URL="http://localhost:3000"
+NEXT_PUBLIC_MAPTILER_API_KEY="your-maptiler-api-key"
 ```
 
 ## Production Considerations

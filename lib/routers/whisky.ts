@@ -11,26 +11,53 @@ export const whiskyRouter = createTRPCRouter({
       z.object({
         search: z.string().optional(),
         region: z.string().optional(),
-        type: z.string().optional(),
-        limit: z.number().min(1).max(100).default(50),
+        country: z.string().optional(),
+        gathering: z.number().optional(),
+        theme: z.string().optional(),
+        provider: z.string().optional(),
+        host: z.string().optional(),
+        variety: z.string().optional(),
+        limit: z.number().min(1).max(1000).default(1000),
         offset: z.number().min(0).default(0),
       }).optional()
     )
     .query(async ({ input }) => {
-      const { search, region, type, limit = 50, offset = 0 } = input || {};
+      const { search, region, country, gathering, theme, provider, host, variety, limit = 50, offset = 0 } = input || {};
 
       let whereConditions = [];
 
       if (search) {
-        whereConditions.push(ilike(whiskies.name, `%${search}%`));
+        whereConditions.push(
+          ilike(whiskies.distillery, `%${search}%`)
+        );
       }
 
       if (region) {
         whereConditions.push(eq(whiskies.region, region));
       }
 
-      if (type) {
-        whereConditions.push(eq(whiskies.type, type));
+      if (country) {
+        whereConditions.push(eq(whiskies.country, country));
+      }
+
+      if (gathering) {
+        whereConditions.push(eq(whiskies.gathering, gathering));
+      }
+
+      if (theme) {
+        whereConditions.push(ilike(whiskies.theme, `%${theme}%`));
+      }
+
+      if (provider) {
+        whereConditions.push(ilike(whiskies.provider, `%${provider}%`));
+      }
+
+      if (host) {
+        whereConditions.push(ilike(whiskies.host, `%${host}%`));
+      }
+
+      if (variety) {
+        whereConditions.push(ilike(whiskies.variety, `%${variety}%`));
       }
 
       const result = await db
@@ -98,18 +125,27 @@ export const whiskyRouter = createTRPCRouter({
       .from(whiskies)
       .groupBy(whiskies.region);
 
-    const types = await db
+    const countries = await db
       .select({
-        type: whiskies.type,
+        country: whiskies.country,
         count: sql<number>`count(*)`,
       })
       .from(whiskies)
-      .groupBy(whiskies.type);
+      .groupBy(whiskies.country);
+
+    const gatherings = await db
+      .select({
+        gathering: whiskies.gathering,
+        count: sql<number>`count(*)`,
+      })
+      .from(whiskies)
+      .groupBy(whiskies.gathering);
 
     return {
       total: totalCount[0]?.count || 0,
       regions,
-      types,
+      countries,
+      gatherings,
     };
   }),
 });

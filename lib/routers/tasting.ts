@@ -151,7 +151,7 @@ export const tastingRouter = createTRPCRouter({
   getUserTastings: protectedProcedure
     .input(
       z.object({
-        limit: z.number().min(1).max(100).default(20),
+        limit: z.number().min(1).max(1000).default(1000),
         offset: z.number().min(0).default(0),
       }).optional()
     )
@@ -189,7 +189,7 @@ export const tastingRouter = createTRPCRouter({
     .input(
       z.object({
         whiskyId: z.string(),
-        limit: z.number().min(1).max(50).default(10),
+          limit: z.number().min(1).max(1000).default(1000),
       })
     )
     .query(async ({ input }) => {

@@ -3,6 +3,7 @@
 import { GlassWater, Map, List, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signIn, signOut, useSession } from "next-auth/react";
+import Link from "next/link";
 
 interface HeaderProps {
   viewMode: 'map' | 'library';
@@ -14,17 +15,17 @@ export function Header({ viewMode, onViewModeChange }: HeaderProps) {
 
   return (
     <header className="flex-none h-16 bg-slate-900 border-b border-amber-900/30 flex items-center justify-between px-6 shadow-lg z-20 relative">
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-amber-600/20 rounded-full border border-amber-600/50">
+      <div className="flex items-center gap-4 flex-shrink-0 min-w-0">
+        <div className="p-2 bg-amber-600/20 rounded-full border border-amber-600/50 flex-shrink-0">
           <GlassWater className="w-6 h-6 text-amber-500" />
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-amber-50 tracking-wide">Draycott Drams</h1>
-          <p className="text-xs text-amber-500/80 uppercase tracking-widest">Est. 2023</p>
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-amber-50 tracking-wide whitespace-nowrap">Draycott Drams</h1>
+          <p className="hidden sm:block text-xs text-amber-500/80 uppercase tracking-widest">Est. 2023</p>
         </div>
       </div>
 
-      <nav className="flex items-center gap-4">
+      <nav className="flex items-center gap-4 flex-shrink-0 ml-6">
         <Button
           variant={viewMode === 'map' ? 'default' : 'ghost'}
           size="sm"
@@ -43,6 +44,19 @@ export function Header({ viewMode, onViewModeChange }: HeaderProps) {
           <List size={18} className="mr-2" />
           <span className="hidden sm:inline">Library</span>
         </Button>
+        
+        {/* Temporarily hidden import icon
+        <Link href="/import">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hover:bg-slate-800 text-slate-400"
+          >
+            <Upload size={18} className="mr-2" />
+            <span className="hidden sm:inline">Import</span>
+          </Button>
+        </Link>
+        */}
 
         <div className="w-px h-8 bg-slate-700 mx-2" />
 
@@ -73,8 +87,8 @@ export function Header({ viewMode, onViewModeChange }: HeaderProps) {
             onClick={() => signIn('google')}
             className="text-slate-400 hover:text-slate-200"
           >
-            <User size={18} className="mr-2" />
-            Sign In
+            <User size={18} className="sm:mr-2" />
+            <span className="hidden sm:inline">Sign In</span>
           </Button>
         )}
       </nav>
