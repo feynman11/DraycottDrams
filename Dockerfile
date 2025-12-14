@@ -30,13 +30,13 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Install shadow utilities and create a non-root user
-RUN apk add --no-cache shadow
-RUN addgroup -S -g 1001 nodejs
-RUN adduser -S -u 1001 -G nodejs nextjs
+# Create a non-root user (Debian-based image already has groupadd/useradd)
+RUN groupadd -g 1001 nodejs
+RUN useradd -u 1001 -g nodejs -s /bin/bash -m nextjs
 
 # Copy the built application
-COPY --from=builder /app/public ./public
+# With Next.js standalone output, public assets are included in .next/standalone/public
+# Copy standalone build (includes public directory if it exists)
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
