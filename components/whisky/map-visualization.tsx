@@ -117,15 +117,31 @@ export const MapVisualization: React.FC<Props> = ({
   const [showOptions, setShowOptions] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
   const [colorMode, setColorMode] = useState<ColorMode>('orange');
+  const [maptilerApiKey, setMaptilerApiKey] = useState<string>('');
+  const [apiKeyFetched, setApiKeyFetched] = useState(false);
   
   // Calculate total number of gatherings for auto-scaling
   const totalGatherings = gatherings.length > 0 ? Math.max(...gatherings) : 1;
 
+  // Fetch MapTiler API key from server
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    const fetchApiKey = async () => {
+      try {
+        const response = await fetch('/api/map-key');
+        const data = await response.json();
+        setMaptilerApiKey(data.apiKey || '');
+      } catch (error) {
+        console.error('Failed to fetch map API key:', error);
+        setMaptilerApiKey('');
+      } finally {
+        setApiKeyFetched(true);
+      }
+    };
+    fetchApiKey();
+  }, []);
 
-    // Get MapTiler API key from environment variable
-    const maptilerApiKey = process.env.NEXT_PUBLIC_MAPTILER_API_KEY || '';
+  useEffect(() => {
+    if (!mapContainer.current || map.current || !apiKeyFetched) return;
 
     // Initialize map with MapTiler backdrop style
     map.current = new maplibregl.Map({
@@ -150,7 +166,7 @@ export const MapVisualization: React.FC<Props> = ({
         map.current = null;
       }
     };
-  }, []);
+  }, [apiKeyFetched, maptilerApiKey]);
 
   // Update markers when whiskies, selectedId, or colorMode changes
   useEffect(() => {
