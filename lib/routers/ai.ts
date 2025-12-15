@@ -10,7 +10,7 @@ export const aiRouter = createTRPCRouter({
     .input(
       z.object({
         preferences: z.object({
-          flavorProfile: z.object({
+          flavourProfile: z.object({
             peat: z.number().min(0).max(100).optional(),
             fruit: z.number().min(0).max(100).optional(),
             floral: z.number().min(0).max(100).optional(),
@@ -35,7 +35,7 @@ export const aiRouter = createTRPCRouter({
         const prompt = `You are an expert whisky sommelier for the Draycott Drams whisky club. Based on the following preferences, recommend whiskies from our collection.
 
 User Preferences:
-${preferences.flavorProfile ? `- Flavor Profile: ${JSON.stringify(preferences.flavorProfile)}` : ""}
+${preferences.flavourProfile ? `- flavour Profile: ${JSON.stringify(preferences.flavourProfile)}` : ""}
 ${preferences.regions?.length ? `- Preferred Regions: ${preferences.regions.join(", ")}` : ""}
 ${preferences.types?.length ? `- Preferred Types: ${preferences.types.join(", ")}` : ""}
 ${preferences.priceRange ? `- Price Range: ${preferences.priceRange}` : ""}
@@ -101,7 +101,7 @@ Rating: ${rating}/5
 Personal Notes: ${personalNotes || "None provided"}
 
 Please provide an analysis of this tasting experience. Include:
-1. What flavors and characteristics were detected
+1. What flavours and characteristics were detected
 2. How this compares to typical profiles for this whisky
 3. Suggestions for pairing or future tastings
 4. Any interesting observations about the tasting experience

@@ -111,8 +111,21 @@ export const MapVisualization: React.FC<Props> = ({
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
-  const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
   const whiskiesRef = useRef<string>('');
+  const clusterPopupRef = useRef<maplibregl.Popup | null>(null);
+  const hoverPopupRef = useRef<maplibregl.Popup | null>(null);
+  const listenersAddedRef = useRef<boolean>(false);
+  const eventHandlersRef = useRef<{
+    clusterClick?: (e: maplibregl.MapLayerMouseEvent) => void;
+    clusterCountClick?: (e: maplibregl.MapLayerMouseEvent) => void;
+    unclusteredClick?: (e: maplibregl.MapLayerMouseEvent) => void;
+    unclusteredMouseEnter?: (e: maplibregl.MapLayerMouseEvent) => void;
+    unclusteredMouseLeave?: () => void;
+    clusterMouseEnter?: () => void;
+    clusterMouseLeave?: () => void;
+    clusterCountMouseEnter?: () => void;
+    clusterCountMouseLeave?: () => void;
+  }>({});
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
@@ -168,19 +181,9 @@ export const MapVisualization: React.FC<Props> = ({
     };
   }, [apiKeyFetched, maptilerApiKey]);
 
-  // Update markers when whiskies, selectedId, or colorMode changes
-  useEffect(() => {
-    if (!map.current || !mapLoaded) return;
-
-    // Create a string key to detect if whiskies, colorMode, or totalGatherings changed
-    const whiskiesKey = JSON.stringify({
-      whiskies: whiskies.map(w => ({ id: w.id, coordinates: w.coordinates })),
-      colorMode,
-      totalGatherings,
-    });
-    
-    // Filter whiskies with valid coordinates
-    const whiskiesWithCoords = whiskies.filter(
+  // Convert whiskies to GeoJSON for clustering
+  const whiskiesToGeoJSON = (whiskiesList: Whisky[], colorMode: ColorMode, totalGatherings: number) => {
+    const whiskiesWithCoords = whiskiesList.filter(
       (whisky): whisky is Whisky & { coordinates: [number, number] } =>
         !!whisky.coordinates &&
         Array.isArray(whisky.coordinates) &&
@@ -189,123 +192,316 @@ export const MapVisualization: React.FC<Props> = ({
         typeof whisky.coordinates[1] === 'number'
     );
 
-    // Only recreate markers if whiskies list or colorMode changed
-    if (whiskiesRef.current !== whiskiesKey) {
-      // Remove existing markers
-      markersRef.current.forEach(marker => marker.remove());
-      markersRef.current.clear();
-      whiskiesRef.current = whiskiesKey;
+    return {
+      type: 'FeatureCollection' as const,
+      features: whiskiesWithCoords.map((whisky) => ({
+        type: 'Feature' as const,
+        geometry: {
+          type: 'Point' as const,
+          coordinates: whisky.coordinates,
+        },
+        properties: {
+          id: whisky.id,
+          name: whisky.name,
+          distillery: whisky.distillery,
+          region: whisky.region,
+          country: whisky.country,
+          gathering: whisky.gathering,
+          color: getGatheringColor(whisky.gathering, colorMode, totalGatherings),
+        },
+      })),
+    };
+  };
 
-      // Create markers for each whisky
-      whiskiesWithCoords.forEach((whisky) => {
-        const [lng, lat] = whisky.coordinates;
+  // Helper function to remove event listeners
+  const removeEventListeners = (
+    clusterLayerId: string,
+    clusterCountLayerId: string,
+    unclusteredLayerId: string
+  ) => {
+    if (!map.current) return;
+    
+    const handlers = eventHandlersRef.current;
+    
+    // Remove cluster click listeners
+    if (handlers.clusterClick) {
+      map.current.off('click', clusterLayerId, handlers.clusterClick);
+    }
+    if (handlers.clusterCountClick) {
+      map.current.off('click', clusterCountLayerId, handlers.clusterCountClick);
+    }
+    
+    // Remove unclustered click listeners
+    if (handlers.unclusteredClick) {
+      map.current.off('click', unclusteredLayerId, handlers.unclusteredClick);
+    }
+    
+    // Remove hover listeners
+    if (handlers.unclusteredMouseEnter) {
+      map.current.off('mouseenter', unclusteredLayerId, handlers.unclusteredMouseEnter);
+    }
+    if (handlers.unclusteredMouseLeave) {
+      map.current.off('mouseleave', unclusteredLayerId, handlers.unclusteredMouseLeave);
+    }
+    if (handlers.clusterMouseEnter) {
+      map.current.off('mouseenter', clusterLayerId, handlers.clusterMouseEnter);
+    }
+    if (handlers.clusterMouseLeave) {
+      map.current.off('mouseleave', clusterLayerId, handlers.clusterMouseLeave);
+    }
+    if (handlers.clusterCountMouseEnter) {
+      map.current.off('mouseenter', clusterCountLayerId, handlers.clusterCountMouseEnter);
+    }
+    if (handlers.clusterCountMouseLeave) {
+      map.current.off('mouseleave', clusterCountLayerId, handlers.clusterCountMouseLeave);
+    }
+    
+    // Clear handlers
+    eventHandlersRef.current = {};
+  };
 
-        // Get color based on gathering and color mode, with auto-scaling
-        const gatheringColor = getGatheringColor(whisky.gathering, colorMode, totalGatherings);
+  // Helper function to attach event listeners
+  const attachEventListeners = (
+    sourceId: string,
+    clusterLayerId: string,
+    clusterCountLayerId: string,
+    unclusteredLayerId: string
+  ) => {
+    if (!map.current) return;
 
-        // Create marker element
-        const el = document.createElement('div');
-        el.className = 'whisky-marker';
-        el.style.width = '12px';
-        el.style.height = '12px';
-        el.style.borderRadius = '50%';
-        el.style.backgroundColor = gatheringColor;
-        el.style.cursor = 'pointer';
-        el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-        el.style.zIndex = '1';
-        // Store gathering for later reference
-        el.setAttribute('data-gathering', whisky.gathering.toString());
-        // Remove transition to prevent lag during map movement
-        el.style.willChange = 'transform';
+    // Remove any existing listeners first
+    removeEventListeners(clusterLayerId, clusterCountLayerId, unclusteredLayerId);
 
-        // Create popup
-        const popup = new maplibregl.Popup({
+    // Cluster click handlers are disabled since clustering is off
+    // No need to attach cluster listeners
+
+    // Handle unclustered point clicks
+    const handleUnclusteredClick = (e: maplibregl.MapLayerMouseEvent) => {
+      const features = map.current!.queryRenderedFeatures(e.point, {
+        layers: [unclusteredLayerId],
+      });
+      if (features.length === 0) return;
+
+      const props = features[0].properties as { id: string };
+      const whisky = whiskies.find((w: Whisky) => w.id === props.id);
+      if (whisky) {
+        // Remove any hover popup when clicking
+        if (hoverPopupRef.current) {
+          hoverPopupRef.current.remove();
+          hoverPopupRef.current = null;
+        }
+        onSelect(whisky);
+      }
+    };
+    
+    eventHandlersRef.current.unclusteredClick = handleUnclusteredClick;
+    map.current.on('click', unclusteredLayerId, handleUnclusteredClick);
+
+    // Show popup on hover for unclustered points
+    const handleUnclusteredMouseEnter = (e: maplibregl.MapLayerMouseEvent) => {
+      map.current!.getCanvas().style.cursor = 'pointer';
+      const features = map.current!.queryRenderedFeatures(e.point, {
+        layers: [unclusteredLayerId],
+      });
+      if (features.length === 0) return;
+
+      const props = features[0].properties as { id: string; color?: string };
+      const whisky = whiskies.find((w: Whisky) => w.id === props.id);
+      if (whisky) {
+        // Remove any existing hover popup before creating a new one
+        if (hoverPopupRef.current) {
+          hoverPopupRef.current.remove();
+          hoverPopupRef.current = null;
+        }
+        
+        // Also remove cluster popup if it exists
+        if (clusterPopupRef.current) {
+          clusterPopupRef.current.remove();
+          clusterPopupRef.current = null;
+        }
+        
+        // Get the dot color for this whisky
+        const dotColor = props.color || getGatheringColor(whisky.gathering, colorMode, totalGatherings);
+        
+        // Convert hex to RGB and calculate brightness for text color
+        const hex = dotColor.replace('#', '');
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        const textColor = brightness > 128 ? '#1e293b' : '#f1f5f9'; // slate-800 for light, slate-100 for dark
+        const secondaryTextColor = brightness > 128 ? '#475569' : '#cbd5e1'; // slate-600 for light, slate-300 for dark
+        
+        hoverPopupRef.current = new maplibregl.Popup({
           offset: 25,
           closeButton: false,
           className: 'whisky-popup',
-        }).setHTML(`
-          <div class="whisky-popup-content">
-            <div class="font-bold text-slate-100 text-sm">${whisky.name}</div>
-            <div class="text-slate-400 text-xs">${whisky.region}, ${whisky.country}</div>
-          </div>
-        `);
-
-        // Create marker
-        const marker = new maplibregl.Marker({
-          element: el,
-          anchor: 'center',
         })
-          .setLngLat([lng, lat])
-          .setPopup(popup)
+          .setLngLat(e.lngLat)
+          .setHTML(`
+            <div class="whisky-popup-content p-2 rounded-lg" style="background-color: ${dotColor}; color: ${textColor}; border: 2px solid ${dotColor};">
+              <div class="font-bold text-sm" style="color: ${textColor};">${whisky.distillery}</div>
+              <div class="text-xs" style="color: ${secondaryTextColor};">${whisky.region}, ${whisky.country}</div>
+            </div>
+          `)
           .addTo(map.current!);
+        }
+      };
+      
+      const handleUnclusteredMouseLeave = () => {
+        map.current!.getCanvas().style.cursor = '';
+        // Remove hover popup when mouse leaves
+        if (hoverPopupRef.current) {
+          hoverPopupRef.current.remove();
+          hoverPopupRef.current = null;
+        }
+      };
+      
+      const handleClusterMouseEnter = () => {
+        map.current!.getCanvas().style.cursor = 'pointer';
+      };
+      
+      const handleClusterMouseLeave = () => {
+        map.current!.getCanvas().style.cursor = '';
+      };
+      
+      const handleClusterCountMouseEnter = () => {
+        map.current!.getCanvas().style.cursor = 'pointer';
+      };
+      
+      const handleClusterCountMouseLeave = () => {
+        map.current!.getCanvas().style.cursor = '';
+      };
+      
+      // Store handlers
+      eventHandlersRef.current.unclusteredMouseEnter = handleUnclusteredMouseEnter;
+      eventHandlersRef.current.unclusteredMouseLeave = handleUnclusteredMouseLeave;
+      eventHandlersRef.current.clusterMouseEnter = handleClusterMouseEnter;
+      eventHandlersRef.current.clusterMouseLeave = handleClusterMouseLeave;
+      eventHandlersRef.current.clusterCountMouseEnter = handleClusterCountMouseEnter;
+      eventHandlersRef.current.clusterCountMouseLeave = handleClusterCountMouseLeave;
+      
+      // Attach hover listeners
+      map.current.on('mouseenter', unclusteredLayerId, handleUnclusteredMouseEnter);
+      map.current.on('mouseleave', unclusteredLayerId, handleUnclusteredMouseLeave);
+      map.current.on('mouseenter', clusterLayerId, handleClusterMouseEnter);
+      map.current.on('mouseleave', clusterLayerId, handleClusterMouseLeave);
+      map.current.on('mouseenter', clusterCountLayerId, handleClusterCountMouseEnter);
+      map.current.on('mouseleave', clusterCountLayerId, handleClusterCountMouseLeave);
+    };
 
-        // Add click handler
-        el.addEventListener('click', (e) => {
-          e.stopPropagation();
-          onSelect(whisky);
-          popup.addTo(map.current!);
-        });
+  // Update map source and layers when whiskies, selectedId, or colorMode changes
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
 
-        // Show popup on hover
-        el.addEventListener('mouseenter', () => {
-          popup.addTo(map.current!);
-        });
+    const whiskiesKey = JSON.stringify({
+      whiskies: whiskies.map(w => ({ id: w.id, coordinates: w.coordinates })),
+      colorMode,
+      totalGatherings,
+    });
 
-        el.addEventListener('mouseleave', () => {
-          popup.remove();
-        });
+    const sourceId = 'whiskies-source';
+    const clusterLayerId = 'whiskies-clusters';
+    const clusterCountLayerId = 'whiskies-cluster-count';
+    const unclusteredLayerId = 'whiskies-unclustered';
 
-        markersRef.current.set(whisky.id, marker);
+    // Only update if data changed
+    if (whiskiesRef.current !== whiskiesKey) {
+      whiskiesRef.current = whiskiesKey;
+
+      const geoJSON = whiskiesToGeoJSON(whiskies, colorMode, totalGatherings);
+
+      // Remove existing source and layers if they exist
+      // First remove event listeners, then remove layers
+      if (map.current.getSource(sourceId)) {
+        listenersAddedRef.current = false;
+        
+        // Remove event listeners before removing layers
+        removeEventListeners(clusterLayerId, clusterCountLayerId, unclusteredLayerId);
+        
+        if (map.current.getLayer(unclusteredLayerId)) map.current.removeLayer(unclusteredLayerId);
+        map.current.removeSource(sourceId);
+      }
+
+      // Add source without clustering
+      map.current.addSource(sourceId, {
+        type: 'geojson',
+        data: geoJSON,
+        cluster: false,
       });
+
+      // Add points layer (no clustering, so all points are shown individually)
+      map.current.addLayer({
+        id: unclusteredLayerId,
+        type: 'circle',
+        source: sourceId,
+        paint: {
+          'circle-color': [
+            'case',
+            ['==', ['get', 'id'], selectedId || ''],
+            '#fff',
+            ['get', 'color'],
+          ],
+          'circle-radius': [
+            'case',
+            ['==', ['get', 'id'], selectedId || ''],
+            8,
+            6,
+          ],
+          'circle-stroke-width': [
+            'case',
+            ['==', ['get', 'id'], selectedId || ''],
+            2,
+            0,
+          ],
+          'circle-stroke-color': '#fff',
+        },
+      });
+
+      // Attach event listeners immediately after layers are added
+      // MapLibre GL allows attaching listeners to layers immediately
+      attachEventListeners(sourceId, clusterLayerId, clusterCountLayerId, unclusteredLayerId);
+      listenersAddedRef.current = true;
     }
 
-    // Update marker styles based on selection (without recreating)
-    markersRef.current.forEach((marker, whiskyId) => {
-      const isSelected = selectedId === whiskyId;
-      const el = marker.getElement();
-      
-      // Get gathering number and color
-      const gatheringNum = parseInt(el.getAttribute('data-gathering') || '1', 10);
-      const gatheringColor = getGatheringColor(gatheringNum, colorMode, totalGatherings);
-      
-      if (isSelected) {
-        el.style.width = '16px';
-        el.style.height = '16px';
-        el.style.backgroundColor = gatheringColor;
-        el.style.border = '2px solid #fff';
-        el.style.zIndex = '1000';
-        
-        // Add ripple effect if not already present
-        if (!el.querySelector('.whisky-marker-ripple')) {
-          const ripple = document.createElement('div');
-          ripple.className = 'whisky-marker-ripple';
-          ripple.style.position = 'absolute';
-          ripple.style.width = '24px';
-          ripple.style.height = '24px';
-          ripple.style.borderRadius = '50%';
-          ripple.style.border = `2px solid ${gatheringColor}`;
-          ripple.style.top = '50%';
-          ripple.style.left = '50%';
-          ripple.style.transform = 'translate(-50%, -50%)';
-          ripple.style.animation = 'ping 1s cubic-bezier(0, 0, 0.2, 1) infinite';
-          ripple.style.opacity = '0.75';
-          el.style.position = 'relative';
-          el.appendChild(ripple);
-        }
-      } else {
-        el.style.width = '12px';
-        el.style.height = '12px';
-        el.style.backgroundColor = gatheringColor;
-        el.style.border = 'none';
-        el.style.zIndex = '1';
-        
-        // Remove ripple effect
-        const ripple = el.querySelector('.whisky-marker-ripple');
-        if (ripple) {
-          ripple.remove();
-        }
+    // Ensure event listeners are attached even if data hasn't changed but layers exist
+    if (map.current.getSource(sourceId) && 
+        map.current.getLayer(unclusteredLayerId) && 
+        !listenersAddedRef.current) {
+      attachEventListeners(sourceId, clusterLayerId, clusterCountLayerId, unclusteredLayerId);
+      listenersAddedRef.current = true;
+    }
+
+    // Update source data when colorMode or selection changes (without recreating layers)
+    if (map.current.getSource(sourceId)) {
+      const geoJSON = whiskiesToGeoJSON(whiskies, colorMode, totalGatherings);
+      const source = map.current.getSource(sourceId) as maplibregl.GeoJSONSource;
+      source.setData(geoJSON);
+
+      // Update unclustered point styles based on selection
+      if (map.current.getLayer(unclusteredLayerId)) {
+        map.current.setPaintProperty(unclusteredLayerId, 'circle-color', [
+          'case',
+          ['==', ['get', 'id'], selectedId || ''],
+          '#fff',
+          ['get', 'color'],
+        ]);
+
+        map.current.setPaintProperty(unclusteredLayerId, 'circle-radius', [
+          'case',
+          ['==', ['get', 'id'], selectedId || ''],
+          8,
+          6,
+        ]);
+
+        map.current.setPaintProperty(unclusteredLayerId, 'circle-stroke-width', [
+          'case',
+          ['==', ['get', 'id'], selectedId || ''],
+          2,
+          0,
+        ]);
       }
-    });
+    }
   }, [whiskies, selectedId, mapLoaded, colorMode, totalGatherings, onSelect]);
 
   const handleZoomIn = () => {

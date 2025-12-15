@@ -187,3 +187,4 @@ export function getDistilleryCoordinates(distillery: string, country: string, re
   
   return countryCenters[country] || null;
 }
+

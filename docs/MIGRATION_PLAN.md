@@ -9,7 +9,7 @@ Transform the current React/Vite whisky club prototype into a full-stack product
 ### Application Features
 - **World Map Visualization**: Interactive D3.js map showing whisky distilleries
 - **Whisky Library**: Grid view of all whiskies with filtering
-- **Whisky Details**: Detailed tasting notes and flavor profiles
+- **Whisky Details**: Detailed tasting notes and flavour profiles
 - **AI Sommelier**: Gemini-powered chat interface for whisky recommendations
 - **Static Data**: 8 whisky entries stored in constants.ts
 
@@ -138,7 +138,7 @@ CREATE TABLE whiskies (
   price_range TEXT,
   description TEXT NOT NULL,
   coordinates JSONB, -- [longitude, latitude]
-  flavor_profile JSONB, -- {peat, fruit, floral, spice, wood, sweetness}
+  flavour_profile JSONB, -- {peat, fruit, floral, spice, wood, sweetness}
   image_url TEXT,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
@@ -156,7 +156,7 @@ CREATE TABLE tastings (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Tasting Notes (detailed flavor notes per tasting)
+-- Tasting Notes (detailed flavour notes per tasting)
 CREATE TABLE tasting_notes (
   id TEXT PRIMARY KEY,
   tasting_id TEXT REFERENCES tastings(id),

@@ -24,6 +24,8 @@ export const users = pgTable("users", {
   name: text("name"),
   image: text("image"),
   role: text("role").$default(() => UserRole.USER).notNull(),
+  admin: boolean("admin").default(false).notNull(),
+  member: boolean("member").default(false).notNull(),
   lastLogin: timestamp("last_login", { mode: "date" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -50,7 +52,7 @@ export const whiskies = pgTable("whiskies", {
   description: text("description"),
   tastingNotes: jsonb("tasting_notes").$type<string[]>(),
   coordinates: jsonb("coordinates").$type<[number, number]>(),
-  flavorProfile: jsonb("flavor_profile").$type<{
+  flavourProfile: jsonb("flavour_profile").$type<{
     peat: number;
     fruit: number;
     floral: number;

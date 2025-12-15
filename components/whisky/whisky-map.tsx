@@ -59,7 +59,7 @@ export function WhiskyMap() {
   });
 
   return (
-    <div className="w-full h-full relative">
+    <div className="w-full h-full relative overflow-hidden">
       <MapVisualization
         whiskies={whiskies}
         onSelect={handleWhiskySelect}

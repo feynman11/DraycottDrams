@@ -7,3 +7,4 @@ export async function GET() {
   // Return the API key (or empty string if not set)
   return NextResponse.json({ apiKey: maptilerApiKey });
 }
+

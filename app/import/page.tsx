@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "@/lib/trpc-client";
 import { Button } from "@/components/ui/button";
 import { Upload, Download, FileText, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function ImportPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [csvText, setCsvText] = useState<string>("");
   const [clearExisting, setClearExisting] = useState(false);
@@ -15,7 +19,16 @@ export default function ImportPage() {
     imported: number;
   } | null>(null);
 
-  const { data: templateData, isLoading: templateLoading } = api.import.getTemplate.useQuery();
+  // Redirect if not a member
+  useEffect(() => {
+    if (status === "authenticated" && session && !session.user?.member) {
+      router.push("/");
+    }
+  }, [session, status, router]);
+
+  const { data: templateData, isLoading: templateLoading } = api.import.getTemplate.useQuery(undefined, {
+    enabled: !!session?.user?.member,
+  });
   const importMutation = api.import.importCSV.useMutation({
     onSuccess: (data) => {
       setImportStatus(data);
@@ -74,6 +87,31 @@ export default function ImportPage() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+
+  // Show loading while checking auth
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
+        <div className="max-w-4xl mx-auto flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+        </div>
+      </div>
+    );
+  }
+
+  // Show unauthorized message if not a member
+  if (status === "authenticated" && session && !session.user?.member) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-slate-900 border border-slate-800 rounded-lg p-8 text-center">
+            <h2 className="text-2xl font-bold text-amber-400 mb-2">Access Denied</h2>
+            <p className="text-slate-400">You must be a member to access the import page.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
@@ -243,3 +281,5 @@ export default function ImportPage() {
     </div>
   );
 }
+
+

@@ -1,9 +1,10 @@
 "use client";
 
-import { GlassWater, Map, List, User, LogOut } from "lucide-react";
+import { GlassWater, Map, List, User, LogOut, Upload, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface HeaderProps {
   viewMode: 'map' | 'library';
@@ -12,6 +13,9 @@ interface HeaderProps {
 
 export function Header({ viewMode, onViewModeChange }: HeaderProps) {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
+  const isMembersPage = pathname === "/members";
+  const isImportPage = pathname === "/import";
 
   return (
     <header className="flex-none h-16 bg-slate-900 border-b border-amber-900/30 flex items-center justify-between px-6 shadow-lg z-20 relative">
@@ -45,18 +49,33 @@ export function Header({ viewMode, onViewModeChange }: HeaderProps) {
           <span className="hidden sm:inline">Library</span>
         </Button>
         
-        {/* Temporarily hidden import icon
-        <Link href="/import">
+        {session?.user?.member && (
           <Button
-            variant="ghost"
+            variant={isImportPage ? 'default' : 'ghost'}
             size="sm"
-            className="hover:bg-slate-800 text-slate-400"
+            className={isImportPage ? 'bg-amber-700 text-white shadow-amber-900/20 shadow-lg' : 'hover:bg-slate-800 text-slate-400'}
+            asChild
           >
-            <Upload size={18} className="mr-2" />
-            <span className="hidden sm:inline">Import</span>
+            <Link href="/import" className="hidden sm:flex items-center">
+              <Upload size={18} className="mr-2" />
+              <span className="hidden sm:inline">Import</span>
+            </Link>
           </Button>
-        </Link>
-        */}
+        )}
+
+        {session?.user?.admin || session?.user?.member ? (
+          <Button
+            variant={isMembersPage ? 'default' : 'ghost'}
+            size="sm"
+            className={isMembersPage ? 'bg-amber-700 text-white shadow-amber-900/20 shadow-lg' : 'hover:bg-slate-800 text-slate-400'}
+            asChild
+          >
+            <Link href="/members" className="hidden sm:flex items-center">
+              <Users size={18} className="mr-2" />
+              <span className="hidden sm:inline">Members</span>
+            </Link>
+          </Button>
+        ) : null}
 
         <div className="w-px h-8 bg-slate-700 mx-2" />
 

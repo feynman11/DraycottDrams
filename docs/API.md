@@ -44,7 +44,7 @@ Get all whiskies with optional filtering and pagination.
   description: string;
   tastingNotes: string[];
   coordinates: [number, number];
-  flavorProfile: {
+  flavourProfile: {
     peat: number;
     fruit: number;
     floral: number;
@@ -264,7 +264,7 @@ Get whisky recommendations based on user preferences.
 ```typescript
 {
   preferences: {
-    flavorProfile?: {
+    flavourProfile?: {
       peat?: number;
       fruit?: number;
       floral?: number;
@@ -396,9 +396,9 @@ Common whisky regions include:
 - USA: Kentucky, Tennessee, etc.
 - Other: Taiwan, India, etc.
 
-### Flavor Profile Scale
+### flavour Profile Scale
 
-All flavor characteristics are rated 0-100:
+All flavour characteristics are rated 0-100:
 - 0-20: Not present
 - 21-40: Subtle
 - 41-60: Noticeable

@@ -284,7 +284,7 @@ const formattedData = RAW_WHISKY_DATA.map((whisky, index) => {
     description: null,
     tastingNotes: null,
     coordinates: coordinates,
-    flavorProfile: null,
+    flavourProfile: null,
   };
 });
 
@@ -320,7 +320,7 @@ async function seedDatabase() {
         description: whisky.description,
         tastingNotes: whisky.tastingNotes,
         coordinates: whisky.coordinates,
-        flavorProfile: whisky.flavorProfile,
+        flavourProfile: whisky.flavourProfile,
       }))
     );
 

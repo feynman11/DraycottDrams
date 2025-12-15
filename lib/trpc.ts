@@ -33,3 +33,27 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
     },
   });
 });
+
+export const memberProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  if (!ctx.session?.user?.member) {
+    throw new Error("Forbidden: Member access required");
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      session: { ...ctx.session, user: ctx.session.user },
+    },
+  });
+});
+
+export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  if (!ctx.session?.user?.admin) {
+    throw new Error("Forbidden: Admin access required");
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      session: { ...ctx.session, user: ctx.session.user },
+    },
+  });
+});

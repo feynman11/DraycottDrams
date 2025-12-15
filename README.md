@@ -20,7 +20,7 @@ A modern, full-stack whisky club management application built with Next.js, feat
 ### 🍶 Whisky Library
 - **Comprehensive database** of whiskies with detailed profiles
 - **Advanced filtering** by region, type, and characteristics
-- **Tasting notes** and flavor profiles
+- **Tasting notes** and flavour profiles
 - **Price range information**
 
 ### 🤖 AI Sommelier
@@ -36,7 +36,7 @@ A modern, full-stack whisky club management application built with Next.js, feat
 - **Club member management**
 
 ### 📊 Data & Analytics
-- **Flavor profile visualization**
+- **flavour profile visualization**
 - **Tasting statistics**
 - **Club activity tracking**
 - **Regional whisky distribution**

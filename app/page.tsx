@@ -27,9 +27,9 @@ export default function HomePage() {
     <div className="flex flex-col h-screen overflow-hidden bg-slate-950 text-slate-200">
       <Header viewMode={viewMode} onViewModeChange={setViewMode} />
 
-      <main className="flex-1 relative overflow-hidden">
+      <main className="flex-1 min-h-0 relative overflow-hidden">
         {viewMode === 'map' ? (
-          <div className="w-full h-full relative bg-slate-950">
+          <div className="w-full h-full relative bg-slate-950 overflow-hidden">
             <WhiskyMap />
             {showAtlasBox && (
               <div className="absolute bottom-6 left-6 max-w-sm pointer-events-none">
@@ -43,7 +43,7 @@ export default function HomePage() {
                   </button>
                   <h3 className="text-amber-500 font-bold mb-1 pr-6">Interactive Atlas</h3>
                   <p className="text-sm text-slate-300">
-                    Explore the origins of the whiskies tasted by the club. Click a pin to view tasting notes and flavor profiles.
+                    Explore the origins of the whiskies tasted by the club. Click a pin to view tasting notes and flavour profiles.
                   </p>
                 </div>
               </div>

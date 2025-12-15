@@ -108,20 +108,20 @@ export function WhiskyDetail({ whisky, onClose }: WhiskyDetailProps) {
             </div>
           )}
 
-          {whisky.flavorProfile && (
+          {whisky.flavourProfile && (
             <div>
-              <h3 className="text-lg font-bold text-amber-400 mb-3">Flavor Profile</h3>
+              <h3 className="text-lg font-bold text-amber-400 mb-3">flavour Profile</h3>
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
                 <p className="text-slate-400 text-sm">
-                  Flavor radar visualization will be implemented here.
+                  flavour radar visualization will be implemented here.
                 </p>
                 <div className="mt-2 text-xs text-slate-500">
-                  Peat: {whisky.flavorProfile.peat} |
-                  Fruit: {whisky.flavorProfile.fruit} |
-                  Floral: {whisky.flavorProfile.floral} |
-                  Spice: {whisky.flavorProfile.spice} |
-                  Wood: {whisky.flavorProfile.wood} |
-                  Sweetness: {whisky.flavorProfile.sweetness}
+                  Peat: {whisky.flavourProfile.peat} |
+                  Fruit: {whisky.flavourProfile.fruit} |
+                  Floral: {whisky.flavourProfile.floral} |
+                  Spice: {whisky.flavourProfile.spice} |
+                  Wood: {whisky.flavourProfile.wood} |
+                  Sweetness: {whisky.flavourProfile.sweetness}
                 </div>
               </div>
             </div>

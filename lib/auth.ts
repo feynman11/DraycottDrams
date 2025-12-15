@@ -23,14 +23,33 @@ export const authOptions = {
             .limit(1);
 
           if (existingUser.length === 0) {
-            // Create new user for OAuth
-            await db.insert(users).values({
-              id: user.id,
-              email: user.email,
-              name: user.name || null,
-              image: user.image || null,
-              emailVerified: new Date(),
-            });
+            // Create new user for OAuth - all users start as non-members
+            // Try with admin/member fields first, fallback to basic insert if columns don't exist
+            try {
+              await db.insert(users).values({
+                id: user.id,
+                email: user.email,
+                name: user.name || null,
+                image: user.image || null,
+                emailVerified: new Date(),
+                admin: false,
+                member: false,
+              });
+            } catch (insertError: any) {
+              // If admin/member columns don't exist yet, try without them
+              if (insertError?.message?.includes('admin') || insertError?.message?.includes('member')) {
+                console.warn("admin/member columns may not exist yet, inserting without them");
+                await db.insert(users).values({
+                  id: user.id,
+                  email: user.email,
+                  name: user.name || null,
+                  image: user.image || null,
+                  emailVerified: new Date(),
+                });
+              } else {
+                throw insertError;
+              }
+            }
           } else {
             // Update existing user with OAuth info if needed
             await db
@@ -43,11 +62,14 @@ export const authOptions = {
               .where(eq(users.email, user.email));
           }
         } catch (error) {
-          console.error("Error creating/updating user:", error);
-          return false;
+          // Log error but don't block sign-in - allow authentication to proceed
+          // The user can still sign in, and we can fix database issues separately
+          console.error("Error creating/updating user in database:", error);
+          // Don't return false - allow sign-in to proceed
         }
       }
 
+      // Always allow sign-in - all users can authenticate
       return true;
     },
     async session({ session, token }: any) {
@@ -59,7 +81,7 @@ export const authOptions = {
 
       try {
         const dbUser = await db
-          .select({ id: users.id, role: users.role })
+          .select({ id: users.id, role: users.role, admin: users.admin, member: users.member })
           .from(users)
           .where(eq(users.id, token.sub))
           .limit(1);
@@ -72,6 +94,8 @@ export const authOptions = {
         if (session.user) {
           session.user.id = token.sub;
           session.user.role = dbUser[0].role;
+          session.user.admin = dbUser[0].admin;
+          session.user.member = dbUser[0].member;
         }
       } catch (error) {
         console.error("Error verifying user in session callback:", error);
@@ -86,7 +110,7 @@ export const authOptions = {
         if (account?.provider === "google" && user.email) {
           try {
             const dbUser = await db
-              .select({ id: users.id, role: users.role })
+              .select({ id: users.id, role: users.role, admin: users.admin, member: users.member })
               .from(users)
               .where(eq(users.email, user.email))
               .limit(1);
@@ -94,6 +118,8 @@ export const authOptions = {
             if (dbUser.length > 0) {
               token.sub = dbUser[0].id;
               token.role = dbUser[0].role;
+              token.admin = dbUser[0].admin;
+              token.member = dbUser[0].member;
               // Update lastLogin
               await db
                 .update(users)
@@ -108,11 +134,11 @@ export const authOptions = {
         }
       }
 
-      // On subsequent requests, verify the user still exists and refresh role
+      // On subsequent requests, verify the user still exists and refresh role/admin/member
       if (token.sub && !user) {
         try {
           const dbUser = await db
-            .select({ id: users.id, role: users.role })
+            .select({ id: users.id, role: users.role, admin: users.admin, member: users.member })
             .from(users)
             .where(eq(users.id, token.sub))
             .limit(1);
@@ -121,10 +147,14 @@ export const authOptions = {
             // User was deleted, clear the token
             token.sub = undefined;
             token.role = undefined;
+            token.admin = undefined;
+            token.member = undefined;
             console.warn(`User ${token.sub} not found in database, clearing token`);
           } else {
-            // Refresh role in case it changed
+            // Refresh role, admin, and member in case they changed
             token.role = dbUser[0].role;
+            token.admin = dbUser[0].admin;
+            token.member = dbUser[0].member;
           }
         } catch (error) {
           console.error("Error verifying user in database:", error);
@@ -133,9 +163,21 @@ export const authOptions = {
 
       return token;
     },
+    async redirect({ url, baseUrl }) {
+      // After sign-in, redirect to the map page (home page)
+      if (url === baseUrl || url === `${baseUrl}/`) {
+        return `${baseUrl}/`;
+      }
+      // Allow relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allow callback URLs on the same origin
+      if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
+    },
   },
   pages: {
     signIn: "/signin",
+    error: "/signin",
   },
   session: {
     strategy: "jwt" as const,

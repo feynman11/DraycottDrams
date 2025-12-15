@@ -1,4 +1,4 @@
-import { createTRPCRouter, publicProcedure } from "@/lib/trpc";
+import { createTRPCRouter, memberProcedure } from "@/lib/trpc";
 import { db } from "@/lib/db";
 import { whiskies } from "@/db/schema";
 import { parseCSV, generateCSVTemplate } from "@/lib/csv-parser";
@@ -29,14 +29,14 @@ function parseABV(abvStr: string): number {
 
 export const importRouter = createTRPCRouter({
   // Get CSV template
-  getTemplate: publicProcedure.query(() => {
+  getTemplate: memberProcedure.query(() => {
     return {
       csv: generateCSVTemplate(),
     };
   }),
 
   // Import CSV data
-  importCSV: publicProcedure
+  importCSV: memberProcedure
     .input(
       z.object({
         csvText: z.string().min(1),
@@ -101,7 +101,7 @@ export const importRouter = createTRPCRouter({
               description: null,
               tastingNotes: null,
               coordinates: coordinates,
-              flavorProfile: null,
+              flavourProfile: null,
             };
           })
         ).returning();
@@ -120,3 +120,5 @@ export const importRouter = createTRPCRouter({
       }
     }),
 });
+
+

@@ -4,12 +4,15 @@ import { useState, useMemo } from "react";
 import { api } from "@/lib/trpc-client";
 import { Button } from "@/components/ui/button";
 import { WhiskyCard } from "./whisky-card";
+import { WhiskyDetail } from "./whisky-detail";
+import { type Whisky } from "@/db/schema";
 
 export function WhiskyLibrary() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("");
   const [selectedGathering, setSelectedGathering] = useState<string>("");
   const [groupByGathering, setGroupByGathering] = useState(false);
+  const [selectedWhisky, setSelectedWhisky] = useState<Whisky | null>(null);
 
   const { data: whiskies, isLoading } = api.whisky.getAll.useQuery({
     search: searchTerm || undefined,
@@ -54,8 +57,9 @@ export function WhiskyLibrary() {
   }
 
   return (
-    <div className="w-full h-full overflow-y-auto p-6 lg:p-12 bg-slate-950">
-      <div className="max-w-7xl mx-auto">
+    <div className="w-full h-full relative bg-slate-950">
+      <div className="w-full h-full overflow-y-auto p-6 lg:p-12">
+        <div className="max-w-7xl mx-auto">
         <h2 className="text-3xl font-bold mb-8 text-amber-50 border-b border-slate-800 pb-4">
           The Library
         </h2>
@@ -138,7 +142,11 @@ export function WhiskyLibrary() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {gatheringWhiskies.map((whisky) => (
-                    <WhiskyCard key={whisky.id} whisky={whisky} />
+                    <WhiskyCard 
+                      key={whisky.id} 
+                      whisky={whisky} 
+                      onClick={() => setSelectedWhisky(whisky)}
+                    />
                   ))}
                 </div>
               </div>
@@ -147,7 +155,11 @@ export function WhiskyLibrary() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {whiskies?.map((whisky) => (
-              <WhiskyCard key={whisky.id} whisky={whisky} />
+              <WhiskyCard 
+                key={whisky.id} 
+                whisky={whisky} 
+                onClick={() => setSelectedWhisky(whisky)}
+              />
             ))}
           </div>
         )}
@@ -168,7 +180,14 @@ export function WhiskyLibrary() {
             </Button>
           </div>
         )}
+        </div>
       </div>
+      
+      {/* Whisky Detail Panel */}
+      <WhiskyDetail 
+        whisky={selectedWhisky} 
+        onClose={() => setSelectedWhisky(null)} 
+      />
     </div>
   );
 }
