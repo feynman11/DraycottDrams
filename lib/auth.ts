@@ -163,7 +163,7 @@ export const authOptions = {
 
       return token;
     },
-    async redirect({ url, baseUrl }) {
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
       // After sign-in, redirect to the map page (home page)
       if (url === baseUrl || url === `${baseUrl}/`) {
         return `${baseUrl}/`;
