@@ -1,6 +1,7 @@
 "use client";
 
-import { GlassWater, Map, List, User, LogOut, Upload, Users } from "lucide-react";
+import { Map, List, User, LogOut, Upload, Users } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
@@ -20,8 +21,15 @@ export function Header({ viewMode, onViewModeChange }: HeaderProps) {
   return (
     <header className="flex-none h-16 bg-slate-900 border-b border-amber-900/30 flex items-center justify-between px-6 shadow-lg z-20 relative">
       <div className="flex items-center gap-4 flex-shrink-0 min-w-0">
-        <div className="p-2 bg-amber-600/20 rounded-full border border-amber-600/50 flex-shrink-0">
-          <GlassWater className="w-6 h-6 text-amber-500" />
+        <div className="flex-shrink-0">
+          <Image
+            src="/logo.png"
+            alt="Draycott Drams Logo"
+            width={40}
+            height={40}
+            className="h-10 w-auto"
+            priority
+          />
         </div>
         <div className="min-w-0">
           <h1 className="text-xl font-bold text-amber-50 tracking-wide whitespace-nowrap">Draycott Drams</h1>
