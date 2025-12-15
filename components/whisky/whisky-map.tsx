@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { api } from "@/lib/trpc-client";
+import { type Whisky } from "@/db/schema";
 import { MapVisualization } from "./map-visualization";
-import { WhiskyDetail } from "./whisky-detail";
+import { DistilleryDetail } from "./distillery-detail";
 
 export function WhiskyMap() {
-  const [selectedWhisky, setSelectedWhisky] = useState<any>(null);
+  const [selectedDistillery, setSelectedDistillery] = useState<string | null>(null);
+  const [selectedDistilleryWhiskies, setSelectedDistilleryWhiskies] = useState<Whisky[]>([]);
   const [gatheringFilter, setGatheringFilter] = useState<number | undefined>(undefined);
   
   const { data: whiskies, isLoading } = api.whisky.getAll.useQuery({
@@ -16,16 +18,25 @@ export function WhiskyMap() {
   
   const { data: stats } = api.whisky.getStats.useQuery();
 
-  const handleWhiskySelect = (whisky: any) => {
-    setSelectedWhisky(whisky);
+  const handleWhiskySelect = (whisky: Whisky) => {
+    // Keep for backward compatibility if needed
+  };
+
+  const handleDistillerySelect = (distillery: string, distilleryWhiskies: Whisky[]) => {
+    setSelectedDistillery(distillery);
+    setSelectedDistilleryWhiskies(distilleryWhiskies);
   };
 
   const closeDetail = () => {
-    setSelectedWhisky(null);
+    setSelectedDistillery(null);
+    setSelectedDistilleryWhiskies([]);
   };
 
   const handleGatheringChange = (gathering: number | undefined) => {
     setGatheringFilter(gathering);
+    // Clear selection when filter changes
+    setSelectedDistillery(null);
+    setSelectedDistilleryWhiskies([]);
   };
 
   if (isLoading) {
@@ -63,13 +74,20 @@ export function WhiskyMap() {
       <MapVisualization
         whiskies={whiskies}
         onSelect={handleWhiskySelect}
-        selectedId={selectedWhisky?.id}
+        onDistillerySelect={handleDistillerySelect}
+        selectedDistillery={selectedDistillery || undefined}
         gatheringFilter={gatheringFilter}
         gatherings={gatherings}
         gatheringThemes={gatheringThemes}
         onGatheringChange={handleGatheringChange}
       />
-      <WhiskyDetail whisky={selectedWhisky} onClose={closeDetail} />
+      {selectedDistillery && (
+        <DistilleryDetail
+          distillery={selectedDistillery}
+          whiskies={selectedDistilleryWhiskies}
+          onClose={closeDetail}
+        />
+      )}
     </div>
   );
 }

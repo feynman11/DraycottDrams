@@ -9,7 +9,9 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 interface Props {
   whiskies: Whisky[];
   onSelect: (whisky: Whisky) => void;
+  onDistillerySelect?: (distillery: string, whiskies: Whisky[]) => void;
   selectedId?: string;
+  selectedDistillery?: string;
   gatheringFilter?: number;
   gatherings?: number[];
   gatheringThemes?: Map<number, string>;
@@ -103,7 +105,9 @@ const getGatheringColor = (
 export const MapVisualization: React.FC<Props> = ({ 
   whiskies, 
   onSelect, 
+  onDistillerySelect,
   selectedId,
+  selectedDistillery,
   gatheringFilter,
   gatherings = [],
   gatheringThemes = new Map(),
@@ -181,8 +185,9 @@ export const MapVisualization: React.FC<Props> = ({
     };
   }, [apiKeyFetched, maptilerApiKey]);
 
-  // Convert whiskies to GeoJSON for clustering
-  const whiskiesToGeoJSON = (whiskiesList: Whisky[], colorMode: ColorMode, totalGatherings: number) => {
+  // Group whiskies by distillery and convert to GeoJSON
+  const distilleriesToGeoJSON = (whiskiesList: Whisky[], colorMode: ColorMode, totalGatherings: number) => {
+    // Filter whiskies with valid coordinates
     const whiskiesWithCoords = whiskiesList.filter(
       (whisky): whisky is Whisky & { coordinates: [number, number] } =>
         !!whisky.coordinates &&
@@ -192,24 +197,56 @@ export const MapVisualization: React.FC<Props> = ({
         typeof whisky.coordinates[1] === 'number'
     );
 
-    return {
-      type: 'FeatureCollection' as const,
-      features: whiskiesWithCoords.map((whisky) => ({
+    // Group by distillery
+    const distilleryMap = new Map<string, Whisky[]>();
+    whiskiesWithCoords.forEach((whisky) => {
+      const key = whisky.distillery;
+      if (!distilleryMap.has(key)) {
+        distilleryMap.set(key, []);
+      }
+      distilleryMap.get(key)!.push(whisky);
+    });
+
+    // Create one feature per distillery
+    const features = Array.from(distilleryMap.entries()).map(([distillery, distilleryWhiskies]) => {
+      // Use coordinates from first whisky (all should be the same for same distillery)
+      const coordinates = distilleryWhiskies[0].coordinates!;
+      
+      // Find the whisky with highest ABV to determine color
+      const highestABVWhisky = distilleryWhiskies.reduce((max, whisky) => {
+        const maxABV = parseFloat(max.abv.toString());
+        const currentABV = parseFloat(whisky.abv.toString());
+        return currentABV > maxABV ? whisky : max;
+      }, distilleryWhiskies[0]);
+      
+      // Use the gathering color from the highest ABV whisky
+      const color = getGatheringColor(highestABVWhisky.gathering, colorMode, totalGatherings);
+      
+      // Get region and country from first whisky
+      const firstWhisky = distilleryWhiskies[0];
+      
+      return {
         type: 'Feature' as const,
         geometry: {
           type: 'Point' as const,
-          coordinates: whisky.coordinates,
+          coordinates,
         },
         properties: {
-          id: whisky.id,
-          name: whisky.name,
-          distillery: whisky.distillery,
-          region: whisky.region,
-          country: whisky.country,
-          gathering: whisky.gathering,
-          color: getGatheringColor(whisky.gathering, colorMode, totalGatherings),
+          distillery,
+          region: firstWhisky.region,
+          country: firstWhisky.country,
+          whiskyCount: distilleryWhiskies.length,
+          highestABV: parseFloat(highestABVWhisky.abv.toString()),
+          color,
+          // Store all whisky IDs for reference
+          whiskyIds: distilleryWhiskies.map(w => w.id),
         },
-      })),
+      };
+    });
+
+    return {
+      type: 'FeatureCollection' as const,
+      features,
     };
   };
 
@@ -275,29 +312,34 @@ export const MapVisualization: React.FC<Props> = ({
     // Cluster click handlers are disabled since clustering is off
     // No need to attach cluster listeners
 
-    // Handle unclustered point clicks
+    // Handle distillery point clicks
     const handleUnclusteredClick = (e: maplibregl.MapLayerMouseEvent) => {
       const features = map.current!.queryRenderedFeatures(e.point, {
         layers: [unclusteredLayerId],
       });
       if (features.length === 0) return;
 
-      const props = features[0].properties as { id: string };
-      const whisky = whiskies.find((w: Whisky) => w.id === props.id);
-      if (whisky) {
+      const props = features[0].properties as { distillery: string; whiskyIds: string[] };
+      if (props.distillery && onDistillerySelect) {
+        // Find all whiskies from this distillery
+        const distilleryWhiskies = whiskies.filter((w: Whisky) => 
+          w.distillery === props.distillery
+        );
+        
         // Remove any hover popup when clicking
         if (hoverPopupRef.current) {
           hoverPopupRef.current.remove();
           hoverPopupRef.current = null;
         }
-        onSelect(whisky);
+        
+        onDistillerySelect(props.distillery, distilleryWhiskies);
       }
     };
     
     eventHandlersRef.current.unclusteredClick = handleUnclusteredClick;
     map.current.on('click', unclusteredLayerId, handleUnclusteredClick);
 
-    // Show popup on hover for unclustered points
+    // Show popup on hover for distillery points
     const handleUnclusteredMouseEnter = (e: maplibregl.MapLayerMouseEvent) => {
       map.current!.getCanvas().style.cursor = 'pointer';
       const features = map.current!.queryRenderedFeatures(e.point, {
@@ -305,9 +347,8 @@ export const MapVisualization: React.FC<Props> = ({
       });
       if (features.length === 0) return;
 
-      const props = features[0].properties as { id: string; color?: string };
-      const whisky = whiskies.find((w: Whisky) => w.id === props.id);
-      if (whisky) {
+      const props = features[0].properties as { distillery: string; region: string; country: string; whiskyCount: number; color?: string };
+      if (props.distillery) {
         // Remove any existing hover popup before creating a new one
         if (hoverPopupRef.current) {
           hoverPopupRef.current.remove();
@@ -320,8 +361,8 @@ export const MapVisualization: React.FC<Props> = ({
           clusterPopupRef.current = null;
         }
         
-        // Get the dot color for this whisky
-        const dotColor = props.color || getGatheringColor(whisky.gathering, colorMode, totalGatherings);
+        // Get the dot color for this distillery
+        const dotColor = props.color || '#f59e0b';
         
         // Convert hex to RGB and calculate brightness for text color
         const hex = dotColor.replace('#', '');
@@ -335,13 +376,14 @@ export const MapVisualization: React.FC<Props> = ({
         hoverPopupRef.current = new maplibregl.Popup({
           offset: 25,
           closeButton: false,
-          className: 'whisky-popup',
+          className: 'distillery-popup',
         })
           .setLngLat(e.lngLat)
           .setHTML(`
-            <div class="whisky-popup-content p-2 rounded-lg" style="background-color: ${dotColor}; color: ${textColor}; border: 2px solid ${dotColor};">
-              <div class="font-bold text-sm" style="color: ${textColor};">${whisky.distillery}</div>
-              <div class="text-xs" style="color: ${secondaryTextColor};">${whisky.region}, ${whisky.country}</div>
+            <div class="distillery-popup-content p-2 rounded-lg" style="background-color: ${dotColor}; color: ${textColor}; border: 2px solid ${dotColor};">
+              <div class="font-bold text-sm" style="color: ${textColor};">${props.distillery}</div>
+              <div class="text-xs" style="color: ${secondaryTextColor};">${props.region}, ${props.country}</div>
+              <div class="text-xs mt-1" style="color: ${secondaryTextColor};">${props.whiskyCount} ${props.whiskyCount === 1 ? 'whisky' : 'whiskies'}</div>
             </div>
           `)
           .addTo(map.current!);
@@ -395,21 +437,21 @@ export const MapVisualization: React.FC<Props> = ({
     if (!map.current || !mapLoaded) return;
 
     const whiskiesKey = JSON.stringify({
-      whiskies: whiskies.map(w => ({ id: w.id, coordinates: w.coordinates })),
+      whiskies: whiskies.map(w => ({ id: w.id, distillery: w.distillery, coordinates: w.coordinates })),
       colorMode,
       totalGatherings,
     });
 
-    const sourceId = 'whiskies-source';
-    const clusterLayerId = 'whiskies-clusters';
-    const clusterCountLayerId = 'whiskies-cluster-count';
-    const unclusteredLayerId = 'whiskies-unclustered';
+    const sourceId = 'distilleries-source';
+    const clusterLayerId = 'distilleries-clusters';
+    const clusterCountLayerId = 'distilleries-cluster-count';
+    const unclusteredLayerId = 'distilleries-unclustered';
 
     // Only update if data changed
     if (whiskiesRef.current !== whiskiesKey) {
       whiskiesRef.current = whiskiesKey;
 
-      const geoJSON = whiskiesToGeoJSON(whiskies, colorMode, totalGatherings);
+      const geoJSON = distilleriesToGeoJSON(whiskies, colorMode, totalGatherings);
 
       // Remove existing source and layers if they exist
       // First remove event listeners, then remove layers
@@ -419,6 +461,8 @@ export const MapVisualization: React.FC<Props> = ({
         // Remove event listeners before removing layers
         removeEventListeners(clusterLayerId, clusterCountLayerId, unclusteredLayerId);
         
+        const countLabelLayerId = 'distilleries-count-label';
+        if (map.current.getLayer(countLabelLayerId)) map.current.removeLayer(countLabelLayerId);
         if (map.current.getLayer(unclusteredLayerId)) map.current.removeLayer(unclusteredLayerId);
         map.current.removeSource(sourceId);
       }
@@ -438,23 +482,50 @@ export const MapVisualization: React.FC<Props> = ({
         paint: {
           'circle-color': [
             'case',
-            ['==', ['get', 'id'], selectedId || ''],
+            ['==', ['get', 'distillery'], selectedDistillery || ''],
             '#fff',
             ['get', 'color'],
           ],
           'circle-radius': [
             'case',
-            ['==', ['get', 'id'], selectedId || ''],
+            ['==', ['get', 'distillery'], selectedDistillery || ''],
+            10,
             8,
-            6,
           ],
           'circle-stroke-width': [
             'case',
-            ['==', ['get', 'id'], selectedId || ''],
+            ['==', ['get', 'distillery'], selectedDistillery || ''],
+            3,
             2,
-            0,
           ],
           'circle-stroke-color': '#fff',
+        },
+      });
+
+      // Add text label layer to show whisky count (only when zoomed in)
+      const countLabelLayerId = 'distilleries-count-label';
+      map.current.addLayer({
+        id: countLabelLayerId,
+        type: 'symbol',
+        source: sourceId,
+        minzoom: 5, // Only show labels when zoomed in (zoom level 5 or higher)
+        layout: {
+          'text-field': ['to-string', ['get', 'whiskyCount']],
+          'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+          'text-size': [
+            'case',
+            ['==', ['get', 'distillery'], selectedDistillery || ''],
+            14,
+            12,
+          ],
+          'text-anchor': 'center',
+          'visibility': 'visible',
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': '#000000',
+          'text-halo-width': 2,
+          'text-halo-blur': 1,
         },
       });
 
@@ -474,35 +545,47 @@ export const MapVisualization: React.FC<Props> = ({
 
     // Update source data when colorMode or selection changes (without recreating layers)
     if (map.current.getSource(sourceId)) {
-      const geoJSON = whiskiesToGeoJSON(whiskies, colorMode, totalGatherings);
+      const geoJSON = distilleriesToGeoJSON(whiskies, colorMode, totalGatherings);
       const source = map.current.getSource(sourceId) as maplibregl.GeoJSONSource;
       source.setData(geoJSON);
+
+      const countLabelLayerId = 'distilleries-count-label';
 
       // Update unclustered point styles based on selection
       if (map.current.getLayer(unclusteredLayerId)) {
         map.current.setPaintProperty(unclusteredLayerId, 'circle-color', [
           'case',
-          ['==', ['get', 'id'], selectedId || ''],
+          ['==', ['get', 'distillery'], selectedDistillery || ''],
           '#fff',
           ['get', 'color'],
         ]);
 
         map.current.setPaintProperty(unclusteredLayerId, 'circle-radius', [
           'case',
-          ['==', ['get', 'id'], selectedId || ''],
+          ['==', ['get', 'distillery'], selectedDistillery || ''],
+          10,
           8,
-          6,
         ]);
 
         map.current.setPaintProperty(unclusteredLayerId, 'circle-stroke-width', [
           'case',
-          ['==', ['get', 'id'], selectedId || ''],
+          ['==', ['get', 'distillery'], selectedDistillery || ''],
+          3,
           2,
-          0,
+        ]);
+      }
+
+      // Update text label size based on selection
+      if (map.current.getLayer(countLabelLayerId)) {
+        map.current.setLayoutProperty(countLabelLayerId, 'text-size', [
+          'case',
+          ['==', ['get', 'distillery'], selectedDistillery || ''],
+          14,
+          12,
         ]);
       }
     }
-  }, [whiskies, selectedId, mapLoaded, colorMode, totalGatherings, onSelect]);
+  }, [whiskies, selectedId, selectedDistillery, mapLoaded, colorMode, totalGatherings, onSelect, onDistillerySelect]);
 
   const handleZoomIn = () => {
     if (map.current) {
