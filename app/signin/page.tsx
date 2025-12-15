@@ -3,10 +3,10 @@
 import { signIn, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { GlassWater } from "lucide-react";
 
-export default function SignInPage() {
+function SignInForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -154,6 +154,24 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function SignInLoading() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-slate-200">
+      <div className="p-4 bg-amber-600/20 rounded-full border border-amber-600/50 mb-4">
+        <GlassWater className="w-12 h-12 text-amber-500 animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<SignInLoading />}>
+      <SignInForm />
+    </Suspense>
   );
 }
 
