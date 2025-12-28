@@ -44,22 +44,7 @@ export function WhiskyMap() {
     setSelectedDistilleryWhiskies([]);
   };
 
-  if (isLoading) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-slate-950">
-        <div className="text-amber-500">Loading whisky atlas...</div>
-      </div>
-    );
-  }
-
-  if (!whiskies) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-slate-950">
-        <div className="text-red-500">Failed to load whiskies</div>
-      </div>
-    );
-  }
-
+  // All hooks must be called before any early returns
   // Create a map of distillery names to whisky counts
   const distilleryWhiskiesMap = useMemo(() => {
     if (!whiskies) return new Map<string, WhiskyWithGathering[]>();
@@ -88,6 +73,23 @@ export function WhiskyMap() {
       return whiskies;
     }
   }, [whiskies, allDistilleries, showDistilleriesWithWhiskies]);
+
+  // Early returns after all hooks have been called
+  if (isLoading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-slate-950">
+        <div className="text-amber-500">Loading whisky atlas...</div>
+      </div>
+    );
+  }
+
+  if (!whiskies) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-slate-950">
+        <div className="text-red-500">Failed to load whiskies</div>
+      </div>
+    );
+  }
 
   const gatherings = stats?.gatherings
     ?.map((g) => g.gathering)

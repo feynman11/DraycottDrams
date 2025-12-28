@@ -1,5 +1,5 @@
 # Use the official Bun image
-FROM oven/bun:1.3.4 AS base
+FROM oven/bun:1.3.5 AS base
 
 # Install dependencies only when needed
 FROM base AS deps

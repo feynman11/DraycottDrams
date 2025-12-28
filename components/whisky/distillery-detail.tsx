@@ -12,26 +12,26 @@ interface DistilleryDetailProps {
 }
 
 export function DistilleryDetail({ distillery, whiskies, onClose }: DistilleryDetailProps) {
-  if (!distillery || whiskies.length === 0) return null;
-
+  // All hooks must be called before any early returns
   const firstWhisky = whiskies[0];
-  const distilleryId = (firstWhisky as any).distilleryId || (firstWhisky as any).distillery?.id;
+  const distilleryId = firstWhisky ? ((firstWhisky as any).distilleryId || (firstWhisky as any).distillery?.id) : undefined;
   
   // Fetch distillery details - try by ID first, then by name
   const { data: distilleryDetailsById } = api.distillery.getById.useQuery(
-    { id: distilleryId },
-    { enabled: !!distilleryId }
+    { id: distilleryId! },
+    { enabled: !!distilleryId && !!distillery && whiskies.length > 0 }
   );
   
   const { data: distilleriesList } = api.distillery.getAll.useQuery(
     { search: distillery, limit: 1 },
-    { enabled: !distilleryDetailsById && !!distillery }
+    { enabled: !distilleryDetailsById && !!distillery && whiskies.length > 0 }
   );
   
   const distilleryDetails = distilleryDetailsById || distilleriesList?.[0];
 
   // Group whiskies by gathering for better display
   const whiskiesByGathering = useMemo(() => {
+    if (!whiskies || whiskies.length === 0) return {} as Record<number, WhiskyWithGathering[]>;
     return whiskies.reduce((acc, whisky) => {
       const key = whisky.gathering;
       if (!acc[key]) {
@@ -46,19 +46,23 @@ export function DistilleryDetail({ distillery, whiskies, onClose }: DistilleryDe
     .map(Number)
     .sort((a, b) => a - b);
 
-  const region = firstWhisky.region;
-  const country = firstWhisky.country;
-
   // Calculate statistics
-  const totalGatherings = gatherings.length;
-  const totalWhiskies = whiskies.length;
   const dateRange = useMemo(() => {
+    if (!whiskies || whiskies.length === 0) return null;
     const dates = whiskies.map(w => new Date(w.date).getTime()).filter(Boolean);
     if (dates.length === 0) return null;
     const minDate = new Date(Math.min(...dates));
     const maxDate = new Date(Math.max(...dates));
     return { min: minDate, max: maxDate };
   }, [whiskies]);
+
+  // Early return after all hooks have been called
+  if (!distillery || whiskies.length === 0) return null;
+
+  const region = firstWhisky.region;
+  const country = firstWhisky.country;
+  const totalGatherings = gatherings.length;
+  const totalWhiskies = whiskies.length;
 
   return (
     <div className="absolute inset-y-0 right-0 w-full md:w-[480px] bg-slate-900/95 backdrop-blur-xl shadow-2xl border-l border-slate-700 transform transition-transform duration-300 z-[100] overflow-y-auto">
