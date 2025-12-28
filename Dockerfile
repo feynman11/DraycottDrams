@@ -39,6 +39,8 @@ RUN useradd -u 1001 -g nodejs -s /bin/bash -m nextjs
 # Copy standalone build (includes public directory if it exists)
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Explicitly copy public directory to ensure static assets are available
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 # Switch to non-root user
 USER nextjs
