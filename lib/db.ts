@@ -4,6 +4,8 @@ import postgres from "postgres";
 import * as schema from "@/db/schema";
 
 // Load environment variables
+// Prefer `.env.local` (common in Next.js) but still allow `.env`.
+config({ path: ".env.local" });
 config();
 
 // Database connection

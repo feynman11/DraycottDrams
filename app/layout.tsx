@@ -7,11 +7,11 @@ import { Toaster } from "sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Draycott Drams - Whisky Club",
-  description: "Discover and explore the finest whiskies with the Draycott Drams whisky club. Interactive world map, tasting notes, and AI sommelier recommendations.",
+  title: "Draycott Drambusters - Whisky Club",
+  description: "Discover and explore the finest whiskies with the Draycott Drambusters whisky club. Interactive world map, tasting notes, and AI sommelier recommendations.",
   keywords: ["whisky", "whiskey", "scotch", "bourbon", "tasting", "club", "spirits"],
-  authors: [{ name: "Draycott Drams" }],
-  creator: "Draycott Drams",
+  authors: [{ name: "Draycott Drambusters" }],
+  creator: "Draycott Drambusters",
 };
 
 export default function RootLayout({

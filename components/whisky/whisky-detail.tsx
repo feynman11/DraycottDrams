@@ -1,10 +1,10 @@
 "use client";
 
-import { type Whisky } from "@/db/schema";
+import { type WhiskyWithGathering } from "@/lib/types";
 import { X, MapPin, Droplets, Banknote, Calendar, Map } from 'lucide-react';
 
 interface WhiskyDetailProps {
-  whisky: Whisky | null;
+  whisky: WhiskyWithGathering | null;
   onClose: () => void;
 }
 

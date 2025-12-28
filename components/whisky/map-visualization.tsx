@@ -3,19 +3,24 @@
 import React, { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import { ZoomIn, ZoomOut, RotateCcw, Filter, MapPin, Info } from 'lucide-react';
-import { type Whisky } from '@/db/schema';
+import { type WhiskyWithGathering, type Distillery } from '@/lib/types';
+import { Button } from '@/components/ui/button';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 interface Props {
-  whiskies: Whisky[];
-  onSelect: (whisky: Whisky) => void;
-  onDistillerySelect?: (distillery: string, whiskies: Whisky[]) => void;
+  whiskies: WhiskyWithGathering[];
+  allDistilleries?: Distillery[];
+  distilleryWhiskiesMap?: Map<string, WhiskyWithGathering[]>;
+  onSelect: (whisky: WhiskyWithGathering) => void;
+  onDistillerySelect?: (distillery: string, whiskies: WhiskyWithGathering[]) => void;
   selectedId?: string;
   selectedDistillery?: string;
   gatheringFilter?: number;
   gatherings?: number[];
   gatheringThemes?: Map<number, string>;
   onGatheringChange?: (gathering: number | undefined) => void;
+  showDistilleriesWithWhiskies?: boolean;
+  onShowDistilleriesWithWhiskiesChange?: (show: boolean) => void;
 }
 
 // Region view coordinates
@@ -104,6 +109,8 @@ const getGatheringColor = (
 
 export const MapVisualization: React.FC<Props> = ({ 
   whiskies, 
+  allDistilleries,
+  distilleryWhiskiesMap,
   onSelect, 
   onDistillerySelect,
   selectedId,
@@ -112,6 +119,8 @@ export const MapVisualization: React.FC<Props> = ({
   gatherings = [],
   gatheringThemes = new Map(),
   onGatheringChange,
+  showDistilleriesWithWhiskies = false,
+  onShowDistilleriesWithWhiskiesChange,
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
@@ -186,10 +195,10 @@ export const MapVisualization: React.FC<Props> = ({
   }, [apiKeyFetched, maptilerApiKey]);
 
   // Group whiskies by distillery and convert to GeoJSON
-  const distilleriesToGeoJSON = (whiskiesList: Whisky[], colorMode: ColorMode, totalGatherings: number) => {
+  const distilleriesToGeoJSON = (whiskiesList: WhiskyWithGathering[], colorMode: ColorMode, totalGatherings: number) => {
     // Filter whiskies with valid coordinates
     const whiskiesWithCoords = whiskiesList.filter(
-      (whisky): whisky is Whisky & { coordinates: [number, number] } =>
+      (whisky): whisky is WhiskyWithGathering & { coordinates: [number, number] } =>
         !!whisky.coordinates &&
         Array.isArray(whisky.coordinates) &&
         whisky.coordinates.length === 2 &&
@@ -198,7 +207,7 @@ export const MapVisualization: React.FC<Props> = ({
     );
 
     // Group by distillery
-    const distilleryMap = new Map<string, Whisky[]>();
+    const distilleryMap = new Map<string, WhiskyWithGathering[]>();
     whiskiesWithCoords.forEach((whisky) => {
       const key = whisky.distillery;
       if (!distilleryMap.has(key)) {
@@ -207,7 +216,7 @@ export const MapVisualization: React.FC<Props> = ({
       distilleryMap.get(key)!.push(whisky);
     });
 
-    // Create one feature per distillery
+    // Create one feature per distillery with whiskies
     const features = Array.from(distilleryMap.entries()).map(([distillery, distilleryWhiskies]) => {
       // Use coordinates from first whisky (all should be the same for same distillery)
       const coordinates = distilleryWhiskies[0].coordinates!;
@@ -243,6 +252,38 @@ export const MapVisualization: React.FC<Props> = ({
         },
       };
     });
+
+    // Add distilleries without whiskies if showDistilleriesWithWhiskies is true
+    if (showDistilleriesWithWhiskies && allDistilleries) {
+      allDistilleries.forEach((distillery) => {
+        // Skip if already added (has whiskies)
+        if (distilleryMap.has(distillery.name)) return;
+        
+        // Only add if has coordinates
+        if (distillery.coordinates && 
+            Array.isArray(distillery.coordinates) && 
+            distillery.coordinates.length === 2 &&
+            typeof distillery.coordinates[0] === 'number' &&
+            typeof distillery.coordinates[1] === 'number') {
+          features.push({
+            type: 'Feature' as const,
+            geometry: {
+              type: 'Point' as const,
+              coordinates: distillery.coordinates as [number, number],
+            },
+            properties: {
+              distillery: distillery.name,
+              region: distillery.region || '',
+              country: distillery.country || '',
+              whiskyCount: 0,
+              highestABV: 0,
+              color: '#6b7280', // Gray color for distilleries without whiskies
+              whiskyIds: [],
+            },
+          });
+        }
+      });
+    }
 
     return {
       type: 'FeatureCollection' as const,
@@ -322,9 +363,8 @@ export const MapVisualization: React.FC<Props> = ({
       const props = features[0].properties as { distillery: string; whiskyIds: string[] };
       if (props.distillery && onDistillerySelect) {
         // Find all whiskies from this distillery
-        const distilleryWhiskies = whiskies.filter((w: Whisky) => 
-          w.distillery === props.distillery
-        );
+        const distilleryWhiskies = distilleryWhiskiesMap?.get(props.distillery) || 
+          whiskies.filter((w) => w.distillery === props.distillery);
         
         // Remove any hover popup when clicking
         if (hoverPopupRef.current) {
@@ -440,6 +480,8 @@ export const MapVisualization: React.FC<Props> = ({
       whiskies: whiskies.map(w => ({ id: w.id, distillery: w.distillery, coordinates: w.coordinates })),
       colorMode,
       totalGatherings,
+      showDistilleriesWithWhiskies,
+      allDistilleries: allDistilleries?.map(d => ({ id: d.id, name: d.name, coordinates: d.coordinates })),
     });
 
     const sourceId = 'distilleries-source';
@@ -585,7 +627,7 @@ export const MapVisualization: React.FC<Props> = ({
         ]);
       }
     }
-  }, [whiskies, selectedId, selectedDistillery, mapLoaded, colorMode, totalGatherings, onSelect, onDistillerySelect]);
+  }, [whiskies, selectedId, selectedDistillery, mapLoaded, colorMode, totalGatherings, onSelect, onDistillerySelect, showDistilleriesWithWhiskies, allDistilleries]);
 
   const handleZoomIn = () => {
     if (map.current) {
@@ -655,6 +697,23 @@ export const MapVisualization: React.FC<Props> = ({
               <h3 className="text-sm font-semibold text-slate-200">Map Options</h3>
             </div>
             
+            {/* Distillery Filter */}
+            {onShowDistilleriesWithWhiskiesChange && (
+              <div className="mb-4">
+                <Button
+                  variant={showDistilleriesWithWhiskies ? "default" : "outline"}
+                  onClick={() => onShowDistilleriesWithWhiskiesChange(!showDistilleriesWithWhiskies)}
+                  className={`w-full ${
+                    showDistilleriesWithWhiskies
+                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950"
+                      : "text-slate-400 border-slate-700 hover:bg-slate-800"
+                  }`}
+                >
+                  {showDistilleriesWithWhiskies ? "Showing All" : "Show Distilleries without Whiskies"}
+                </Button>
+              </div>
+            )}
+
             {/* Gathering Filter */}
             <div className="mb-4">
               <label className="block text-xs font-medium text-slate-400 mb-2">

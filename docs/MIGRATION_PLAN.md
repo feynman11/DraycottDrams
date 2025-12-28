@@ -1,4 +1,4 @@
-# Draycott Drams - Production Application Migration Plan
+# Draycott Drambusters - Production Application Migration Plan
 
 ## Overview
 
@@ -339,4 +339,4 @@ docs/
 
 ## Conclusion
 
-This migration plan provides a comprehensive roadmap for transforming the Draycott Drams prototype into a production-ready whisky club management system. The phased approach ensures minimal disruption while building a scalable, maintainable application that can grow with the club's needs.
+This migration plan provides a comprehensive roadmap for transforming the Draycott Drambusters prototype into a production-ready whisky club management system. The phased approach ensures minimal disruption while building a scalable, maintainable application that can grow with the club's needs.

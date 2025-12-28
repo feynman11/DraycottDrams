@@ -32,7 +32,7 @@ export const aiRouter = createTRPCRouter({
       try {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        const prompt = `You are an expert whisky sommelier for the Draycott Drams whisky club. Based on the following preferences, recommend whiskies from our collection.
+        const prompt = `You are an expert whisky sommelier for the Draycott Drambusters whisky club. Based on the following preferences, recommend whiskies from our collection.
 
 User Preferences:
 ${preferences.flavourProfile ? `- flavour Profile: ${JSON.stringify(preferences.flavourProfile)}` : ""}
@@ -93,7 +93,7 @@ Please provide 3 whisky recommendations with brief explanations of why they matc
       try {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        const prompt = `You are an expert whisky sommelier analyzing a tasting experience for the Draycott Drams whisky club.
+        const prompt = `You are an expert whisky sommelier analyzing a tasting experience for the Draycott Drambusters whisky club.
 
 Whisky: ${whiskyName}
 Tasting Notes: ${tastingNotes.join(", ")}
@@ -143,7 +143,7 @@ Keep your response conversational and expert-level, around 200-300 words.`;
       try {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        const systemPrompt = `You are an AI sommelier for the Draycott Drams whisky club. You are knowledgeable about whisky, its production, tasting, and the specific whiskies in our collection. Be helpful, engaging, and expert-level in your responses. Keep responses conversational but informative.`;
+        const systemPrompt = `You are an AI sommelier for the Draycott Drambusters whisky club. You are knowledgeable about whisky, its production, tasting, and the specific whiskies in our collection. Be helpful, engaging, and expert-level in your responses. Keep responses conversational but informative.`;
 
         const chat = model.startChat({
           history: [

@@ -1,6 +1,6 @@
 # Environment Variables
 
-This document describes all environment variables required for the Draycott Drams whisky club application.
+This document describes all environment variables required for the Draycott Drambusters whisky club application.
 
 ## Getting Started
 

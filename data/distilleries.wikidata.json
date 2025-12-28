@@ -1,0 +1,3259 @@
+[
+  {
+    "source": "wikidata",
+    "wikidataId": "Q4648402",
+    "name": "A. Smith Bowman Distillery",
+    "coordinates": [
+      -77.351389,
+      38.956722
+    ],
+    "country": "United States",
+    "region": "Fairfax County",
+    "description": "whisky distillery in Fairfax County, Virginia",
+    "founded": 1934
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q306439",
+    "name": "Abbeyhill",
+    "coordinates": [
+      -3.171359,
+      55.954664
+    ],
+    "country": "United Kingdom",
+    "region": "City of Edinburgh",
+    "description": "whisky distillery in City of Edinburgh, Scotland, UK",
+    "founded": 1852
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q319559",
+    "name": "Aberfeldy Distillery",
+    "coordinates": [
+      -3.84981,
+      56.6245
+    ],
+    "country": "United Kingdom",
+    "region": "Aberfeldy",
+    "website": "http://www.dewars.com",
+    "description": "whisky distillery in Perth and Kinross, Scotland, UK",
+    "founded": 1896
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q319639",
+    "name": "Aberlour distillery",
+    "coordinates": [
+      -3.23,
+      57.467222
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.aberlour.co.uk/",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1826
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q976761",
+    "name": "Abhainn Dearg distillery",
+    "coordinates": [
+      -7.044722222,
+      58.170833333
+    ],
+    "country": "United Kingdom",
+    "region": "Outer Hebrides",
+    "website": "http://www.abhainndearg.co.uk/",
+    "description": "company in Outer Hebrides, Scotland, UK",
+    "founded": 2008
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q4682070",
+    "name": "Adelphi Whisky",
+    "coordinates": [
+      -4.251844,
+      55.852597
+    ],
+    "country": "United Kingdom",
+    "region": "Glasgow City",
+    "description": "Scotch whisky distillery in Glasgow, Scotland, UK",
+    "founded": 1826
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q2827977",
+    "name": "Ailsa Bay",
+    "coordinates": [
+      -4.833512,
+      55.261793
+    ],
+    "country": "United Kingdom",
+    "region": "South Ayrshire",
+    "website": "http://ailsabay.com/",
+    "description": "whisky distillery in South Ayrshire, Scotland, UK",
+    "founded": 2007
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q116776688",
+    "name": "Ailsa Bay distillery",
+    "coordinates": [
+      -4.835,
+      55.2609
+    ],
+    "country": "United Kingdom",
+    "region": "South Ayrshire",
+    "description": "whisky distillery in South Ayrshire, Scotland, UK"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q2640213",
+    "name": "Albyn distillery",
+    "coordinates": [
+      -5.611542,
+      55.428171
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery on Kintyre, Argyll and Bute, Scotland, UK",
+    "founded": 1830
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1483783",
+    "name": "Alloa distillery",
+    "coordinates": [
+      -3.803524,
+      56.113945
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "Scottish whisky distillery",
+    "founded": 1795
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q280576",
+    "name": "Allt-A-Bhainne",
+    "coordinates": [
+      -3.206225,
+      57.394225
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/AlltaBhainne_EN.shtml",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1975
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q564499",
+    "name": "Annandale distillery",
+    "coordinates": [
+      -3.25571,
+      55.0017
+    ],
+    "country": "United Kingdom",
+    "region": "Dumfries and Galloway",
+    "description": "whisky distillery in Dumfries and Galloway, Scotland, UK",
+    "founded": 1830
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q110897663",
+    "name": "Arbikie distillery",
+    "coordinates": [
+      -2.55421,
+      56.64822
+    ],
+    "country": "United Kingdom",
+    "region": "Angus",
+    "website": "https://arbikie.com/",
+    "description": "scotch whisky and gin distillery in Inverkeilor, Angus, Scotland, UK",
+    "founded": 2014
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q639631",
+    "name": "Ardmore distillery",
+    "coordinates": [
+      -2.745,
+      57.3511
+    ],
+    "country": "United Kingdom",
+    "region": "Aberdeenshire",
+    "website": "http://www.ardmorewhisky.com/",
+    "description": "whisky distillery in Aberdeenshire, Scotland, UK",
+    "founded": 1898
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q108702716",
+    "name": "Ardnahoe distillery",
+    "coordinates": [
+      -6.11745,
+      55.8692
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "website": "https://ardnahoedistillery.com/de",
+    "description": "Scotch whisky distillery on Islay, Argyll and Bute, Scotland, UK",
+    "founded": 2019
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q31159057",
+    "name": "Ardnamurchan distillery",
+    "coordinates": [
+      -5.9407,
+      56.691413
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "website": "http://www.adelphidistillery.com",
+    "description": "whisky distillery in Lochaber, Highland, Scotland, UK",
+    "founded": 2014
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q652573",
+    "name": "Argyll whisky distiller",
+    "coordinates": [
+      -5.608567,
+      55.427819
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery in Campbeltown, Kintyre, Argyll and Bute, Scotland, UK",
+    "founded": 1844
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q699163",
+    "name": "Arran distillery",
+    "coordinates": [
+      -5.280175,
+      55.699477777
+    ],
+    "country": "United Kingdom",
+    "region": "North Ayrshire",
+    "website": "http://www.arranwhisky.com/",
+    "description": "whisky distillery in North Ayrshire, Scotland, UK",
+    "founded": 1995
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q758604",
+    "name": "Auchentoshan distillery",
+    "coordinates": [
+      -4.439,
+      55.922
+    ],
+    "country": "United Kingdom",
+    "region": "West Dunbartonshire",
+    "website": "http://www.auchentoshan.co.uk",
+    "description": "whisky distillery in West Dunbartonshire, Scotland, UK",
+    "founded": 1823
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q110962166",
+    "name": "Auchinblae distillery",
+    "coordinates": [
+      -2.450165,
+      56.897204
+    ],
+    "country": "United Kingdom",
+    "region": "Aberdeenshire",
+    "description": "scotch whisky distillery in Auchenblae, Kincardine, Aberdeenshire, Scotland, UK (1895-1930)",
+    "founded": 1895
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q758615",
+    "name": "Auchnagie",
+    "coordinates": [
+      -3.625829,
+      56.64953
+    ],
+    "country": "United Kingdom",
+    "region": "Perth and Kinross",
+    "description": "whisky distillery in Perth and Kinross, Scotland, UK",
+    "founded": 1812
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q758617",
+    "name": "Auchorachan",
+    "coordinates": [
+      -3.315485,
+      57.332606
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "description": "whisky distillery in Moray, Scotland, UK"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q758618",
+    "name": "Auchroisk distillery",
+    "coordinates": [
+      -3.11553,
+      57.548
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Auchroisk_EN.shtml",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1974
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q758621",
+    "name": "Auchtermuchty",
+    "coordinates": [
+      -3.234476,
+      56.293758
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "Scottish whisky distillery",
+    "founded": 1829
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q758626",
+    "name": "Auchtertool",
+    "coordinates": [
+      -3.260483,
+      56.10257
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "Scottish whisky distillery",
+    "founded": 1845
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q4821838",
+    "name": "Aultmore distillery",
+    "coordinates": [
+      -3.001136111,
+      57.568133333
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Aultmore_EN.shtml",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1896
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q804683",
+    "name": "Balblair distillery",
+    "coordinates": [
+      -4.181198498,
+      57.84098658
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "website": "http://www.gordonandmacphail.com/wg_BalblairDistillery.html",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1790
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q805176",
+    "name": "Ballechin",
+    "coordinates": [
+      -3.726533,
+      56.657216
+    ],
+    "country": "United Kingdom",
+    "region": "Perth and Kinross",
+    "description": "whisky distillery in Perth and Kinross, Scotland, UK",
+    "founded": 1810
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q805469",
+    "name": "Balmenach distillery",
+    "coordinates": [
+      -3.533908333,
+      57.326708333
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1824
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q805853",
+    "name": "Balvenie distillery",
+    "coordinates": [
+      -3.129094444,
+      57.457230555
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.TheBalvenie.com/",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1892
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q28231971",
+    "name": "Bandon Distillery",
+    "coordinates": [
+      -8.719777777,
+      51.746805555
+    ],
+    "country": "Ireland",
+    "region": "Bandon"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982572",
+    "name": "Banff distillery",
+    "coordinates": [
+      -2.559428,
+      57.667247
+    ],
+    "country": "United Kingdom",
+    "region": "Aberdeenshire",
+    "description": "producer of single malt Scotch whisky",
+    "founded": 1863
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q806797",
+    "name": "Bankier",
+    "coordinates": [
+      -3.959563,
+      55.987286
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "Scottish whisky distillery",
+    "founded": 1827
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q816571",
+    "name": "Ben Nevis distillery",
+    "coordinates": [
+      -5.07389,
+      56.8351
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "website": "http://www.bennevisdistillery.com/",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1825
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q4886733",
+    "name": "Ben Wyvis distillery",
+    "coordinates": [
+      -4.15987,
+      57.696752
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1965
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q817801",
+    "name": "Benmore",
+    "coordinates": [
+      -5.606799,
+      55.429294
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery in Argyll and Bute, Scotland, UK",
+    "founded": 1830
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q818147",
+    "name": "BenRiach",
+    "coordinates": [
+      -3.292777777,
+      57.611944444
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.benriachdistillery.co.uk/tmenu/a_warm_welcome.asp",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1898
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q818145",
+    "name": "Benrinnes distillery",
+    "coordinates": [
+      -3.23686,
+      57.44188
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Benrinnes_EN.shtml",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1835
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q265437",
+    "name": "Benromach",
+    "coordinates": [
+      -3.6203,
+      57.6136
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1898
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q634538",
+    "name": "Bladnoch distillery",
+    "coordinates": [
+      -4.46241,
+      54.8582
+    ],
+    "country": "United Kingdom",
+    "region": "Wigtown",
+    "website": "https://bladnoch.com/",
+    "description": "whisky distillery Bladnoch, Dumfries and Galloway, Scotland, UK",
+    "founded": 1817
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q881152",
+    "name": "Blair Athol distillery",
+    "coordinates": [
+      -3.721461111,
+      56.697866666
+    ],
+    "country": "United Kingdom",
+    "region": "Perth and Kinross",
+    "description": "whisky distillery in Perth and Kinross, Scotland, UK",
+    "founded": 1798
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q896414",
+    "name": "Bo’ness distillery",
+    "coordinates": [
+      -3.620353,
+      56.014318
+    ],
+    "country": "United Kingdom",
+    "region": "Falkirk",
+    "description": "whisky distillery in Falkirk, Scotland, UK",
+    "founded": 1813
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q892022",
+    "name": "Bon Accord",
+    "coordinates": [
+      -2.113658,
+      57.132216
+    ],
+    "country": "United Kingdom",
+    "region": "Aberdeen City",
+    "description": "whisky distillery in Aberdeen City, Scotland, UK",
+    "founded": 1855
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q73032850",
+    "name": "Bonnington",
+    "coordinates": [
+      -3.1851,
+      55.9726
+    ],
+    "country": "United Kingdom of Great Britain and Ireland",
+    "region": "Unknown",
+    "description": "former whisky distillery",
+    "founded": 1798
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q897183",
+    "name": "Braeval distillery",
+    "coordinates": [
+      -3.255513888,
+      57.272580555
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Braeval_EN.shtml",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1973
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q744308",
+    "name": "Brora distillery",
+    "coordinates": [
+      -3.868132,
+      58.024908
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1819
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q2927641",
+    "name": "Buffalo Trace Distillery",
+    "coordinates": [
+      -84.869444444,
+      38.2175
+    ],
+    "country": "United States",
+    "region": "Kentucky",
+    "website": "http://buffalotrace.com/distillery.html",
+    "description": "distillery in Frankfort, Kentucky"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q19845139",
+    "name": "Burks' Distillery",
+    "coordinates": [
+      -85.350833333,
+      37.646666666
+    ],
+    "country": "United States",
+    "region": "Marion County"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1016822",
+    "name": "Burnside Distillery",
+    "coordinates": [
+      -5.611193,
+      55.422731
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery in Campbeltown, Kintyre, Argyll and Bute, Scotland, UK",
+    "founded": 1825
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1026576",
+    "name": "Caledonian",
+    "coordinates": [
+      -3.220063,
+      55.944605
+    ],
+    "country": "United Kingdom",
+    "region": "City of Edinburgh",
+    "description": "whisky distillery in City of Edinburgh, Scotland, UK",
+    "founded": 1855
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1028371",
+    "name": "Cambus",
+    "coordinates": [
+      -3.844369,
+      56.125619
+    ],
+    "country": "United Kingdom",
+    "region": "Clackmannanshire",
+    "description": "whisky distillery in Clackmannanshire, Scotland, UK",
+    "founded": 1813
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1028809",
+    "name": "Cameronbridge distillery",
+    "coordinates": [
+      -3.056121,
+      56.189635
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "Whiskydistillery & trademark",
+    "founded": 1824
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1029621",
+    "name": "Camlachie",
+    "coordinates": [
+      -4.212184,
+      55.853107
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "whisky distillery",
+    "founded": 1834
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1030634",
+    "name": "Campbeltown",
+    "coordinates": [
+      -5.608955,
+      55.426786
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery in Campbeltown, Kintyre, Argyll and Bute, Scotland, UK",
+    "founded": 1815
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1033569",
+    "name": "Canonmills",
+    "coordinates": [
+      -3.204469,
+      55.96232
+    ],
+    "country": "United Kingdom",
+    "region": "City of Edinburgh",
+    "description": "whisky distillery in City of Edinburgh, Scotland, UK"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982998",
+    "name": "Caperdonich distillery",
+    "coordinates": [
+      -3.210711,
+      57.530375
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whiskymania.ch/Caperdonich.123.0.html",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1898
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q893272",
+    "name": "Cardhu distillery",
+    "coordinates": [
+      -3.356925,
+      57.470827777
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.undiscoveredscotland.co.uk/knockando/cardow/index.html",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1824
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1045394",
+    "name": "Carsebridge",
+    "coordinates": [
+      -3.777147,
+      56.121737
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "Scottish whisky distillery",
+    "founded": 1799
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1103747",
+    "name": "Clydesdale",
+    "coordinates": [
+      -3.932204,
+      55.775007
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "whisky distillery",
+    "founded": 1825
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q108719335",
+    "name": "Clydeside distillery",
+    "coordinates": [
+      -4.2968,
+      55.86221
+    ],
+    "country": "United Kingdom",
+    "region": "Glasgow City",
+    "description": "Scotch whisky distillery in Glasgow, Scotland, UK",
+    "founded": 2017
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q124932",
+    "name": "Clynelish Distillery",
+    "coordinates": [
+      -3.870622222,
+      58.023919444
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "website": "https://www.malts.com/en-gb/distilleries/clynelish/",
+    "description": "whisky distillery business in Highland, Scotland, UK",
+    "founded": 1967
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1108023",
+    "name": "Coleburn",
+    "coordinates": [
+      -3.272011158,
+      57.581602632
+    ],
+    "country": "United Kingdom",
+    "region": "Longmorn",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1897
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1129333",
+    "name": "Convalmore",
+    "coordinates": [
+      -3.13334,
+      57.46124
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1893
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q893266",
+    "name": "Cragganmore distillery",
+    "coordinates": [
+      -3.395,
+      57.410278
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "https://www.malts.com/en-row/distilleries/cragganmore/",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1869
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1138727",
+    "name": "Craigellachie",
+    "coordinates": [
+      -3.18458,
+      57.48847
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Craigellachie_EN.shtml",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1891
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q113799362",
+    "name": "Croithlí",
+    "coordinates": [
+      -8.264870926,
+      55.023032842
+    ],
+    "country": "Ireland",
+    "region": "Unknown",
+    "website": "https://thecrollydistillery.com/",
+    "description": "single distillery Irish whiskey",
+    "founded": 2020
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q3011845",
+    "name": "Daftmill distillery",
+    "coordinates": [
+      -3.104412,
+      56.297118
+    ],
+    "country": "United Kingdom",
+    "region": "Fife",
+    "website": "http://www.daftmill.com/",
+    "description": "whisky distillery in Fife, Scotland, UK",
+    "founded": 2005
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q258976",
+    "name": "Dailuaine",
+    "coordinates": [
+      -3.273883333,
+      57.454819444
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Dailuaine_EN.shtml",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1851
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1157792",
+    "name": "Dalaruan Distillery",
+    "coordinates": [
+      -5.608969,
+      55.429302
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery in Campbeltown, Kintyre, Argyll and Bute, Scotland, UK",
+    "founded": 1824
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1157940",
+    "name": "Dalintober",
+    "coordinates": [
+      -5.601617,
+      55.428815
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery in Campbeltown, Argyll and Bute, Scotland, UK",
+    "founded": 1832
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1157995",
+    "name": "Dallas Dhu distillery",
+    "coordinates": [
+      -3.614,
+      57.5898
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "description": "category A listed building in Moray, Scotland, UK",
+    "founded": 1898
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q893151",
+    "name": "Dalmore distillery",
+    "coordinates": [
+      -4.239480555,
+      57.688411111
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "website": "http://www.thedalmore.com",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1839
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q25621852",
+    "name": "Dalmunach distillery",
+    "coordinates": [
+      -3.300533,
+      57.454878
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "description": "scotch whisky",
+    "founded": 2014
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q773797",
+    "name": "Dalwhinnie distillery",
+    "coordinates": [
+      -4.238061111,
+      56.940127777
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "website": "https://www.malts.com/en-row/distilleries/dalwhinnie",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1897
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q5246792",
+    "name": "Deanston distillery",
+    "coordinates": [
+      -4.03764722,
+      56.1882
+    ],
+    "country": "United Kingdom",
+    "region": "Stirling",
+    "website": "http://www.burnstewartdistillers.com",
+    "description": "whisky distillery in Stirling, Scotland, UK",
+    "founded": 1966
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1206631",
+    "name": "Devanha Distillery",
+    "coordinates": [
+      -2.097274,
+      57.131372
+    ],
+    "country": "United Kingdom",
+    "region": "Aberdeen City",
+    "description": "whisky distillery in Aberdeen City, Scotland, UK",
+    "founded": 1837
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q3030727",
+    "name": "Distillerie Warenghem",
+    "coordinates": [
+      -3.43324,
+      48.7244
+    ],
+    "country": "France",
+    "region": "Unknown",
+    "website": "http://www.whisky-breton.com/"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1263993",
+    "name": "Dufftown distillery",
+    "coordinates": [
+      -3.1301,
+      57.4364
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Dufftown_EN.shtml",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1895
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q181714",
+    "name": "Dumbarton distillery",
+    "coordinates": [
+      -4.56777,
+      55.942092
+    ],
+    "country": "United Kingdom",
+    "region": "West Dunbartonshire",
+    "description": "whisky distillery in West Dunbartonshire, Scotland, UK",
+    "founded": 1938
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1536262",
+    "name": "Dundashill",
+    "coordinates": [
+      -4.255527,
+      55.87177
+    ],
+    "country": "United Kingdom",
+    "region": "Glasgow City",
+    "description": "whiskey distillery in Glasgow",
+    "founded": 1770
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1284697",
+    "name": "Edinburgh whisky distillery",
+    "coordinates": [
+      -3.18287,
+      55.938451
+    ],
+    "country": "United Kingdom",
+    "region": "City of Edinburgh",
+    "description": "whisky distillery in City of Edinburgh, Scotland, UK",
+    "founded": 1849
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982705",
+    "name": "Edradour distillery",
+    "coordinates": [
+      -3.702813888,
+      56.700894444
+    ],
+    "country": "United Kingdom",
+    "region": "Perth and Kinross",
+    "website": "http://www.edradour.co.uk",
+    "description": "whisky distillery in Perth and Kinross, Scotland, UK",
+    "founded": 1825
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q967985",
+    "name": "Fettercairn distillery",
+    "coordinates": [
+      -2.58252,
+      56.85382
+    ],
+    "country": "United Kingdom",
+    "region": "Aberdeenshire",
+    "description": "whisky distillery in Aberdeenshire, Scotland, UK",
+    "founded": 1824
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q116694330",
+    "name": "Filliers",
+    "coordinates": [
+      3.54385,
+      50.99051
+    ],
+    "country": "Belgium",
+    "region": "Deinze",
+    "website": "https://filliersdistillery.com",
+    "description": "gin distillery in Belgium",
+    "founded": 1863
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q14325532",
+    "name": "Fuji Gotemba distillery",
+    "coordinates": [
+      138.934444444,
+      35.308611111
+    ],
+    "country": "Japan",
+    "region": "Gotemba",
+    "website": "https://www.kirin.co.jp/experience/factory/gotemba/",
+    "founded": 1972
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1507227",
+    "name": "George Dickel",
+    "coordinates": [
+      -86.2447,
+      35.4386
+    ],
+    "country": "United States",
+    "region": "Unknown",
+    "website": "https://www.georgedickel.com",
+    "description": "trademark",
+    "founded": 1884
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1515113",
+    "name": "Gerston",
+    "coordinates": [
+      -3.507558,
+      58.517025
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1886
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1527141",
+    "name": "Girvan distillery",
+    "coordinates": [
+      -4.8336,
+      55.260853
+    ],
+    "country": "United Kingdom",
+    "region": "South Ayrshire",
+    "description": "whisky distillery in South Ayrshire, Scotland, UK",
+    "founded": 1963
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q3108512",
+    "name": "Glann ar Mor distillery",
+    "coordinates": [
+      -3.077702,
+      48.859188
+    ],
+    "country": "France",
+    "region": "Unknown",
+    "website": "http://www.glannarmor.com",
+    "description": "French distillery",
+    "founded": 1999
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1253728",
+    "name": "Glen Albyn",
+    "coordinates": [
+      -4.24719,
+      57.48163
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1844
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q138037",
+    "name": "Glen Elgin distillery",
+    "coordinates": [
+      -3.277144,
+      57.599485
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.royalmilewhiskies.com/category.asp?cat_id=D_GELG",
+    "description": "trademark",
+    "founded": 1898
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982670",
+    "name": "Glen Garioch distillery",
+    "coordinates": [
+      -2.319358333,
+      57.338519444
+    ],
+    "country": "United Kingdom",
+    "region": "Aberdeenshire",
+    "website": "http://www.glengarioch.co.uk/",
+    "description": "whisky distillery in Aberdeenshire, Scotland, UK",
+    "founded": 1797
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982683",
+    "name": "Glen Grant distillery",
+    "coordinates": [
+      -3.210797,
+      57.532
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Glen%20Grant_EN.shtml",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1840
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1461648",
+    "name": "Glen Keith distillery",
+    "coordinates": [
+      -2.957565,
+      57.546945
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Glen%20Keith_EN.shtml",
+    "description": "distillery in Moray, Scotland, UK",
+    "founded": 1957
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1530815",
+    "name": "Glen Mhor",
+    "coordinates": [
+      -4.2257,
+      57.48383611
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1892
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982841",
+    "name": "Glen Moray distillery",
+    "coordinates": [
+      -3.341111,
+      57.644444
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.glenmoray.com",
+    "description": "trademark",
+    "founded": 1897
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982663",
+    "name": "Glen Ord Distillery",
+    "coordinates": [
+      -4.475555555,
+      57.522222222
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "website": "http://www.whisky.com/brands/glen_ord_brand.html",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1838
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q741360",
+    "name": "Glen Scotia distillery",
+    "coordinates": [
+      -5.604401,
+      55.429634
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "website": "http://www.glenscotia-distillery.co.uk/",
+    "description": "trademark",
+    "founded": 1832
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q637058",
+    "name": "Glen Spey",
+    "coordinates": [
+      -3.208161,
+      57.52662
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Glen%20Spey_EN.shtml",
+    "description": "trademark",
+    "founded": 1878
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1530871",
+    "name": "Glenaden",
+    "coordinates": [
+      -2.04834,
+      57.514995
+    ],
+    "country": "United Kingdom",
+    "region": "Aberdeenshire",
+    "description": "whisky distillery in Aberdeenshire, Scotland, UK",
+    "founded": 1845
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q185904",
+    "name": "Glenallachie distillery",
+    "coordinates": [
+      -3.227530555,
+      57.455930555
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.theglenallachie.com/",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1967
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q771766",
+    "name": "Glenburgie distillery",
+    "coordinates": [
+      -3.518213,
+      57.623829
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "description": "trademark",
+    "founded": 1810
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q248641",
+    "name": "Glencadam distillery",
+    "coordinates": [
+      -2.652811111,
+      56.736508333
+    ],
+    "country": "United Kingdom",
+    "region": "Angus",
+    "description": "whisky distillery in Angus, Scotland, UK",
+    "founded": 1825
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q240163",
+    "name": "Glendronach distillery",
+    "coordinates": [
+      -2.62527,
+      57.4849
+    ],
+    "country": "United Kingdom",
+    "region": "Aberdeenshire",
+    "website": "http://www.glendronachdistillery.co.uk/",
+    "description": "distillery in Aberdeenshire, Scotland, UK",
+    "founded": 1826
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q283103",
+    "name": "Glendullan distillery",
+    "coordinates": [
+      -3.11838,
+      57.44788
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Glendullan_EN.shtml",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1897
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q652203",
+    "name": "Glenfarclas distillery",
+    "coordinates": [
+      -3.31821,
+      57.4272
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.glenfarclas.co.uk/",
+    "description": "whisky distillery in Ballindalloch, Moray, Scotland, UK",
+    "founded": 1836
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q911587",
+    "name": "Glenfiddich Distillery",
+    "coordinates": [
+      -3.130833333,
+      57.455138888
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.glenfiddich.fr",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1886
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982746",
+    "name": "Glenflagler distillery",
+    "coordinates": [
+      -3.926668,
+      55.863187
+    ],
+    "country": "United Kingdom",
+    "region": "North Lanarkshire",
+    "description": "whisky distillery in North Lanarkshire, Scotland, UK",
+    "founded": 1964
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1530987",
+    "name": "Glenfoyle distillery",
+    "coordinates": [
+      -4.077712,
+      56.130488
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "former Scottish whisky distillery in Gargunnock, Stirlingshire",
+    "founded": 1795
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1530988",
+    "name": "Glengilp distillery",
+    "coordinates": [
+      -5.44774,
+      56.02288
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery in Ardrishaig, Argyll and Bute, Scotland, UK",
+    "founded": 1831
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1530998",
+    "name": "Glenglassaugh distillery",
+    "coordinates": [
+      -2.73722,
+      57.6778
+    ],
+    "country": "United Kingdom",
+    "region": "Aberdeenshire",
+    "website": "https://www.glenglassaugh.com/",
+    "description": "whisky distillery in Aberdeenshire, Scotland, UK",
+    "founded": 1874
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982852",
+    "name": "Glengoyne distillery",
+    "coordinates": [
+      -4.363780555,
+      56.014030555
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "website": "http://www.glengoyne.com",
+    "description": "whisky distillery",
+    "founded": 1833
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q827815",
+    "name": "Glengyle",
+    "coordinates": [
+      -5.61095,
+      55.4272
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "trademark",
+    "founded": 1872
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1531004",
+    "name": "Gleniffer",
+    "coordinates": [
+      -4.482852,
+      55.825251
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "whisky distillery in Scotland",
+    "founded": 1833
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982834",
+    "name": "Glenkinchie distillery",
+    "coordinates": [
+      -2.89106,
+      55.8912
+    ],
+    "country": "United Kingdom",
+    "region": "Pencaitland",
+    "description": "whisky distillery in Glenkinchie, East Lothian, Scotland, UK",
+    "founded": 1825
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1262909",
+    "name": "Glenlochy",
+    "coordinates": [
+      -5.09398,
+      56.82231
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "website": "http://www.glenlochy.com/",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1898
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1531018",
+    "name": "Glenlossie",
+    "coordinates": [
+      -3.3183,
+      57.5989
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Glenlossie_EN.shtml",
+    "description": "trademark",
+    "founded": 1876
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1531021",
+    "name": "Glenmavis",
+    "coordinates": [
+      -3.635665,
+      55.909499
+    ],
+    "country": "United Kingdom",
+    "region": "West Lothian",
+    "description": "whisky distillery in West Lothian, Scotland, UK",
+    "founded": 1783
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q157974",
+    "name": "Glenmorangie distillery",
+    "coordinates": [
+      -4.075,
+      57.825
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "website": "http://www.glenmorangie.com/",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1843
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1531144",
+    "name": "Glenochil",
+    "coordinates": [
+      -3.839792,
+      56.147251
+    ],
+    "country": "United Kingdom",
+    "region": "Clackmannanshire",
+    "description": "Scottish whisky distillery",
+    "founded": 1746
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1531164",
+    "name": "Glenside Distillery",
+    "coordinates": [
+      -5.609462,
+      55.430659
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery on Kintyre, Argyll and Bute, Scotland, UK",
+    "founded": 1830
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1531167",
+    "name": "Glentarras",
+    "coordinates": [
+      -2.970087,
+      55.122995
+    ],
+    "country": "United Kingdom",
+    "region": "Dumfries and Galloway",
+    "description": "whisky distillery in Dumfries and Galloway, Scotland, UK",
+    "founded": 1839
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1531170",
+    "name": "Glentauchers distillery",
+    "coordinates": [
+      -3.049253,
+      57.534867
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Glentauchers_EN.shtml",
+    "description": "whisky distillery in Moray, Scotland",
+    "founded": 1897
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982994",
+    "name": "Glenturret distillery",
+    "coordinates": [
+      -3.853888888,
+      56.389444444
+    ],
+    "country": "United Kingdom",
+    "region": "Perth and Kinross",
+    "description": "whisky distillery in Perth and Kinross, Scotland, UK, on the banks of the Turret Burn"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q668828",
+    "name": "Glenugie distillery",
+    "coordinates": [
+      -1.783327,
+      57.505825
+    ],
+    "country": "United Kingdom",
+    "region": "Aberdeenshire",
+    "description": "whisky distillery in Aberdeenshire, Scotland, UK",
+    "founded": 1831
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982630",
+    "name": "Glenury distillery",
+    "coordinates": [
+      -2.214639,
+      56.972407
+    ],
+    "country": "United Kingdom",
+    "region": "Aberdeenshire",
+    "description": "whisky distillery in Aberdeenshire, Scotland, UK",
+    "founded": 1825
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q5584773",
+    "name": "Gordon & MacPhail",
+    "coordinates": [
+      -3.31501111,
+      57.64761667
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.gordonandmacphail.com/",
+    "description": "independent bottler and distiller of Scotch Whisky, founded in 1895 in Elgin, Moray Scotland, UK"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1543040",
+    "name": "Grandtully",
+    "coordinates": [
+      -3.828162,
+      56.634404
+    ],
+    "country": "United Kingdom",
+    "region": "Perth and Kinross",
+    "description": "whisky distillery in Perth and Kinross, Scotland, UK",
+    "founded": 1825
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q2411721",
+    "name": "Grange distillery, Burntisland",
+    "coordinates": [
+      -3.242,
+      56.0659
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "former whisky distillery in Fife",
+    "founded": 1786
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1282038",
+    "name": "Greenock distillery",
+    "coordinates": [
+      -4.761028,
+      55.947593
+    ],
+    "country": "United Kingdom",
+    "region": "Inverclyde",
+    "description": "former whisky distillery in Inverclyde, Scotland, UK",
+    "founded": 1795
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q3125870",
+    "name": "Hakushu distillery",
+    "coordinates": [
+      138.300333333,
+      35.826638888
+    ],
+    "country": "Japan",
+    "region": "Yamanashi Prefecture",
+    "website": "http://www.suntory.com/factory/hakushu/",
+    "description": "Japanese distillery",
+    "founded": 1973
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q118586034",
+    "name": "Hanyu distillery",
+    "coordinates": [
+      139.53066,
+      36.17207
+    ],
+    "country": "Japan",
+    "region": "Hanyū-shi",
+    "founded": 1980
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1473847",
+    "name": "Hazelburn distillery",
+    "coordinates": [
+      -5.6098,
+      55.428219
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "trademark",
+    "founded": 1796
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q5694665",
+    "name": "Heaven Hill",
+    "coordinates": [
+      -85.7815,
+      38.2448
+    ],
+    "country": "United States",
+    "region": "Unknown",
+    "website": "http://heavenhill.com",
+    "description": "American distillery company",
+    "founded": 1935
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982844",
+    "name": "Highland Park distillery",
+    "coordinates": [
+      -2.95545,
+      58.968602777
+    ],
+    "country": "United Kingdom",
+    "region": "Orkney Islands",
+    "description": "whisky distillery in Orkney Islands, Scotland, UK",
+    "founded": 1788
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1530971",
+    "name": "Hillside Distillery",
+    "coordinates": [
+      -2.463627,
+      56.744568
+    ],
+    "country": "United Kingdom",
+    "region": "Angus",
+    "description": "whisky distillery in Angus, Scotland, UK",
+    "founded": 1897
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q120108000",
+    "name": "Holyrood Distillery",
+    "coordinates": [
+      -3.1776,
+      55.9432
+    ],
+    "country": "United Kingdom",
+    "region": "Edinburgh",
+    "website": "https://holyrooddistillery.co.uk/",
+    "description": "distillery in Scotland",
+    "founded": 2019
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1660281",
+    "name": "Imperial distillery",
+    "coordinates": [
+      -3.26009,
+      57.44917
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Imperial_EN.shtml",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1897
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982658",
+    "name": "Inchgower distillery",
+    "coordinates": [
+      -2.963885,
+      57.661882
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "description": "whiskey distillery in Moray, Scotland, UK",
+    "founded": 1871
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1671709",
+    "name": "Invergordon distillery",
+    "coordinates": [
+      -4.158713,
+      57.697201
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1959
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1671712",
+    "name": "Inverleven",
+    "coordinates": [
+      -4.56777,
+      55.942092
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "Scottish whisky distillery",
+    "founded": 1938
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1674014",
+    "name": "Isla distillery",
+    "coordinates": [
+      -3.4242,
+      56.401964
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "former Scottish whisky distillery in Perth",
+    "founded": 1851
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q47536037",
+    "name": "Jack Daniel's Distillery",
+    "coordinates": [
+      -86.368056,
+      35.284722
+    ],
+    "country": "United States",
+    "region": "Lynchburg",
+    "description": "whiskey distillery in Lynchburg, Tennessee, USA"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q502268",
+    "name": "Johnnie Walker",
+    "coordinates": [
+      -4.501111111,
+      55.614444444
+    ],
+    "country": "United Kingdom",
+    "region": "East Ayrshire",
+    "website": "https://www.johnniewalker.com/",
+    "description": "brand of Scotch whisky owned by Diageo that originated in Kilmarnock, Ayrshire, Scotland",
+    "founded": 1820
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q13209194",
+    "name": "Karuizawa distillery",
+    "coordinates": [
+      138.506666666,
+      36.322777777
+    ],
+    "country": "Japan",
+    "region": "Unknown",
+    "founded": 1955
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q15063416",
+    "name": "Kavalan distillery",
+    "coordinates": [
+      121.691944444,
+      24.713722222
+    ],
+    "country": "Taiwan",
+    "region": "Yuanshan Township",
+    "website": "http://www.kavalanwhisky.com/",
+    "description": "whisky distillery",
+    "founded": 2005
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q42847695",
+    "name": "Kennetpans Distillery",
+    "coordinates": [
+      -3.7473141,
+      56.08011
+    ],
+    "country": "United Kingdom",
+    "region": "Clackmannanshire",
+    "description": "architectural structure in Clackmannanshire, Scotland, UK",
+    "founded": 1773
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q106678867",
+    "name": "Kenten",
+    "coordinates": [
+      144.82075,
+      43.075833333
+    ],
+    "country": "Japan",
+    "region": "Hokkaido",
+    "website": "http://akkeshi-distillery.com/",
+    "founded": 2016
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1741225",
+    "name": "Kilbagie",
+    "coordinates": [
+      -3.724796,
+      56.090196
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "Scottish whisky distillery",
+    "founded": 1777
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1867525",
+    "name": "Kilbeggan Distillery",
+    "coordinates": [
+      -7.502353,
+      53.369257
+    ],
+    "country": "Ireland",
+    "region": "County Westmeath",
+    "website": "https://www.kilbegganwhiskey.com/",
+    "description": "Irish whiskey production site, County Westmeath, Ireland",
+    "founded": 1757
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1741699",
+    "name": "Kinclaith",
+    "coordinates": [
+      -4.24083,
+      55.8483
+    ],
+    "country": "United Kingdom",
+    "region": "Glasgow City",
+    "description": "whisky distillery in Glasgow City, Scotland, UK",
+    "founded": 1957
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q67080307",
+    "name": "Kingsbarns Distillery",
+    "coordinates": [
+      -2.642382,
+      56.287566
+    ],
+    "country": "United Kingdom",
+    "region": "Fife",
+    "website": "https://www.kingsbarnsdistillery.com/",
+    "description": "whisky distillery in Fife, Scotland, UK",
+    "founded": 2014
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982652",
+    "name": "Kininvie distillery",
+    "coordinates": [
+      -3.104829,
+      57.480288
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.scotchwhisky.net/distilleries/silent/kininvie.htm",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1990
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1742213",
+    "name": "Kinloch",
+    "coordinates": [
+      -5.608232,
+      55.427178
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery in Campbeltown, Kintyre, Argyll and Bute, Scotland, UK",
+    "founded": 1823
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1742298",
+    "name": "Kintyre Distillery",
+    "coordinates": [
+      -5.608232,
+      55.429279
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery in Campbeltown, Kintyre, Argyll and Bute, Scotland, UK",
+    "founded": 1825
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1743516",
+    "name": "Kirkliston Distillery",
+    "coordinates": [
+      -3.405843,
+      55.953313
+    ],
+    "country": "United Kingdom",
+    "region": "City of Edinburgh",
+    "description": "whisky distillery in Edinburgh, Scotland, UK",
+    "founded": 1795
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982812",
+    "name": "Knockando distillery",
+    "coordinates": [
+      -3.35063,
+      57.4595
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Knockando_EN.shtml",
+    "description": "trademark",
+    "founded": 1898
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982649",
+    "name": "Knockdhu distillery",
+    "coordinates": [
+      -2.754414,
+      57.582406
+    ],
+    "country": "United Kingdom",
+    "region": "Aberdeenshire",
+    "website": "http://www.whiskyguiden.se/Speyside/Knockdhu.html",
+    "description": "whisky distillery in Aberdeenshire, Scotland, UK",
+    "founded": 1894
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1805280",
+    "name": "Langholm Distillery",
+    "coordinates": [
+      -2.988877,
+      55.142568
+    ],
+    "country": "United Kingdom",
+    "region": "Dumfries and Galloway",
+    "description": "whisky distillery in Dumfries and Galloway, Scotland, UK",
+    "founded": 1765
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q6504799",
+    "name": "Lawrenceburg Distillers Indiana",
+    "coordinates": [
+      -84.8611,
+      39.0989
+    ],
+    "country": "United States",
+    "region": "Lawrenceburg",
+    "website": "https://www.mgpingredients.com/",
+    "description": "MGP Ingredients"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q123399053",
+    "name": "Leven distillery",
+    "coordinates": [
+      -3.025055555,
+      56.1995
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "whisky distillery"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q116692697",
+    "name": "Lindores Abbey distillery",
+    "coordinates": [
+      -3.2254,
+      56.3518
+    ],
+    "country": "United Kingdom",
+    "region": "Newburgh",
+    "description": "scotch whisky distillery"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q983029",
+    "name": "Linkwood distillery",
+    "coordinates": [
+      -3.28624,
+      57.6354
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "description": "whisky distillery in Elgin, Scotland",
+    "founded": 1825
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1034033",
+    "name": "Littlemill distillery",
+    "coordinates": [
+      -4.4935,
+      55.9306
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "Scottish whisky distillery",
+    "founded": 1772
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982871",
+    "name": "Loch Lomond distillery",
+    "coordinates": [
+      -4.577288888,
+      55.994294444
+    ],
+    "country": "United Kingdom",
+    "region": "West Dunbartonshire",
+    "website": "http://www.lochlomonddistillery.com",
+    "description": "whisky distillery in West Dunbartonshire, Scotland, UK",
+    "founded": 1966
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1867327",
+    "name": "Lochend",
+    "coordinates": [
+      -3.175087,
+      55.972983
+    ],
+    "country": "United Kingdom",
+    "region": "City of Edinburgh",
+    "description": "whisky distillery in City of Edinburgh, Scotland, UK",
+    "founded": 1825
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1867352",
+    "name": "Lochhead",
+    "coordinates": [
+      -5.607968,
+      55.428242
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery in Campbeltown, Kintyre, Argyll and Bute, Scotland, UK",
+    "founded": 1824
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1680089",
+    "name": "Lochrin",
+    "coordinates": [
+      -3.2059,
+      55.942622
+    ],
+    "country": "United Kingdom",
+    "region": "City of Edinburgh",
+    "description": "whisky distillery in City of Edinburgh, Scotland, UK"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1867420",
+    "name": "Lochruan Distillery",
+    "coordinates": [
+      -5.603409,
+      55.428594
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery in Campbeltown, Kintyre, Argyll and Bute, Scotland, UK",
+    "founded": 1833
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982583",
+    "name": "Lochside distillery",
+    "coordinates": [
+      -2.47056,
+      56.7222
+    ],
+    "country": "United Kingdom",
+    "region": "Angus",
+    "description": "whisky distillery in Angus, Scotland, UK",
+    "founded": 1957
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q15242812",
+    "name": "Longmorn distillery",
+    "coordinates": [
+      -3.28250833,
+      57.60815278
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1894
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1869577",
+    "name": "Longrow",
+    "coordinates": [
+      -5.608951,
+      55.425611
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery  in Campbeltown, Kintyre, Argyll and Bute, Scotland, UK",
+    "founded": 1824
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q200987",
+    "name": "Macduff",
+    "coordinates": [
+      -2.511148,
+      57.657686
+    ],
+    "country": "United Kingdom",
+    "region": "Aberdeenshire",
+    "website": "http://www.macduffint.co.uk/",
+    "description": "Whisky distillery in Banff, Banffshire, Scotland  and brand",
+    "founded": 1962
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1758887",
+    "name": "Maker's Mark",
+    "coordinates": [
+      -85.348888888,
+      37.647777777
+    ],
+    "country": "United States",
+    "region": "Kentucky",
+    "website": "http://www.makersmark.com",
+    "description": "small-batch bourbon whisky that is distilled in Loretto, Kentucky, by Beam Suntory",
+    "founded": 1889
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q362391",
+    "name": "Mannochmore distillery",
+    "coordinates": [
+      -3.31944,
+      57.6003
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whiskyguiden.se/Speyside/Mannochmore.html",
+    "description": "whisky distillery near Elgin,Scotland",
+    "founded": 1971
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q119756769",
+    "name": "Mars Komagatake distillery",
+    "coordinates": [
+      137.901138888,
+      35.747611111
+    ],
+    "country": "Japan",
+    "region": "Miyada",
+    "website": "https://www.hombo.co.jp/company/kura/shinshu.html",
+    "description": "Ditsillery of Japanese whisky in Nagano prefecture",
+    "founded": 1985
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1775735",
+    "name": "Meadowburn Distillery",
+    "coordinates": [
+      -5.610469,
+      55.422978
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery in Campbeltown, Kintyre, Argyll and Bute, Scotland, UK",
+    "founded": 1824
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q6858656",
+    "name": "Millburn distillery",
+    "coordinates": [
+      -4.205007,
+      57.482585
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1805
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1526981",
+    "name": "Miltonduff distillery",
+    "coordinates": [
+      -3.370214,
+      57.623741
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Miltonduff_EN.shtml",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1824
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q14338929",
+    "name": "Miyagikyo distillery",
+    "coordinates": [
+      140.650555555,
+      38.308055555
+    ],
+    "country": "Japan",
+    "region": "Aoba-ku",
+    "website": "http://www.nikka.com/eng/",
+    "description": "building in Aoba-ku, Miyagi Prefecture, Japan",
+    "founded": 1969
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q501320",
+    "name": "Mortlach Distillery",
+    "coordinates": [
+      -3.12613,
+      57.44078
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.mortlach.com/",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1823
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q115934825",
+    "name": "Nagahama Distillery",
+    "coordinates": [
+      136.2677,
+      35.376962
+    ],
+    "country": "Japan",
+    "region": "Shiga Prefecture",
+    "website": "https://www.romanbeer.com/whisky/",
+    "founded": 2016
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q108862263",
+    "name": "Nc’nean distillery",
+    "coordinates": [
+      -5.965416666,
+      56.598722222
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "website": "https://ncnean.com/",
+    "description": "Scotch whisky distillery in Drimnin on the Morvern peninsula, Highland, Scotland, UK",
+    "founded": 2017
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q3312688",
+    "name": "New Midleton Distillery",
+    "coordinates": [
+      -8.169485,
+      51.91311
+    ],
+    "country": "Ireland",
+    "region": "County Cork",
+    "description": "distillery in County Cork, Ireland"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1432194",
+    "name": "North British Distillery",
+    "coordinates": [
+      -3.235027,
+      55.940432
+    ],
+    "country": "United Kingdom",
+    "region": "City of Edinburgh",
+    "website": "https://www.thenorthbritish.co.uk",
+    "description": "whisky distillery in Edinburgh, Scotland",
+    "founded": 1885
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q948597",
+    "name": "North Port distillery",
+    "coordinates": [
+      -2.66028,
+      56.7356
+    ],
+    "country": "United Kingdom",
+    "region": "Angus",
+    "description": "whisky distillery in Angus, Scotland, UK",
+    "founded": 1820
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982708",
+    "name": "Oban distillery",
+    "coordinates": [
+      -5.4728,
+      56.4147
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "website": "http://www.discovering-distilleries.com/oban",
+    "description": "whisky distillery in Oban, Argyll and Bute, Scotland, UK",
+    "founded": 1794
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q2013933",
+    "name": "Octomore",
+    "coordinates": [
+      -6.385977,
+      55.745484
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "Scottish whisky distillery on Isley (1816-1852)",
+    "founded": 1816
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q268267",
+    "name": "Old Bushmills Distillery",
+    "coordinates": [
+      -6.519647222,
+      55.201919444
+    ],
+    "country": "United Kingdom",
+    "region": "Unknown",
+    "website": "https://www.bushmills.com/",
+    "description": "distillery in Northern Ireland",
+    "founded": 1784
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q24257037",
+    "name": "Old Prentice Distillery",
+    "coordinates": [
+      -84.898333333,
+      37.973055555
+    ],
+    "country": "United States",
+    "region": "Lawrenceburg",
+    "description": "distillery in Lawrenceburg"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q845140",
+    "name": "Old Pulteney",
+    "coordinates": [
+      -3.08472222,
+      58.43444444
+    ],
+    "country": "United Kingdom",
+    "region": "Wick",
+    "website": "http://www.oldpulteney.com",
+    "description": "Whisky distillery in Wick, Scotland, UK",
+    "founded": 1826
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q7085936",
+    "name": "Ole Smoky Distillery",
+    "coordinates": [
+      -83.51936,
+      35.71087
+    ],
+    "country": "United States",
+    "region": "Unknown",
+    "website": "http://www.olesmokymoonshine.com",
+    "description": "Distillery in Gatlinburg, Tennessee",
+    "founded": 2010
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q112594",
+    "name": "Parkmore distillery",
+    "coordinates": [
+      -3.11917,
+      57.4547
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1894
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q3036620",
+    "name": "Penderyn Distillery",
+    "coordinates": [
+      -3.521111,
+      51.764167
+    ],
+    "country": "United Kingdom",
+    "region": "Cynon Valley",
+    "website": "https://www.penderyn.wales/",
+    "description": "Whisky distillery in Rhondda Cynon Taf, Wales",
+    "founded": 1900
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982979",
+    "name": "Pittyvaich distillery",
+    "coordinates": [
+      -3.131641,
+      57.435969
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Pittyvaich_EN.shtml",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1975
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q2102144",
+    "name": "Pollo",
+    "coordinates": [
+      -4.109863,
+      57.719306
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1817
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1313145",
+    "name": "Port Dundas",
+    "coordinates": [
+      -4.253047222,
+      55.873297222
+    ],
+    "country": "United Kingdom",
+    "region": "Glasgow City",
+    "description": "area of Glasgow, Scotland (UK)",
+    "founded": 1811
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q203404",
+    "name": "Port Ellen Distillery",
+    "coordinates": [
+      -6.1969,
+      55.6334
+    ],
+    "country": "United Kingdom",
+    "region": "Kildalton",
+    "description": "distillery located in Port Ellen, Islay, Argyll and Bute, Scotland, UK",
+    "founded": 1825
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1573880",
+    "name": "Provanmill",
+    "coordinates": [
+      -4.196244,
+      55.876602
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "Scottish whisky distillery",
+    "founded": 1815
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q2151975",
+    "name": "Rieclachan",
+    "coordinates": [
+      -5.611211,
+      55.426798
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery in Campbeltown, Argyll and Bute, Scotland, UK",
+    "founded": 1825
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q85797673",
+    "name": "Roe & Co Distillery",
+    "coordinates": [
+      -6.284111111,
+      53.344027777
+    ],
+    "country": "Ireland",
+    "region": "Dublin",
+    "description": "Irish whiskey distillery"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q388012",
+    "name": "Rosebank distillery",
+    "coordinates": [
+      -3.803226805,
+      56.002479805
+    ],
+    "country": "United Kingdom",
+    "region": "Falkirk",
+    "description": "whisky distillery in Falkirk, Scotland, UK",
+    "founded": 1840
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q3442457",
+    "name": "Roseisle",
+    "coordinates": [
+      -3.47305,
+      57.66825
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 2010
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q448423",
+    "name": "Royal Brackla",
+    "coordinates": [
+      -3.905466666,
+      57.539691666
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1812
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q2171061",
+    "name": "Royal Lochnagar distillery",
+    "coordinates": [
+      -3.2016,
+      57.0301
+    ],
+    "country": "United Kingdom",
+    "region": "Aberdeenshire",
+    "description": "whisky distillery in Aberdeenshire, Scotland, UK",
+    "founded": 1845
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q2227027",
+    "name": "Saucel",
+    "coordinates": [
+      -4.421313,
+      55.841206
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "Scottish whisky distillery",
+    "founded": 1793
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982716",
+    "name": "Scapa distillery",
+    "coordinates": [
+      -2.984975,
+      58.963666666
+    ],
+    "country": "United Kingdom",
+    "region": "Orkney Islands",
+    "website": "http://www.scapamalt.com",
+    "description": "whisky distillery in Orkney Islands, Scotland, UK",
+    "founded": 1885
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q115937078",
+    "name": "Shizuoka Distillery",
+    "coordinates": [
+      138.325319,
+      35.120451
+    ],
+    "country": "Japan",
+    "region": "Shizuoka",
+    "website": "https://shizuoka-distillery.jp/",
+    "founded": 2016
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q2294792",
+    "name": "Slyrs",
+    "coordinates": [
+      11.885469,
+      47.702513
+    ],
+    "country": "Germany",
+    "region": "Unknown",
+    "website": "http://www.slyrs.de/",
+    "description": "distillery in Germany",
+    "founded": 1999
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982655",
+    "name": "Speyburn-Glenlivet distillery",
+    "coordinates": [
+      -3.215282,
+      57.536388
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.speyburn.com/",
+    "description": "trademark",
+    "founded": 1897
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982719",
+    "name": "Springbank",
+    "coordinates": [
+      -5.609,
+      55.425
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "website": "http://www.springbankdistillers.com/",
+    "description": "distillery in Argyll and Bute, Scotland, UK",
+    "founded": 1828
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q2314000",
+    "name": "Springside Distillery",
+    "coordinates": [
+      -5.607695,
+      55.424156
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery in Campbeltown, Kintyre, Argyll and Bute, Scotland, UK",
+    "founded": 1827
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q2320462",
+    "name": "St Magdalene distillery",
+    "coordinates": [
+      -3.59139,
+      55.9764
+    ],
+    "country": "United Kingdom",
+    "region": "West Lothian",
+    "description": "whisky distillery in West Lothian, Scotland, UK",
+    "founded": 1798
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q50836290",
+    "name": "St. Kilian Distillers",
+    "coordinates": [
+      9.185284,
+      49.710864
+    ],
+    "country": "Germany",
+    "region": "Rüdenau",
+    "website": "https://www.stkiliandistillers.com/",
+    "description": "Whisky distillery in Germany",
+    "founded": 2016
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q12336951",
+    "name": "Stauning Whisky",
+    "coordinates": [
+      8.4035,
+      55.9527
+    ],
+    "country": "Denmark",
+    "region": "Ringkøbing-Skjern Municipality",
+    "website": "http://www.stauningwhisky.dk",
+    "founded": 2005
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q167043",
+    "name": "Strathclyde Grain distillery",
+    "coordinates": [
+      -4.241,
+      55.8488
+    ],
+    "country": "United Kingdom",
+    "region": "Glasgow City",
+    "description": "whisky distillery in Glasgow, Scotland, UK",
+    "founded": 1927
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q2353852",
+    "name": "Strathdee",
+    "coordinates": [
+      -2.118945,
+      57.138902
+    ],
+    "country": "United Kingdom",
+    "region": "Aberdeen City",
+    "description": "whisky distillery in Aberdeen City, Scotland, UK",
+    "founded": 1821
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q983051",
+    "name": "Strathisla distillery",
+    "coordinates": [
+      -2.95493,
+      57.5467
+    ],
+    "country": "United Kingdom",
+    "region": "Keith",
+    "website": "http://www.scotlandwhisky.com/distilleries/speyside/Strathisla",
+    "description": "distillery in Moray, Scotland, UK",
+    "founded": 1786
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q473301",
+    "name": "Strathmill",
+    "coordinates": [
+      -2.961226,
+      57.540324
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.whisky-distilleries.info/Strathmill_EN.shtml",
+    "description": "whisky distillery in Keith, Moray, Scotland, UK",
+    "founded": 1891
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q2356880",
+    "name": "Stromness",
+    "coordinates": [
+      -3.302056,
+      58.957833
+    ],
+    "country": "United Kingdom",
+    "region": "Orkney Islands",
+    "description": "whisky distillery in Orkney Islands, Scotland, UK",
+    "founded": 1817
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q2391436",
+    "name": "Tambowie",
+    "coordinates": [
+      -4.357379,
+      55.951568
+    ],
+    "country": "United Kingdom",
+    "region": "East Dunbartonshire",
+    "description": "Scottish whisky distillery",
+    "founded": 1825
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982676",
+    "name": "Tamdhu distillery",
+    "coordinates": [
+      -3.35361,
+      57.459
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://tamdhu.com",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1897
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1474840",
+    "name": "Tamnavulin distillery",
+    "coordinates": [
+      -3.30806,
+      57.3175
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "description": "producer of single malt Scotch whisky",
+    "founded": 1966
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q3516728",
+    "name": "Teaninich distillery",
+    "coordinates": [
+      -4.260523,
+      57.691689
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1817
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q28408323",
+    "name": "Teeling Distillery",
+    "coordinates": [
+      -6.27683333,
+      53.33786111
+    ],
+    "country": "Ireland",
+    "region": "Leinster",
+    "website": "https://teelingwhiskey.com/",
+    "description": "Whiskey distillery in Dublin, Ireland",
+    "founded": 2015
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q61855379",
+    "name": "The Glasgow Distillery",
+    "coordinates": [
+      -4.362097,
+      55.863562
+    ],
+    "country": "United Kingdom",
+    "region": "Glasgow City",
+    "website": "https://glasgowdistillery.com/",
+    "description": "Whisky distillery in Glasgow, Scotland, UK",
+    "founded": 2014
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q301412",
+    "name": "The Glenlivet",
+    "coordinates": [
+      -3.33655,
+      57.3477
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.theglenlivet.com",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1824
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982492",
+    "name": "The Glenrothes distillery",
+    "coordinates": [
+      -3.21009,
+      57.5268
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.theglenrothes.com",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1878
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q47352397",
+    "name": "The Golan Heights Distillery",
+    "coordinates": [
+      35.71,
+      32.991666666
+    ],
+    "country": "Israel",
+    "region": "Unknown",
+    "website": "http://www.golanispirit.com",
+    "description": "Israeli whisky distillery",
+    "founded": 2014
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982891",
+    "name": "The Macallan distillery",
+    "coordinates": [
+      -3.207577777,
+      57.484372222
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.themacallan.com",
+    "description": "whisky distillery in Moray, Scotland, UK",
+    "founded": 1824
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982775",
+    "name": "The Speyside distillery",
+    "coordinates": [
+      -3.98833,
+      57.07
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "website": "http://speysidedistillery.co.uk/",
+    "description": "Whisky distillery in Highland, Scotland, UK",
+    "founded": 1990
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982673",
+    "name": "Tobermory distillery",
+    "coordinates": [
+      -6.07056,
+      56.6206
+    ],
+    "country": "United Kingdom",
+    "region": "Argyll and Bute",
+    "description": "whisky distillery in Tobermory, Mull, Argyll and Bute, Scotland, UK",
+    "founded": 1798
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982680",
+    "name": "Tomatin distillery",
+    "coordinates": [
+      -4.00373,
+      57.3434
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "website": "http://www.tomatin.com",
+    "description": "trademark",
+    "founded": 1897
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q2440708",
+    "name": "Tomintoul distillery",
+    "coordinates": [
+      -3.41335,
+      57.3116
+    ],
+    "country": "United Kingdom",
+    "region": "Moray",
+    "website": "http://www.tomintoulwhisky.com/",
+    "description": "The Tomintoul-Glenlivet Distillery is a distillery in Ballindalloch, in the Speyside region of Scotland, producing malt whisky for blends and bottled as single malts.",
+    "founded": 1964
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q105812096",
+    "name": "Torabhaig",
+    "coordinates": [
+      -5.84874893,
+      57.112882344
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "website": "https://www.torabhaig.com/",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 2013
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982986",
+    "name": "Tormore distillery",
+    "coordinates": [
+      -3.4134,
+      57.397577777
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "description": "distillery in Scotland",
+    "founded": 1958
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q735484",
+    "name": "Tullamore Dew",
+    "coordinates": [
+      -7.50111111,
+      53.25416667
+    ],
+    "country": "Ireland",
+    "region": "Tullamore",
+    "website": "http://www.tullamoredew.com",
+    "description": "brand of Irish whiskey",
+    "founded": 1829
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q28450922",
+    "name": "Tullamore Distillery",
+    "coordinates": [
+      -7.500694444,
+      53.253111111
+    ],
+    "country": "Ireland",
+    "region": "Clonminch"
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q982597",
+    "name": "Tullibardine distillery",
+    "coordinates": [
+      -3.78556,
+      56.2578
+    ],
+    "country": "United Kingdom",
+    "region": "Perth and Kinross",
+    "description": "whisky distillery in Perth and Kinross, Scotland, UK",
+    "founded": 1949
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q3741441",
+    "name": "Wolfburn Distillery",
+    "coordinates": [
+      -3.55139,
+      58.5953
+    ],
+    "country": "United Kingdom",
+    "region": "Highland",
+    "website": "http://www.wolfburn.com/",
+    "description": "whisky distillery in Highland, Scotland, UK",
+    "founded": 1821
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q8032660",
+    "name": "Woodford Reserve",
+    "coordinates": [
+      -84.811944,
+      38.112778
+    ],
+    "country": "United States",
+    "region": "Kentucky",
+    "website": "https://woodfordreserve.com/",
+    "description": "premium small batch Kentucky Straight Bourbon Whiskey produced by the Brown-Forman Corporation",
+    "founded": 1865
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q1417541",
+    "name": "Yamazaki distillery",
+    "coordinates": [
+      135.674556,
+      34.893194
+    ],
+    "country": "Japan",
+    "region": "Shimamoto",
+    "website": "https://www.suntory.co.jp/factory/yamazaki/",
+    "description": "Japanese whisky distillery",
+    "founded": 1923
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q3572452",
+    "name": "Yoichi distillery",
+    "coordinates": [
+      140.791666666,
+      43.1875
+    ],
+    "country": "Japan",
+    "region": "Yoichi",
+    "website": "https://www.nikka.com/distilleries/yoichi/",
+    "description": "building in Yoichi, Hokkaido Prefecture, Japan",
+    "founded": 1934
+  },
+  {
+    "source": "wikidata",
+    "wikidataId": "Q2600580",
+    "name": "Yoker",
+    "coordinates": [
+      -4.382815,
+      55.888093
+    ],
+    "country": "United Kingdom",
+    "region": "Scotland",
+    "description": "Scottish whisky distillery",
+    "founded": 1770
+  }
+]

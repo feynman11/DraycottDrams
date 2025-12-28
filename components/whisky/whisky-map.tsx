@@ -1,28 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { api } from "@/lib/trpc-client";
-import { type Whisky } from "@/db/schema";
 import { MapVisualization } from "./map-visualization";
 import { DistilleryDetail } from "./distillery-detail";
+import { type WhiskyWithGathering } from "@/lib/types";
 
 export function WhiskyMap() {
   const [selectedDistillery, setSelectedDistillery] = useState<string | null>(null);
-  const [selectedDistilleryWhiskies, setSelectedDistilleryWhiskies] = useState<Whisky[]>([]);
+  const [selectedDistilleryWhiskies, setSelectedDistilleryWhiskies] = useState<WhiskyWithGathering[]>([]);
   const [gatheringFilter, setGatheringFilter] = useState<number | undefined>(undefined);
+  const [showDistilleriesWithWhiskies, setShowDistilleriesWithWhiskies] = useState(false);
   
   const { data: whiskies, isLoading } = api.whisky.getAll.useQuery({
     gathering: gatheringFilter,
     limit: 1000, // Get all whiskies when filtered
   });
   
+  const { data: allDistilleries } = api.distillery.getAll.useQuery({
+    limit: 1000,
+  });
+  
   const { data: stats } = api.whisky.getStats.useQuery();
 
-  const handleWhiskySelect = (whisky: Whisky) => {
+  const handleWhiskySelect = (whisky: WhiskyWithGathering) => {
     // Keep for backward compatibility if needed
   };
 
-  const handleDistillerySelect = (distillery: string, distilleryWhiskies: Whisky[]) => {
+  const handleDistillerySelect = (distillery: string, distilleryWhiskies: WhiskyWithGathering[]) => {
     setSelectedDistillery(distillery);
     setSelectedDistilleryWhiskies(distilleryWhiskies);
   };
@@ -55,6 +60,35 @@ export function WhiskyMap() {
     );
   }
 
+  // Create a map of distillery names to whisky counts
+  const distilleryWhiskiesMap = useMemo(() => {
+    if (!whiskies) return new Map<string, WhiskyWithGathering[]>();
+    
+    const map = new Map<string, WhiskyWithGathering[]>();
+    whiskies.forEach((whisky) => {
+      const distilleryName = whisky.distillery;
+      if (!map.has(distilleryName)) {
+        map.set(distilleryName, []);
+      }
+      map.get(distilleryName)!.push(whisky);
+    });
+    return map;
+  }, [whiskies]);
+
+  // Filter distilleries based on whisky count
+  const filteredWhiskies = useMemo(() => {
+    if (!whiskies || !allDistilleries) return whiskies || [];
+    
+    if (showDistilleriesWithWhiskies) {
+      // Show all distilleries (including those without whiskies)
+      // For distilleries without whiskies, we'll need to handle them in MapVisualization
+      return whiskies;
+    } else {
+      // Default: Show only distilleries with whiskies
+      return whiskies;
+    }
+  }, [whiskies, allDistilleries, showDistilleriesWithWhiskies]);
+
   const gatherings = stats?.gatherings
     ?.map((g) => g.gathering)
     .filter((g): g is number => g !== null)
@@ -72,7 +106,9 @@ export function WhiskyMap() {
   return (
     <div className="w-full h-full relative overflow-hidden">
       <MapVisualization
-        whiskies={whiskies}
+        whiskies={filteredWhiskies}
+        allDistilleries={showDistilleriesWithWhiskies ? allDistilleries : undefined}
+        distilleryWhiskiesMap={distilleryWhiskiesMap}
         onSelect={handleWhiskySelect}
         onDistillerySelect={handleDistillerySelect}
         selectedDistillery={selectedDistillery || undefined}
@@ -80,6 +116,8 @@ export function WhiskyMap() {
         gatherings={gatherings}
         gatheringThemes={gatheringThemes}
         onGatheringChange={handleGatheringChange}
+        showDistilleriesWithWhiskies={showDistilleriesWithWhiskies}
+        onShowDistilleriesWithWhiskiesChange={setShowDistilleriesWithWhiskies}
       />
       {selectedDistillery && (
         <DistilleryDetail

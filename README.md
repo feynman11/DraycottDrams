@@ -1,4 +1,4 @@
-# Draycott Drams - Whisky Club Management System
+# Draycott Drambusters - Whisky Club Management System
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.0-black)](https://nextjs.org/)
 [![Bun](https://img.shields.io/badge/Bun-1.3.4-yellow)](https://bun.sh/)
@@ -281,7 +281,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🙏 Acknowledgments
 
-- **Draycott Drams** whisky club members for inspiration
+- **Draycott Drambusters** whisky club members for inspiration
 - **Open source community** for the amazing tools and libraries
 - **Whisky enthusiasts** worldwide for sharing knowledge
 

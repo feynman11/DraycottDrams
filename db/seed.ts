@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
-import { whiskies } from "@/db/schema";
+import { whiskies, distilleries, gatherings, members } from "@/db/schema";
+import { eq, ilike } from "drizzle-orm";
 
 // Helper function to parse date strings like "15 November 2019"
 function parseDate(dateStr: string): Date {
@@ -296,32 +297,147 @@ async function seedDatabase() {
     console.log("🧹 Clearing existing whisky data...");
     await db.delete(whiskies);
 
-    // Insert whisky data
+    // Step 1: Create/find members (hosts)
+    console.log("👥 Creating/finding members...");
+    const uniqueHosts = [...new Set(formattedData.map(w => w.host))];
+    const hostIdMap = new Map<string, string>();
+    
+    for (const hostName of uniqueHosts) {
+      const existing = await db
+        .select()
+        .from(members)
+        .where(eq(members.name, hostName))
+        .limit(1);
+      
+      if (existing.length > 0) {
+        hostIdMap.set(hostName, existing[0].id);
+      } else {
+        const newMember = await db
+          .insert(members)
+          .values({ name: hostName })
+          .returning();
+        hostIdMap.set(hostName, newMember[0].id);
+      }
+    }
+
+    // Step 2: Create/find gatherings
+    console.log("📅 Creating/finding gatherings...");
+    const uniqueGatherings = new Map<number, { number: number; date: Date; theme: string; host: string }>();
+    
+    for (const whisky of formattedData) {
+      if (!uniqueGatherings.has(whisky.gathering)) {
+        uniqueGatherings.set(whisky.gathering, {
+          number: whisky.gathering,
+          date: whisky.date,
+          theme: whisky.theme,
+          host: whisky.host,
+        });
+      }
+    }
+    
+    const gatheringIdMap = new Map<number, string>();
+    
+    for (const [number, gatheringData] of uniqueGatherings.entries()) {
+      const existing = await db
+        .select()
+        .from(gatherings)
+        .where(eq(gatherings.number, number))
+        .limit(1);
+      
+      if (existing.length > 0) {
+        gatheringIdMap.set(number, existing[0].id);
+      } else {
+        const hostId = hostIdMap.get(gatheringData.host);
+        if (!hostId) {
+          throw new Error(`Host not found: ${gatheringData.host}`);
+        }
+        
+        const newGathering = await db
+          .insert(gatherings)
+          .values({
+            number: gatheringData.number,
+            date: gatheringData.date,
+            hostId: hostId,
+            theme: gatheringData.theme || undefined,
+          })
+          .returning();
+        gatheringIdMap.set(number, newGathering[0].id);
+      }
+    }
+
+    // Step 3: Create/find distilleries
+    console.log("🏭 Creating/finding distilleries...");
+    const uniqueDistilleries = new Map<string, { name: string; country: string; region: string; coordinates: [number, number] | null }>();
+    
+    for (const whisky of formattedData) {
+      if (!uniqueDistilleries.has(whisky.distillery)) {
+        const coordinates = getDistilleryCoordinates(whisky.distillery, whisky.country, whisky.region);
+        uniqueDistilleries.set(whisky.distillery, {
+          name: whisky.distillery,
+          country: whisky.country,
+          region: whisky.region,
+          coordinates: coordinates,
+        });
+      }
+    }
+    
+    const distilleryIdMap = new Map<string, string>();
+    
+    for (const [name, distilleryData] of uniqueDistilleries.entries()) {
+      const existing = await db
+        .select()
+        .from(distilleries)
+        .where(ilike(distilleries.name, name))
+        .limit(1);
+      
+      if (existing.length > 0) {
+        distilleryIdMap.set(name, existing[0].id);
+      } else {
+        const newDistillery = await db
+          .insert(distilleries)
+          .values({
+            name: distilleryData.name,
+            country: distilleryData.country,
+            region: distilleryData.region,
+            coordinates: distilleryData.coordinates || undefined,
+          })
+          .returning();
+        distilleryIdMap.set(name, newDistillery[0].id);
+      }
+    }
+
+    // Step 4: Insert whiskies with proper foreign keys
     console.log("🍶 Inserting whisky data...");
     await db.insert(whiskies).values(
-      formattedData.map(whisky => ({
-        id: whisky.id,
-        gathering: whisky.gathering,
-        theme: whisky.theme,
-        date: whisky.date,
-        provider: whisky.provider,
-        country: whisky.country,
-        region: whisky.region,
-        distillery: whisky.distillery,
-        variety: whisky.variety,
-        abv: whisky.abv.toString(),
-        host: whisky.host,
-        notes: whisky.notes,
-        // Legacy fields
-        name: whisky.name,
-        type: whisky.type,
-        age: whisky.age,
-        priceRange: whisky.priceRange,
-        description: whisky.description,
-        tastingNotes: whisky.tastingNotes,
-        coordinates: whisky.coordinates,
-        flavourProfile: whisky.flavourProfile,
-      }))
+      formattedData.map(whisky => {
+        const gatheringId = gatheringIdMap.get(whisky.gathering);
+        const distilleryId = distilleryIdMap.get(whisky.distillery);
+        
+        if (!gatheringId) {
+          throw new Error(`Gathering not found: ${whisky.gathering}`);
+        }
+        if (!distilleryId) {
+          throw new Error(`Distillery not found: ${whisky.distillery}`);
+        }
+        
+        return {
+          id: whisky.id,
+          gatheringId: gatheringId,
+          distilleryId: distilleryId,
+          provider: whisky.provider,
+          variety: whisky.variety,
+          abv: whisky.abv.toString(),
+          notes: whisky.notes,
+          // Legacy fields
+          name: whisky.name,
+          type: whisky.type,
+          age: whisky.age,
+          priceRange: whisky.priceRange,
+          description: whisky.description,
+          tastingNotes: whisky.tastingNotes,
+          flavourProfile: whisky.flavourProfile,
+        };
+      })
     );
 
     console.log("✅ Database seeding completed successfully!");

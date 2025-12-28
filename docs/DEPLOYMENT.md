@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide covers deploying the Draycott Drams whisky club application to production.
+This guide covers deploying the Draycott Drambusters whisky club application to production.
 
 ## Prerequisites
 

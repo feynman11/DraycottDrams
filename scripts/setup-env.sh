@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Draycott Drams - Environment Setup Script
+# Draycott Drambusters - Environment Setup Script
 # This script helps new developers set up their environment variables
 
-echo "🍶 Draycott Drams - Environment Setup"
+echo "🍶 Draycott Drambusters - Environment Setup"
 echo "======================================"
 
 # Check if .env.local already exists

@@ -1,10 +1,10 @@
 "use client";
 
-import { type Whisky } from "@/db/schema";
+import { type WhiskyWithGathering } from "@/lib/types";
 import { GlassWater } from "lucide-react";
 
 interface WhiskyCardProps {
-  whisky: Whisky;
+  whisky: WhiskyWithGathering;
   onClick?: () => void;
 }
 

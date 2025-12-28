@@ -1,7 +1,7 @@
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "@/lib/trpc";
 import { db } from "@/lib/db";
-import { tastings, tastingNotes, whiskies, users } from "@/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { tastings, tastingNotes, whiskies, users, distilleries, gatherings } from "@/db/schema";
+import { eq, desc, and, sql } from "drizzle-orm";
 import { z } from "zod";
 
 export const tastingRouter = createTRPCRouter({
@@ -153,6 +153,7 @@ export const tastingRouter = createTRPCRouter({
       z.object({
         limit: z.number().min(1).max(1000).default(1000),
         offset: z.number().min(0).default(0),
+        gatheringId: z.string().optional(),
       }).optional()
     )
     .query(async ({ ctx, input }) => {
@@ -162,7 +163,12 @@ export const tastingRouter = createTRPCRouter({
         throw new Error("Unauthorized");
       }
 
-      const { limit = 20, offset = 0 } = input || {};
+      const { limit = 20, offset = 0, gatheringId } = input || {};
+
+      const conditions = [eq(tastings.userId, session.user.id)];
+      if (gatheringId) {
+        conditions.push(eq(whiskies.gatheringId, gatheringId));
+      }
 
       const result = await db
         .select({
@@ -170,14 +176,26 @@ export const tastingRouter = createTRPCRouter({
           whisky: {
             id: whiskies.id,
             name: whiskies.name,
-            distillery: whiskies.distillery,
-            region: whiskies.region,
+            variety: whiskies.variety,
+            distillery: distilleries.name,
+            region: distilleries.region,
+          },
+          gathering: {
+            id: gatherings.id,
+            number: gatherings.number,
+            date: gatherings.date,
+            theme: gatherings.theme,
           },
         })
         .from(tastings)
         .innerJoin(whiskies, eq(tastings.whiskyId, whiskies.id))
-        .where(eq(tastings.userId, session.user.id))
-        .orderBy(desc(tastings.tastingDate))
+        .innerJoin(distilleries, eq(whiskies.distilleryId, distilleries.id))
+        .innerJoin(gatherings, eq(whiskies.gatheringId, gatherings.id))
+        .where(and(...conditions))
+        .orderBy(
+          sql`ABS(EXTRACT(EPOCH FROM (${gatherings.date} - CURRENT_TIMESTAMP))) ASC`,
+          desc(tastings.tastingDate)
+        )
         .limit(limit)
         .offset(offset);
 

@@ -1,6 +1,6 @@
 # API Documentation
 
-This document describes the tRPC API endpoints available in the Draycott Drams application.
+This document describes the tRPC API endpoints available in the Draycott Drambusters application.
 
 ## Overview
 

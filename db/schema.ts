@@ -1,6 +1,7 @@
 import { pgTable, text, timestamp, integer, decimal, jsonb, boolean, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 // Enums
 export const UserRole = {
@@ -31,18 +32,46 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const whiskies = pgTable("whiskies", {
+export const members = pgTable("members", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  gathering: integer("gathering").notNull(),
-  theme: text("theme").notNull(),
-  date: timestamp("date", { mode: "date" }).notNull(),
-  provider: text("provider").notNull(),
+  name: text("name").notNull(),
+  userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+  timesHosted: integer("times_hosted").default(0).notNull(),
+  lastHosted: timestamp("last_hosted", { mode: "date" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const distilleries = pgTable("distilleries", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull().unique(),
   country: text("country").notNull(),
   region: text("region").notNull(),
-  distillery: text("distillery").notNull(),
+  coordinates: jsonb("coordinates").$type<[number, number]>(),
+  description: text("description"),
+  website: text("website"),
+  founded: integer("founded"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const gatherings = pgTable("gatherings", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  number: integer("number").notNull().unique(),
+  date: timestamp("date", { mode: "date" }).notNull(),
+  hostId: text("host_id").references(() => members.id, { onDelete: "restrict" }).notNull(),
+  theme: text("theme"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const whiskies = pgTable("whiskies", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  gatheringId: text("gathering_id").references(() => gatherings.id, { onDelete: "restrict" }).notNull(),
+  provider: text("provider").notNull(),
+  distilleryId: text("distillery_id").references(() => distilleries.id, { onDelete: "restrict" }).notNull(),
   variety: text("variety").notNull(),
   abv: decimal("abv", { precision: 4, scale: 1 }).notNull(),
-  host: text("host").notNull(),
   notes: text("notes"),
   // Legacy fields kept for backward compatibility (optional)
   name: text("name"),
@@ -51,7 +80,6 @@ export const whiskies = pgTable("whiskies", {
   priceRange: text("price_range"),
   description: text("description"),
   tastingNotes: jsonb("tasting_notes").$type<string[]>(),
-  coordinates: jsonb("coordinates").$type<[number, number]>(),
   flavourProfile: jsonb("flavour_profile").$type<{
     peat: number;
     fruit: number;
@@ -98,9 +126,66 @@ export const selectTastingSchema = createSelectSchema(tastings);
 export const insertTastingNoteSchema = createInsertSchema(tastingNotes);
 export const selectTastingNoteSchema = createSelectSchema(tastingNotes);
 
+export const insertDistillerySchema = createInsertSchema(distilleries);
+export const selectDistillerySchema = createSelectSchema(distilleries);
+
+export const insertGatheringSchema = createInsertSchema(gatherings);
+export const selectGatheringSchema = createSelectSchema(gatherings);
+
+export const insertMemberSchema = createInsertSchema(members);
+export const selectMemberSchema = createSelectSchema(members);
+
+// Relations
+export const usersRelations = relations(users, ({ one }) => ({
+  member: one(members, {
+    fields: [users.id],
+    references: [members.userId],
+  }),
+}));
+
+export const membersRelations = relations(members, ({ one, many }) => ({
+  user: one(users, {
+    fields: [members.userId],
+    references: [users.id],
+  }),
+  hostedGatherings: many(gatherings),
+}));
+
+export const distilleriesRelations = relations(distilleries, ({ many }) => ({
+  whiskies: many(whiskies),
+}));
+
+export const gatheringsRelations = relations(gatherings, ({ one, many }) => ({
+  host: one(members, {
+    fields: [gatherings.hostId],
+    references: [members.id],
+  }),
+  whiskies: many(whiskies),
+}));
+
+export const whiskiesRelations = relations(whiskies, ({ one }) => ({
+  distillery: one(distilleries, {
+    fields: [whiskies.distilleryId],
+    references: [distilleries.id],
+  }),
+  gathering: one(gatherings, {
+    fields: [whiskies.gatheringId],
+    references: [gatherings.id],
+  }),
+}));
+
 // Types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+
+export type Distillery = typeof distilleries.$inferSelect;
+export type NewDistillery = typeof distilleries.$inferInsert;
+
+export type Gathering = typeof gatherings.$inferSelect;
+export type NewGathering = typeof gatherings.$inferInsert;
+
+export type Member = typeof members.$inferSelect;
+export type NewMember = typeof members.$inferInsert;
 
 export type Whisky = typeof whiskies.$inferSelect;
 export type NewWhisky = typeof whiskies.$inferInsert;

@@ -5,20 +5,24 @@ import { api } from "@/lib/trpc-client";
 import { Button } from "@/components/ui/button";
 import { WhiskyCard } from "./whisky-card";
 import { WhiskyDetail } from "./whisky-detail";
-import { type Whisky } from "@/db/schema";
+import { type WhiskyWithGathering } from "@/lib/types";
+import { useDebounce } from "@/hooks/use-debounce";
+
+type GroupByOption = "none" | "gathering" | "region" | "country" | "distillery" | "variety" | "provider";
 
 export function WhiskyLibrary() {
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [selectedRegion, setSelectedRegion] = useState<string>("");
   const [selectedGathering, setSelectedGathering] = useState<string>("");
-  const [groupByGathering, setGroupByGathering] = useState(false);
-  const [selectedWhisky, setSelectedWhisky] = useState<Whisky | null>(null);
+  const [groupBy, setGroupBy] = useState<GroupByOption>("none");
+  const [selectedWhisky, setSelectedWhisky] = useState<WhiskyWithGathering | null>(null);
 
   const { data: whiskies, isLoading } = api.whisky.getAll.useQuery({
-    search: searchTerm || undefined,
+    search: debouncedSearchTerm || undefined,
     region: selectedRegion || undefined,
     gathering: selectedGathering ? parseInt(selectedGathering) : undefined,
-    limit: groupByGathering ? 100 : 50, // Use max limit when grouping to show all whiskies
+    limit: groupBy !== "none" ? 1000 : 50, // Use max limit when grouping to show all whiskies
   });
 
   const { data: stats } = api.whisky.getStats.useQuery();
@@ -26,27 +30,71 @@ export function WhiskyLibrary() {
   const regions = stats?.regions || [];
   const gatherings = stats?.gatherings || [];
 
-  // Group whiskies by gathering when grouping is enabled
+  // Group whiskies based on selected option
   const groupedWhiskies = useMemo(() => {
-    if (!groupByGathering || !whiskies) return null;
+    if (groupBy === "none" || !whiskies) return null;
 
     const grouped = whiskies.reduce((acc, whisky) => {
-      const gatheringNum = whisky.gathering;
-      if (!acc[gatheringNum]) {
-        acc[gatheringNum] = [];
+      let key: string | number;
+      
+      switch (groupBy) {
+        case "gathering":
+          key = whisky.gathering;
+          break;
+        case "region":
+          key = whisky.region || "Unknown Region";
+          break;
+        case "country":
+          key = whisky.country || "Unknown Country";
+          break;
+        case "distillery":
+          key = whisky.distillery || "Unknown Distillery";
+          break;
+        case "variety":
+          key = whisky.variety || "Unknown Variety";
+          break;
+        case "provider":
+          key = whisky.provider || "Unknown Provider";
+          break;
+        default:
+          return acc;
       }
-      acc[gatheringNum].push(whisky);
-      return acc;
-    }, {} as Record<number, typeof whiskies>);
 
-    // Sort by gathering number
-    return Object.entries(grouped)
-      .sort(([a], [b]) => parseInt(a) - parseInt(b))
-      .map(([gathering, items]) => ({
-        gathering: parseInt(gathering),
-        whiskies: items,
-      }));
-  }, [whiskies, groupByGathering]);
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(whisky);
+      return acc;
+    }, {} as Record<string | number, typeof whiskies>);
+
+    // Sort groups based on type
+    const entries = Object.entries(grouped);
+    
+    switch (groupBy) {
+      case "gathering":
+        return entries
+          .sort(([a], [b]) => parseInt(a) - parseInt(b))
+          .map(([key, items]) => ({
+            key: parseInt(key),
+            label: `Gathering ${key}`,
+            whiskies: items,
+          }));
+      case "region":
+      case "country":
+      case "distillery":
+      case "variety":
+      case "provider":
+        return entries
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key, items]) => ({
+            key,
+            label: key as string,
+            whiskies: items,
+          }));
+      default:
+        return [];
+    }
+  }, [whiskies, groupBy]);
 
   if (isLoading) {
     return (
@@ -69,7 +117,7 @@ export function WhiskyLibrary() {
           <div className="flex flex-wrap gap-4">
             <input
               type="text"
-              placeholder="Search whiskies..."
+              placeholder="Search by name, country, or region..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -103,23 +151,28 @@ export function WhiskyLibrary() {
                 ))}
             </select>
 
-            <label className="flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 cursor-pointer hover:bg-slate-700">
-              <input
-                type="checkbox"
-                checked={groupByGathering}
-                onChange={(e) => setGroupByGathering(e.target.checked)}
-                className="w-4 h-4 text-amber-500 bg-slate-700 border-slate-600 rounded focus:ring-amber-500"
-              />
-              <span>Group by Gathering</span>
-            </label>
+            <select
+              value={groupBy}
+              onChange={(e) => setGroupBy(e.target.value as GroupByOption)}
+              className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            >
+              <option value="none">No Grouping</option>
+              <option value="gathering">Group by Gathering</option>
+              <option value="region">Group by Region</option>
+              <option value="country">Group by Country</option>
+              <option value="distillery">Group by Distillery</option>
+              <option value="variety">Group by Variety</option>
+              <option value="provider">Group by Provider</option>
+            </select>
 
-            {(searchTerm || selectedRegion || selectedGathering) && (
+            {(searchTerm || selectedRegion || selectedGathering || groupBy !== "none") && (
               <Button
                 variant="outline"
                 onClick={() => {
                   setSearchTerm("");
                   setSelectedRegion("");
                   setSelectedGathering("");
+                  setGroupBy("none");
                 }}
                 className="text-slate-400 border-slate-700 hover:bg-slate-800"
               >
@@ -130,18 +183,18 @@ export function WhiskyLibrary() {
         </div>
 
         {/* Whisky Grid */}
-        {groupByGathering && groupedWhiskies ? (
+        {groupBy !== "none" && groupedWhiskies ? (
           <div className="space-y-8">
-            {groupedWhiskies.map(({ gathering, whiskies: gatheringWhiskies }) => (
-              <div key={gathering} className="space-y-4">
+            {groupedWhiskies.map(({ key, label, whiskies: groupWhiskies }) => (
+              <div key={key} className="space-y-4">
                 <h3 className="text-2xl font-semibold text-amber-50 border-b border-slate-800 pb-2">
-                  Gathering {gathering}
+                  {label}
                   <span className="text-lg font-normal text-slate-400 ml-2">
-                    ({gatheringWhiskies.length} {gatheringWhiskies.length === 1 ? "whisky" : "whiskies"})
+                    ({groupWhiskies.length} {groupWhiskies.length === 1 ? "whisky" : "whiskies"})
                   </span>
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {gatheringWhiskies.map((whisky) => (
+                  {groupWhiskies.map((whisky) => (
                     <WhiskyCard 
                       key={whisky.id} 
                       whisky={whisky} 
@@ -173,6 +226,7 @@ export function WhiskyLibrary() {
                 setSearchTerm("");
                 setSelectedRegion("");
                 setSelectedGathering("");
+                setGroupBy("none");
               }}
               className="mt-4 text-slate-400 border-slate-700 hover:bg-slate-800"
             >
