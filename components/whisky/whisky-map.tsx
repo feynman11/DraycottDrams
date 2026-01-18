@@ -11,6 +11,7 @@ export function WhiskyMap() {
   const [selectedDistilleryWhiskies, setSelectedDistilleryWhiskies] = useState<WhiskyWithGathering[]>([]);
   const [gatheringFilter, setGatheringFilter] = useState<number | undefined>(undefined);
   const [showDistilleriesWithWhiskies, setShowDistilleriesWithWhiskies] = useState(false);
+  const [showDistilleriesWithoutTastings, setShowDistilleriesWithoutTastings] = useState(false);
   
   const { data: whiskies, isLoading } = api.whisky.getAll.useQuery({
     gathering: gatheringFilter,
@@ -108,7 +109,7 @@ export function WhiskyMap() {
     <div className="w-full h-full relative overflow-hidden">
       <MapVisualization
         whiskies={filteredWhiskies}
-        allDistilleries={showDistilleriesWithWhiskies ? allDistilleries : undefined}
+        allDistilleries={showDistilleriesWithWhiskies || showDistilleriesWithoutTastings ? allDistilleries : undefined}
         distilleryWhiskiesMap={distilleryWhiskiesMap}
         onSelect={handleWhiskySelect}
         onDistillerySelect={handleDistillerySelect}
@@ -119,6 +120,8 @@ export function WhiskyMap() {
         onGatheringChange={handleGatheringChange}
         showDistilleriesWithWhiskies={showDistilleriesWithWhiskies}
         onShowDistilleriesWithWhiskiesChange={setShowDistilleriesWithWhiskies}
+        showDistilleriesWithoutTastings={showDistilleriesWithoutTastings}
+        onShowDistilleriesWithoutTastingsChange={setShowDistilleriesWithoutTastings}
       />
       {selectedDistillery && (
         <DistilleryDetail

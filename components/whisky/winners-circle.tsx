@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/lib/trpc-client";
-import { Trophy, Medal, TrendingUp, Users, Building2, Calendar } from "lucide-react";
+import { Trophy, Medal, TrendingUp, Users, Building2, Calendar, BarChart3, Globe } from "lucide-react";
 import { RankingBadge } from "./ranking-badge";
 import { WhiskyDetail } from "./whisky-detail";
 import { type WhiskyWithGathering } from "@/lib/types";
@@ -12,7 +12,7 @@ import { DistilleryPerformance } from "./distillery-performance";
 export function WinnersCircle() {
   const [selectedYear, setSelectedYear] = useState<number | undefined>();
   const [selectedRegion, setSelectedRegion] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<"winners" | "providers" | "distilleries">("winners");
+  const [activeTab, setActiveTab] = useState<"winners" | "providers" | "distilleries" | "analytics">("winners");
   const [selectedWhisky, setSelectedWhisky] = useState<WhiskyWithGathering | null>(null);
 
   const { data: winners, isLoading: winnersLoading } = api.whisky.getWinners.useQuery({
@@ -22,6 +22,8 @@ export function WinnersCircle() {
 
   const { data: stats, isLoading: statsLoading } = api.whisky.getRankingStats.useQuery();
   const { data: whiskyStats } = api.whisky.getStats.useQuery();
+  const { data: countryStats, isLoading: countryStatsLoading } = api.whisky.getAverageRankingByCountry.useQuery();
+  const { data: strengthStats, isLoading: strengthStatsLoading } = api.whisky.getAverageRankingByStrength.useQuery();
 
   const regions = whiskyStats?.regions || [];
 
@@ -34,7 +36,7 @@ export function WinnersCircle() {
 
   return (
     <div className="w-full h-full bg-slate-950 overflow-y-auto">
-      <div className="max-w-7xl mx-auto p-6 lg:p-12">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-12">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
@@ -50,7 +52,7 @@ export function WinnersCircle() {
 
         {/* Stats Summary */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
             <StatCard
               icon={<Trophy className="text-amber-400" size={20} />}
               label="Total Winners"
@@ -76,37 +78,45 @@ export function WinnersCircle() {
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-slate-800 pb-4">
-          <TabButton
-            active={activeTab === "winners"}
-            onClick={() => setActiveTab("winners")}
-            icon={<Trophy size={16} />}
-            label="Winners"
-          />
-          <TabButton
-            active={activeTab === "providers"}
-            onClick={() => setActiveTab("providers")}
-            icon={<Users size={16} />}
-            label="Provider Leaderboard"
-          />
-          <TabButton
-            active={activeTab === "distilleries"}
-            onClick={() => setActiveTab("distilleries")}
-            icon={<Building2 size={16} />}
-            label="Distillery Stats"
-          />
+        {/* Tabs - Scrollable on mobile */}
+        <div className="mb-6 border-b border-slate-800 pb-4">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0">
+            <TabButton
+              active={activeTab === "winners"}
+              onClick={() => setActiveTab("winners")}
+              icon={<Trophy size={16} />}
+              label="Winners"
+            />
+            <TabButton
+              active={activeTab === "providers"}
+              onClick={() => setActiveTab("providers")}
+              icon={<Users size={16} />}
+              label="Provider Leaderboard"
+            />
+            <TabButton
+              active={activeTab === "distilleries"}
+              onClick={() => setActiveTab("distilleries")}
+              icon={<Building2 size={16} />}
+              label="Distillery Stats"
+            />
+            <TabButton
+              active={activeTab === "analytics"}
+              onClick={() => setActiveTab("analytics")}
+              icon={<BarChart3 size={16} />}
+              label="Analytics"
+            />
+          </div>
         </div>
 
         {/* Tab Content */}
         {activeTab === "winners" && (
           <>
             {/* Filters */}
-            <div className="flex flex-wrap gap-4 mb-6">
+            <div className="flex flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-6">
               <select
                 value={selectedYear || ""}
                 onChange={(e) => setSelectedYear(e.target.value ? parseInt(e.target.value) : undefined)}
-                className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="px-3 sm:px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
                 <option value="">All Years</option>
                 {years.map((year) => (
@@ -119,7 +129,7 @@ export function WinnersCircle() {
               <select
                 value={selectedRegion}
                 onChange={(e) => setSelectedRegion(e.target.value)}
-                className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="px-3 sm:px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
                 <option value="">All Regions</option>
                 {regions.map((region) => (
@@ -136,7 +146,7 @@ export function WinnersCircle() {
                 <div className="text-amber-500">Loading winners...</div>
               </div>
             ) : winners && winners.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {winners.map((winner) => (
                   <WinnerCard
                     key={winner.id}
@@ -172,6 +182,58 @@ export function WinnersCircle() {
 
         {activeTab === "providers" && <ProviderLeaderboard />}
         {activeTab === "distilleries" && <DistilleryPerformance />}
+        
+        {activeTab === "analytics" && (
+          <div className="space-y-6 sm:space-y-8">
+            {/* Strength Range Stats */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart3 className="text-amber-400" size={20} />
+                <h2 className="text-xl font-bold text-amber-50">Average Ranking by Strength</h2>
+              </div>
+              {strengthStatsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-amber-500">Loading strength stats...</div>
+                </div>
+              ) : strengthStats && strengthStats.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                  {strengthStats.map((stat, index) => (
+                    <StrengthStatCard key={index} stat={stat} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <BarChart3 className="mx-auto text-slate-600 mb-4" size={48} />
+                  <p className="text-slate-400">No strength data available</p>
+                </div>
+              )}
+            </div>
+
+            {/* Country Stats */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Globe className="text-amber-400" size={20} />
+                <h2 className="text-xl font-bold text-amber-50">Average Ranking by Country</h2>
+              </div>
+              {countryStatsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-amber-500">Loading country stats...</div>
+                </div>
+              ) : countryStats && countryStats.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                  {countryStats.map((stat) => (
+                    <CountryStatCard key={stat.country} stat={stat} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Globe className="mx-auto text-slate-600 mb-4" size={48} />
+                  <p className="text-slate-400">No country data available</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Whisky Detail Panel */}
@@ -192,7 +254,7 @@ interface StatCardProps {
 
 function StatCard({ icon, label, value, subtitle }: StatCardProps) {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+    <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 sm:p-4">
       <div className="flex items-center gap-2 mb-2">
         {icon}
         <span className="text-xs text-slate-400 uppercase tracking-wider">{label}</span>
@@ -214,14 +276,14 @@ function TabButton({ active, onClick, icon, label }: TabButtonProps) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap flex-shrink-0 ${
         active
           ? "bg-amber-600 text-white"
           : "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200"
       }`}
     >
       {icon}
-      <span className="font-medium">{label}</span>
+      <span className="font-medium text-sm md:text-base">{label}</span>
     </button>
   );
 }
@@ -285,5 +347,87 @@ function WinnerCard({ winner, onClick }: WinnerCardProps) {
         </div>
       </div>
     </button>
+  );
+}
+
+interface CountryStatCardProps {
+  stat: {
+    country: string;
+    avgRanking: number | null;
+    totalEntries: number;
+    rankedEntries: number;
+    wins: number;
+  };
+}
+
+function CountryStatCard({ stat }: CountryStatCardProps) {
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 sm:p-4 hover:border-amber-600/30 transition-colors">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-bold text-amber-400">{stat.country}</h3>
+        {stat.avgRanking !== null && (
+          <div className="flex items-center gap-1">
+            <Medal className="text-amber-500" size={16} />
+            <span className="text-lg font-bold text-slate-100">{stat.avgRanking.toFixed(2)}</span>
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-3 gap-2 text-xs">
+        <div>
+          <span className="text-slate-500">Entries</span>
+          <p className="text-slate-200 font-semibold">{stat.totalEntries}</p>
+        </div>
+        <div>
+          <span className="text-slate-500">Ranked</span>
+          <p className="text-slate-200 font-semibold">{stat.rankedEntries}</p>
+        </div>
+        <div>
+          <span className="text-slate-500">Wins</span>
+          <p className="text-amber-400 font-semibold">{stat.wins}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface StrengthStatCardProps {
+  stat: {
+    range: string;
+    min: number;
+    max: number | null;
+    avgRanking: number | null;
+    totalEntries: number;
+    rankedEntries: number;
+    wins: number;
+  };
+}
+
+function StrengthStatCard({ stat }: StrengthStatCardProps) {
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 sm:p-4 hover:border-amber-600/30 transition-colors">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-bold text-amber-400">{stat.range}</h3>
+        {stat.avgRanking !== null && (
+          <div className="flex items-center gap-1">
+            <Medal className="text-amber-500" size={16} />
+            <span className="text-lg font-bold text-slate-100">{stat.avgRanking.toFixed(2)}</span>
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-3 gap-2 text-xs">
+        <div>
+          <span className="text-slate-500">Entries</span>
+          <p className="text-slate-200 font-semibold">{stat.totalEntries}</p>
+        </div>
+        <div>
+          <span className="text-slate-500">Ranked</span>
+          <p className="text-slate-200 font-semibold">{stat.rankedEntries}</p>
+        </div>
+        <div>
+          <span className="text-slate-500">Wins</span>
+          <p className="text-amber-400 font-semibold">{stat.wins}</p>
+        </div>
+      </div>
+    </div>
   );
 }

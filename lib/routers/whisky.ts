@@ -513,6 +513,77 @@ export const whiskyRouter = createTRPCRouter({
     }));
   }),
 
+  // Get average ranking by country
+  getAverageRankingByCountry: publicProcedure.query(async () => {
+    const result = await db
+      .select({
+        country: distilleries.country,
+        avgRanking: sql<number>`AVG(${whiskies.ranking}) FILTER (WHERE ${whiskies.ranking} IS NOT NULL)`.as('avg_ranking'),
+        totalEntries: sql<number>`COUNT(*)`.as('total_entries'),
+        rankedEntries: sql<number>`COUNT(*) FILTER (WHERE ${whiskies.ranking} IS NOT NULL)`.as('ranked_entries'),
+        wins: sql<number>`COUNT(*) FILTER (WHERE ${whiskies.ranking} = 1)`.as('wins'),
+      })
+      .from(whiskies)
+      .innerJoin(distilleries, eq(whiskies.distilleryId, distilleries.id))
+      .groupBy(distilleries.country)
+      .having(sql`COUNT(*) FILTER (WHERE ${whiskies.ranking} IS NOT NULL) > 0`)
+      .orderBy(sql`AVG(${whiskies.ranking}) FILTER (WHERE ${whiskies.ranking} IS NOT NULL) ASC`);
+
+    return result.map(row => ({
+      country: row.country,
+      avgRanking: row.avgRanking ? parseFloat(Number(row.avgRanking).toFixed(2)) : null,
+      totalEntries: Number(row.totalEntries),
+      rankedEntries: Number(row.rankedEntries),
+      wins: Number(row.wins),
+    }));
+  }),
+
+  // Get average ranking by strength (ABV) ranges
+  getAverageRankingByStrength: publicProcedure.query(async () => {
+    // Define strength ranges
+    const strengthRanges = [
+      { label: "< 40%", min: 0, max: 40 },
+      { label: "40-43%", min: 40, max: 43 },
+      { label: "43-46%", min: 43, max: 46 },
+      { label: "46-50%", min: 46, max: 50 },
+      { label: "> 50%", min: 50, max: 200 },
+    ];
+
+    const results = await Promise.all(
+      strengthRanges.map(async (range) => {
+        const maxValue = range.max === 200 ? 999 : range.max;
+        const result = await db
+          .select({
+            avgRanking: sql<number>`AVG(${whiskies.ranking}) FILTER (WHERE ${whiskies.ranking} IS NOT NULL)`.as('avg_ranking'),
+            totalEntries: sql<number>`COUNT(*)`.as('total_entries'),
+            rankedEntries: sql<number>`COUNT(*) FILTER (WHERE ${whiskies.ranking} IS NOT NULL)`.as('ranked_entries'),
+            wins: sql<number>`COUNT(*) FILTER (WHERE ${whiskies.ranking} = 1)`.as('wins'),
+          })
+          .from(whiskies)
+          .innerJoin(distilleries, eq(whiskies.distilleryId, distilleries.id))
+          .where(
+            and(
+              sql`CAST(${whiskies.abv} AS DECIMAL) >= ${range.min}`,
+              sql`CAST(${whiskies.abv} AS DECIMAL) < ${maxValue}`
+            )
+          );
+
+        return {
+          range: range.label,
+          min: range.min,
+          max: range.max === 200 ? null : range.max,
+          avgRanking: result[0]?.avgRanking ? parseFloat(Number(result[0].avgRanking).toFixed(2)) : null,
+          totalEntries: result[0] ? Number(result[0].totalEntries) : 0,
+          rankedEntries: result[0] ? Number(result[0].rankedEntries) : 0,
+          wins: result[0] ? Number(result[0].wins) : 0,
+        };
+      })
+    );
+
+    // Filter out ranges with no ranked entries
+    return results.filter(r => r.rankedEntries > 0);
+  }),
+
   // Get total count of whiskies
   getCount: publicProcedure.query(async () => {
     const result = await db

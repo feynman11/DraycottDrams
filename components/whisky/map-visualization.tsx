@@ -21,6 +21,8 @@ interface Props {
   onGatheringChange?: (gathering: number | undefined) => void;
   showDistilleriesWithWhiskies?: boolean;
   onShowDistilleriesWithWhiskiesChange?: (show: boolean) => void;
+  showDistilleriesWithoutTastings?: boolean;
+  onShowDistilleriesWithoutTastingsChange?: (show: boolean) => void;
 }
 
 // Region view coordinates
@@ -111,7 +113,7 @@ export const MapVisualization: React.FC<Props> = ({
   whiskies, 
   allDistilleries,
   distilleryWhiskiesMap,
-  onSelect, 
+  onSelect,
   onDistillerySelect,
   selectedId,
   selectedDistillery,
@@ -121,6 +123,8 @@ export const MapVisualization: React.FC<Props> = ({
   onGatheringChange,
   showDistilleriesWithWhiskies = false,
   onShowDistilleriesWithWhiskiesChange,
+  showDistilleriesWithoutTastings = false,
+  onShowDistilleriesWithoutTastingsChange,
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
@@ -196,6 +200,60 @@ export const MapVisualization: React.FC<Props> = ({
 
   // Group whiskies by distillery and convert to GeoJSON
   const distilleriesToGeoJSON = (whiskiesList: WhiskyWithGathering[], colorMode: ColorMode, totalGatherings: number) => {
+    // If showing only distilleries without tastings, skip whiskies entirely
+    if (showDistilleriesWithoutTastings) {
+      if (!allDistilleries) {
+        return {
+          type: 'FeatureCollection' as const,
+          features: [],
+        };
+      }
+
+      // Create a set of distillery names that have whiskies
+      const distilleriesWithWhiskies = new Set<string>();
+      whiskiesList.forEach((whisky) => {
+        distilleriesWithWhiskies.add(whisky.distillery);
+      });
+
+      // Only include distilleries without whiskies
+      const features = allDistilleries
+        .filter((distillery) => {
+          // Only include if it doesn't have any whiskies
+          return !distilleriesWithWhiskies.has(distillery.name);
+        })
+        .filter((distillery) => {
+          // Only add if has coordinates
+          return (
+            distillery.coordinates &&
+            Array.isArray(distillery.coordinates) &&
+            distillery.coordinates.length === 2 &&
+            typeof distillery.coordinates[0] === 'number' &&
+            typeof distillery.coordinates[1] === 'number'
+          );
+        })
+        .map((distillery) => ({
+          type: 'Feature' as const,
+          geometry: {
+            type: 'Point' as const,
+            coordinates: distillery.coordinates as [number, number],
+          },
+          properties: {
+            distillery: distillery.name,
+            region: distillery.region || '',
+            country: distillery.country || '',
+            whiskyCount: 0,
+            highestABV: 0,
+            color: '#6b7280', // Gray color for distilleries without whiskies
+            whiskyIds: [],
+          },
+        }));
+
+      return {
+        type: 'FeatureCollection' as const,
+        features,
+      };
+    }
+
     // Filter whiskies with valid coordinates
     const whiskiesWithCoords = whiskiesList.filter(
       (whisky): whisky is WhiskyWithGathering & { coordinates: [number, number] } =>
@@ -481,6 +539,7 @@ export const MapVisualization: React.FC<Props> = ({
       colorMode,
       totalGatherings,
       showDistilleriesWithWhiskies,
+      showDistilleriesWithoutTastings,
       allDistilleries: allDistilleries?.map(d => ({ id: d.id, name: d.name, coordinates: d.coordinates })),
     });
 
@@ -627,7 +686,7 @@ export const MapVisualization: React.FC<Props> = ({
         ]);
       }
     }
-  }, [whiskies, selectedId, selectedDistillery, mapLoaded, colorMode, totalGatherings, onSelect, onDistillerySelect, showDistilleriesWithWhiskies, allDistilleries]);
+  }, [whiskies, selectedId, selectedDistillery, mapLoaded, colorMode, totalGatherings, onSelect, onDistillerySelect, showDistilleriesWithWhiskies, showDistilleriesWithoutTastings, allDistilleries]);
 
   const handleZoomIn = () => {
     if (map.current) {
@@ -697,23 +756,6 @@ export const MapVisualization: React.FC<Props> = ({
               <h3 className="text-sm font-semibold text-slate-200">Map Options</h3>
             </div>
             
-            {/* Distillery Filter */}
-            {onShowDistilleriesWithWhiskiesChange && (
-              <div className="mb-4">
-                <Button
-                  variant={showDistilleriesWithWhiskies ? "default" : "outline"}
-                  onClick={() => onShowDistilleriesWithWhiskiesChange(!showDistilleriesWithWhiskies)}
-                  className={`w-full ${
-                    showDistilleriesWithWhiskies
-                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950"
-                      : "text-slate-400 border-slate-700 hover:bg-slate-800"
-                  }`}
-                >
-                  {showDistilleriesWithWhiskies ? "Showing All" : "Show Distilleries without Whiskies"}
-                </Button>
-              </div>
-            )}
-
             {/* Gathering Filter */}
             <div className="mb-4">
               <label className="block text-xs font-medium text-slate-400 mb-2">
@@ -788,6 +830,49 @@ export const MapVisualization: React.FC<Props> = ({
                   Asia
                 </button>
               </div>
+            </div>
+
+            {/* Distillery Filters */}
+            <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
+              {onShowDistilleriesWithoutTastingsChange && (
+                <Button
+                  variant={showDistilleriesWithoutTastings ? "default" : "outline"}
+                  onClick={() => {
+                    onShowDistilleriesWithoutTastingsChange(!showDistilleriesWithoutTastings);
+                    // Disable other filter when this is enabled
+                    if (!showDistilleriesWithoutTastings && onShowDistilleriesWithWhiskiesChange) {
+                      onShowDistilleriesWithWhiskiesChange(false);
+                    }
+                  }}
+                  className={`w-full ${
+                    showDistilleriesWithoutTastings
+                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950"
+                      : "text-slate-400 border-slate-700 hover:bg-slate-800"
+                  }`}
+                >
+                  {showDistilleriesWithoutTastings ? "Showing Only Untasted" : "Show Only Untasted Distilleries"}
+                </Button>
+              )}
+              {onShowDistilleriesWithWhiskiesChange && (
+                <Button
+                  variant={showDistilleriesWithWhiskies ? "default" : "outline"}
+                  onClick={() => {
+                    onShowDistilleriesWithWhiskiesChange(!showDistilleriesWithWhiskies);
+                    // Disable other filter when this is enabled
+                    if (!showDistilleriesWithWhiskies && onShowDistilleriesWithoutTastingsChange) {
+                      onShowDistilleriesWithoutTastingsChange(false);
+                    }
+                  }}
+                  className={`w-full ${
+                    showDistilleriesWithWhiskies
+                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950"
+                      : "text-slate-400 border-slate-700 hover:bg-slate-800"
+                  }`}
+                  disabled={showDistilleriesWithoutTastings}
+                >
+                  {showDistilleriesWithWhiskies ? "Showing All" : "Show All Distilleries"}
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -954,6 +1039,49 @@ export const MapVisualization: React.FC<Props> = ({
                   Asia
                 </button>
               </div>
+            </div>
+
+            {/* Distillery Filters */}
+            <div className="mt-3 pt-3 border-t border-slate-800 space-y-1.5">
+              {onShowDistilleriesWithoutTastingsChange && (
+                <Button
+                  variant={showDistilleriesWithoutTastings ? "default" : "outline"}
+                  onClick={() => {
+                    onShowDistilleriesWithoutTastingsChange(!showDistilleriesWithoutTastings);
+                    // Disable other filter when this is enabled
+                    if (!showDistilleriesWithoutTastings && onShowDistilleriesWithWhiskiesChange) {
+                      onShowDistilleriesWithWhiskiesChange(false);
+                    }
+                  }}
+                  className={`w-full text-xs ${
+                    showDistilleriesWithoutTastings
+                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950"
+                      : "text-slate-400 border-slate-700 hover:bg-slate-800"
+                  }`}
+                >
+                  {showDistilleriesWithoutTastings ? "Only Untasted" : "Show Untasted Only"}
+                </Button>
+              )}
+              {onShowDistilleriesWithWhiskiesChange && (
+                <Button
+                  variant={showDistilleriesWithWhiskies ? "default" : "outline"}
+                  onClick={() => {
+                    onShowDistilleriesWithWhiskiesChange(!showDistilleriesWithWhiskies);
+                    // Disable other filter when this is enabled
+                    if (!showDistilleriesWithWhiskies && onShowDistilleriesWithoutTastingsChange) {
+                      onShowDistilleriesWithoutTastingsChange(false);
+                    }
+                  }}
+                  className={`w-full text-xs ${
+                    showDistilleriesWithWhiskies
+                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950"
+                      : "text-slate-400 border-slate-700 hover:bg-slate-800"
+                  }`}
+                  disabled={showDistilleriesWithoutTastings}
+                >
+                  {showDistilleriesWithWhiskies ? "All Distilleries" : "Show All"}
+                </Button>
+              )}
             </div>
           </div>
         )}
