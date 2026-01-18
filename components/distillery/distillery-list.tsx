@@ -67,9 +67,11 @@ export function DistilleryList() {
 
   // Create a map of distillery performance data by distillery name
   const distilleryPerformanceMap = useMemo(() => {
-    if (!distilleryPerformance) return new Map<string, typeof distilleryPerformance[0]>();
+    type PerformanceType = NonNullable<typeof distilleryPerformance>[number];
     
-    const map = new Map<string, typeof distilleryPerformance[0]>();
+    if (!distilleryPerformance) return new Map<string, PerformanceType>();
+    
+    const map = new Map<string, PerformanceType>();
     distilleryPerformance.forEach((perf) => {
       map.set(perf.distillery, perf);
     });
