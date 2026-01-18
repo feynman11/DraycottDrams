@@ -546,7 +546,8 @@ export const whiskyRouter = createTRPCRouter({
       { label: "40-43%", min: 40, max: 43 },
       { label: "43-46%", min: 43, max: 46 },
       { label: "46-50%", min: 46, max: 50 },
-      { label: "> 50%", min: 50, max: 200 },
+      { label: "50-60%", min: 50, max: 60 },
+      { label: "> 60%", min: 60, max: 200 },
     ];
 
     const results = await Promise.all(
