@@ -25,3 +25,4 @@ export type TastingByWhisky = inferProcedureOutput<AppRouter["tasting"]["getByWh
 // Stats types
 export type WhiskyStats = inferProcedureOutput<AppRouter["whisky"]["getStats"]>;
 
+

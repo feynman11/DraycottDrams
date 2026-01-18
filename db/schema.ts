@@ -73,6 +73,7 @@ export const whiskies = pgTable("whiskies", {
   variety: text("variety").notNull(),
   abv: decimal("abv", { precision: 4, scale: 1 }).notNull(),
   notes: text("notes"),
+  ranking: integer("ranking"), // 1-6 ranking within gathering (1 = first place, null = unranked)
   // Legacy fields kept for backward compatibility (optional)
   name: text("name"),
   type: text("type"),

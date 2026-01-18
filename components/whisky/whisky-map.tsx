@@ -96,12 +96,11 @@ export function WhiskyMap() {
     .filter((g): g is number => g !== null)
     .sort((a, b) => a - b) || [];
 
-  // Create a map of gathering numbers to themes
-  // Use the first whisky from each gathering to get the theme
+  // Create a map of gathering numbers to themes from stats
   const gatheringThemes = new Map<number, string>();
-  whiskies.forEach((whisky) => {
-    if (whisky.gathering && !gatheringThemes.has(whisky.gathering)) {
-      gatheringThemes.set(whisky.gathering, whisky.theme || '');
+  stats?.gatherings?.forEach((g) => {
+    if (g.gathering !== null) {
+      gatheringThemes.set(g.gathering, g.theme || '');
     }
   });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Map, Building2, Droplets, User, LogOut, Users, Menu, X } from "lucide-react";
+import { Map, Building2, Droplets, User, LogOut, Users, Menu, X, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
@@ -15,6 +15,7 @@ export function Header() {
   const isMapPage = pathname === "/map" || pathname === "/";
   const isWhiskiesPage = pathname === "/library";
   const isDistilleriesPage = pathname === "/distilleries";
+  const isWinnersPage = pathname === "/winners";
 
   return (
     <header className="flex-none h-16 bg-slate-900 border-b border-amber-900/30 flex items-center justify-between px-6 shadow-lg z-20 relative">
@@ -65,6 +66,17 @@ export function Header() {
           <Link href="/library" className="flex items-center">
             <Droplets size={18} className="mr-2" />
             <span>Whiskies</span>
+          </Link>
+        </Button>
+        <Button
+          variant={isWinnersPage ? 'default' : 'ghost'}
+          size="sm"
+          className={isWinnersPage ? 'bg-amber-700 text-white shadow-amber-900/20 shadow-lg' : 'hover:bg-slate-800 text-slate-400'}
+          asChild
+        >
+          <Link href="/winners" className="flex items-center">
+            <Trophy size={18} className="mr-2" />
+            <span>Winners</span>
           </Link>
         </Button>
 
@@ -169,6 +181,18 @@ export function Header() {
             >
               <Droplets size={18} />
               <span>Whiskies</span>
+            </Link>
+            <Link
+              href="/winners"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center gap-3 px-6 py-3 text-sm transition-colors ${
+                isWinnersPage
+                  ? 'bg-amber-700/20 text-amber-400 border-l-2 border-amber-700'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+              }`}
+            >
+              <Trophy size={18} />
+              <span>Winners</span>
             </Link>
             {session?.user?.admin || session?.user?.member ? (
               <Link

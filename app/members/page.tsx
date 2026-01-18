@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Users, BookOpen, Star, Building2, Calendar } from "lucide-react";
+import { Loader2, Users, BookOpen, Trophy, Building2, Calendar, AlertTriangle } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/header";
@@ -9,14 +9,22 @@ import { MembersManagement } from "@/components/admin/members-management";
 import { LibraryManagement } from "@/components/admin/library-management";
 import { DistilleryManagement } from "@/components/admin/distillery-management";
 import { GatheringsManagement } from "@/components/admin/gatherings-management";
-import { MyTastings } from "@/components/member/my-tastings";
+import { DataIssues } from "@/components/admin/data-issues";
+import { MyResults } from "@/components/member/my-results";
 
-type Tab = "members" | "whiskys" | "distilleries" | "gatherings" | "tastings";
+type Tab = "members" | "whiskys" | "distilleries" | "gatherings" | "results" | "issues";
 
 export default function MembersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<Tab>("tastings");
+  const [activeTab, setActiveTab] = useState<Tab>("results");
+  const [distillerySearch, setDistillerySearch] = useState<string>("");
+
+  // Handler for editing a distillery from DataIssues
+  const handleEditDistillery = (distilleryName: string) => {
+    setDistillerySearch(distilleryName);
+    setActiveTab("distilleries");
+  };
 
   // Redirect if not a member or admin
   useEffect(() => {
@@ -31,7 +39,7 @@ export default function MembersPage() {
       if (session.user?.admin) {
         setActiveTab("members");
       } else if (session.user?.member) {
-        setActiveTab("tastings");
+        setActiveTab("results");
       }
     }
   }, [status, session]);
@@ -88,15 +96,15 @@ export default function MembersPage() {
                 <div className="flex gap-2 min-w-max md:min-w-0">
                   {isMember && (
                     <button
-                      onClick={() => setActiveTab("tastings")}
+                      onClick={() => setActiveTab("results")}
                       className={`px-3 py-3 md:px-4 md:py-2 font-medium transition-colors flex items-center gap-2 whitespace-nowrap min-w-[120px] md:min-w-0 justify-center md:justify-start ${
-                        activeTab === "tastings"
+                        activeTab === "results"
                           ? "text-amber-400 border-b-2 border-amber-400"
                           : "text-slate-400 hover:text-slate-200"
                       }`}
                     >
-                      <Star size={18} className="flex-shrink-0" />
-                      <span className="text-sm md:text-base">My Tastings</span>
+                      <Trophy size={18} className="flex-shrink-0" />
+                      <span className="text-sm md:text-base">My Results</span>
                     </button>
                   )}
                   {isAdmin && (
@@ -145,6 +153,17 @@ export default function MembersPage() {
                         <Calendar size={18} className="flex-shrink-0" />
                         <span className="text-sm md:text-base">Gatherings</span>
                       </button>
+                      <button
+                        onClick={() => setActiveTab("issues")}
+                        className={`px-3 py-3 md:px-4 md:py-2 font-medium transition-colors flex items-center gap-2 whitespace-nowrap min-w-[120px] md:min-w-0 justify-center md:justify-start ${
+                          activeTab === "issues"
+                            ? "text-amber-400 border-b-2 border-amber-400"
+                            : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        <AlertTriangle size={18} className="flex-shrink-0" />
+                        <span className="text-sm md:text-base">Data Issues</span>
+                      </button>
                     </>
                   )}
                 </div>
@@ -152,11 +171,12 @@ export default function MembersPage() {
 
               {/* Tab Content */}
               <div>
-                {activeTab === "tastings" && isMember && <MyTastings />}
+                {activeTab === "results" && isMember && <MyResults />}
                 {activeTab === "members" && isAdmin && <MembersManagement />}
                 {activeTab === "whiskys" && isAdmin && <LibraryManagement />}
-                {activeTab === "distilleries" && isAdmin && <DistilleryManagement />}
+                {activeTab === "distilleries" && isAdmin && <DistilleryManagement initialSearch={distillerySearch} />}
                 {activeTab === "gatherings" && isAdmin && <GatheringsManagement />}
+                {activeTab === "issues" && isAdmin && <DataIssues onEditDistillery={handleEditDistillery} />}
               </div>
             </div>
           </div>

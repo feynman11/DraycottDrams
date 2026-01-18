@@ -1,14 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "@/lib/trpc-client";
 import { Button } from "@/components/ui/button";
 import { Loader2, Edit2, Trash2, Save, X, Plus, Building2 } from "lucide-react";
 import { type Distillery } from "@/lib/types";
 import { useDebounce } from "@/hooks/use-debounce";
 
-export function DistilleryManagement() {
-  const [searchTerm, setSearchTerm] = useState("");
+interface DistilleryManagementProps {
+  initialSearch?: string;
+}
+
+export function DistilleryManagement({ initialSearch }: DistilleryManagementProps) {
+  const [searchTerm, setSearchTerm] = useState(initialSearch || "");
+
+  // Update search when initialSearch changes
+  useEffect(() => {
+    if (initialSearch) {
+      setSearchTerm(initialSearch);
+    }
+  }, [initialSearch]);
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);

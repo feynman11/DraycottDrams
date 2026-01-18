@@ -78,6 +78,7 @@ export const whiskyRouter = createTRPCRouter({
           variety: whiskies.variety,
           abv: whiskies.abv,
           notes: whiskies.notes,
+          ranking: whiskies.ranking,
           name: whiskies.name,
           type: whiskies.type,
           age: whiskies.age,
@@ -146,6 +147,7 @@ export const whiskyRouter = createTRPCRouter({
           variety: whiskies.variety,
           abv: whiskies.abv,
           notes: whiskies.notes,
+          ranking: whiskies.ranking,
           name: whiskies.name,
           type: whiskies.type,
           age: whiskies.age,
@@ -248,7 +250,16 @@ export const whiskyRouter = createTRPCRouter({
       .innerJoin(distilleries, eq(whiskies.distilleryId, distilleries.id))
       .groupBy(distilleries.country);
 
-    const gatheringsStats = await db
+    // Get all gatherings with their whisky counts (including those with 0 whiskies)
+    const allGatherings = await db
+      .select({
+        gathering: gatherings.number,
+        theme: gatherings.theme,
+      })
+      .from(gatherings)
+      .orderBy(gatherings.number);
+
+    const gatheringsWithCounts = await db
       .select({
         gathering: gatherings.number,
         count: sql<number>`count(*)`,
@@ -256,6 +267,14 @@ export const whiskyRouter = createTRPCRouter({
       .from(whiskies)
       .innerJoin(gatherings, eq(whiskies.gatheringId, gatherings.id))
       .groupBy(gatherings.number);
+
+    // Merge: all gatherings with their counts (0 if no whiskies)
+    const countsMap = new Map(gatheringsWithCounts.map(g => [g.gathering, g.count]));
+    const gatheringsStats = allGatherings.map(g => ({
+      gathering: g.gathering,
+      theme: g.theme,
+      count: countsMap.get(g.gathering) || 0,
+    }));
 
     return {
       total: totalCount[0]?.count || 0,
@@ -383,4 +402,302 @@ export const whiskyRouter = createTRPCRouter({
 
       return { success: true };
     }),
+
+  // Get all first-place winners (Winners Circle)
+  getWinners: publicProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(50),
+        offset: z.number().min(0).default(0),
+        year: z.number().optional(),
+        region: z.string().optional(),
+        country: z.string().optional(),
+      }).optional()
+    )
+    .query(async ({ input }) => {
+      const { limit = 50, offset = 0, year, region, country } = input || {};
+      const { members } = await import("@/db/schema");
+
+      let whereConditions = [eq(whiskies.ranking, 1)];
+
+      if (year) {
+        whereConditions.push(
+          sql`EXTRACT(YEAR FROM ${gatherings.date}) = ${year}`
+        );
+      }
+
+      if (region) {
+        whereConditions.push(eq(distilleries.region, region));
+      }
+
+      if (country) {
+        whereConditions.push(eq(distilleries.country, country));
+      }
+
+      const result = await db
+        .select({
+          id: whiskies.id,
+          provider: whiskies.provider,
+          variety: whiskies.variety,
+          abv: whiskies.abv,
+          ranking: whiskies.ranking,
+          distillery: distilleries.name,
+          country: distilleries.country,
+          region: distilleries.region,
+          gathering: gatherings.number,
+          theme: gatherings.theme,
+          date: gatherings.date,
+          host: members.name,
+        })
+        .from(whiskies)
+        .innerJoin(distilleries, eq(whiskies.distilleryId, distilleries.id))
+        .innerJoin(gatherings, eq(whiskies.gatheringId, gatherings.id))
+        .leftJoin(members, eq(gatherings.hostId, members.id))
+        .where(and(...whereConditions))
+        .orderBy(sql`${gatherings.number} DESC`)
+        .limit(limit)
+        .offset(offset);
+
+      return result;
+    }),
+
+  // Get provider leaderboard
+  getProviderLeaderboard: publicProcedure.query(async () => {
+    const result = await db
+      .select({
+        provider: whiskies.provider,
+        wins: sql<number>`COUNT(*) FILTER (WHERE ${whiskies.ranking} = 1)`.as('wins'),
+        podiums: sql<number>`COUNT(*) FILTER (WHERE ${whiskies.ranking} <= 3)`.as('podiums'),
+        totalEntries: sql<number>`COUNT(*)`.as('total_entries'),
+        avgRanking: sql<number>`AVG(${whiskies.ranking}) FILTER (WHERE ${whiskies.ranking} IS NOT NULL)`.as('avg_ranking'),
+      })
+      .from(whiskies)
+      .groupBy(whiskies.provider)
+      .orderBy(
+        sql`COUNT(*) FILTER (WHERE ${whiskies.ranking} = 1) DESC`,
+        sql`COUNT(*) FILTER (WHERE ${whiskies.ranking} <= 3) DESC`,
+        sql`AVG(${whiskies.ranking}) FILTER (WHERE ${whiskies.ranking} IS NOT NULL) ASC NULLS LAST`
+      );
+
+    return result.map(row => ({
+      ...row,
+      avgRanking: row.avgRanking ? parseFloat(Number(row.avgRanking).toFixed(2)) : null,
+    }));
+  }),
+
+  // Get distillery performance stats
+  getDistilleryPerformance: publicProcedure.query(async () => {
+    const result = await db
+      .select({
+        distilleryId: distilleries.id,
+        distillery: distilleries.name,
+        country: distilleries.country,
+        region: distilleries.region,
+        wins: sql<number>`COUNT(*) FILTER (WHERE ${whiskies.ranking} = 1)`.as('wins'),
+        podiums: sql<number>`COUNT(*) FILTER (WHERE ${whiskies.ranking} <= 3)`.as('podiums'),
+        totalEntries: sql<number>`COUNT(*)`.as('total_entries'),
+        avgRanking: sql<number>`AVG(${whiskies.ranking}) FILTER (WHERE ${whiskies.ranking} IS NOT NULL)`.as('avg_ranking'),
+      })
+      .from(whiskies)
+      .innerJoin(distilleries, eq(whiskies.distilleryId, distilleries.id))
+      .groupBy(distilleries.id, distilleries.name, distilleries.country, distilleries.region)
+      .orderBy(
+        sql`COUNT(*) FILTER (WHERE ${whiskies.ranking} = 1) DESC`,
+        sql`COUNT(*) FILTER (WHERE ${whiskies.ranking} <= 3) DESC`,
+        sql`AVG(${whiskies.ranking}) FILTER (WHERE ${whiskies.ranking} IS NOT NULL) ASC NULLS LAST`
+      );
+
+    return result.map(row => ({
+      ...row,
+      avgRanking: row.avgRanking ? parseFloat(Number(row.avgRanking).toFixed(2)) : null,
+    }));
+  }),
+
+  // Get total count of whiskies
+  getCount: publicProcedure.query(async () => {
+    const result = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(whiskies);
+    return result[0]?.count || 0;
+  }),
+
+  // Get data issues - whiskies with incomplete distillery information
+  getDataIssues: publicProcedure.query(async () => {
+    const { members } = await import("@/db/schema");
+
+    // Whiskies with distilleries missing coordinates
+    const missingCoordinates = await db
+      .select({
+        id: whiskies.id,
+        provider: whiskies.provider,
+        variety: whiskies.variety,
+        distilleryId: distilleries.id,
+        distillery: distilleries.name,
+        country: distilleries.country,
+        region: distilleries.region,
+        coordinates: distilleries.coordinates,
+        gathering: gatherings.number,
+        theme: gatherings.theme,
+        date: gatherings.date,
+      })
+      .from(whiskies)
+      .innerJoin(distilleries, eq(whiskies.distilleryId, distilleries.id))
+      .innerJoin(gatherings, eq(whiskies.gatheringId, gatherings.id))
+      .where(sql`${distilleries.coordinates} IS NULL`);
+
+    // Whiskies with distilleries missing country
+    const missingCountry = await db
+      .select({
+        id: whiskies.id,
+        provider: whiskies.provider,
+        variety: whiskies.variety,
+        distilleryId: distilleries.id,
+        distillery: distilleries.name,
+        country: distilleries.country,
+        region: distilleries.region,
+        coordinates: distilleries.coordinates,
+        gathering: gatherings.number,
+        theme: gatherings.theme,
+        date: gatherings.date,
+      })
+      .from(whiskies)
+      .innerJoin(distilleries, eq(whiskies.distilleryId, distilleries.id))
+      .innerJoin(gatherings, eq(whiskies.gatheringId, gatherings.id))
+      .where(or(
+        sql`${distilleries.country} IS NULL`,
+        eq(distilleries.country, '')
+      ));
+
+    // Whiskies with distilleries missing region
+    const missingRegion = await db
+      .select({
+        id: whiskies.id,
+        provider: whiskies.provider,
+        variety: whiskies.variety,
+        distilleryId: distilleries.id,
+        distillery: distilleries.name,
+        country: distilleries.country,
+        region: distilleries.region,
+        coordinates: distilleries.coordinates,
+        gathering: gatherings.number,
+        theme: gatherings.theme,
+        date: gatherings.date,
+      })
+      .from(whiskies)
+      .innerJoin(distilleries, eq(whiskies.distilleryId, distilleries.id))
+      .innerJoin(gatherings, eq(whiskies.gatheringId, gatherings.id))
+      .where(or(
+        sql`${distilleries.region} IS NULL`,
+        eq(distilleries.region, '')
+      ));
+
+    // Whiskies missing ranking (where gathering has other ranked whiskies)
+    const missingRanking = await db
+      .select({
+        id: whiskies.id,
+        provider: whiskies.provider,
+        variety: whiskies.variety,
+        distilleryId: distilleries.id,
+        distillery: distilleries.name,
+        country: distilleries.country,
+        region: distilleries.region,
+        gathering: gatherings.number,
+        theme: gatherings.theme,
+        date: gatherings.date,
+      })
+      .from(whiskies)
+      .innerJoin(distilleries, eq(whiskies.distilleryId, distilleries.id))
+      .innerJoin(gatherings, eq(whiskies.gatheringId, gatherings.id))
+      .where(sql`${whiskies.ranking} IS NULL`);
+
+    // Get unique distilleries with issues
+    const distilleriesWithIssues = new Map<string, {
+      id: string;
+      name: string;
+      country: string | null;
+      region: string | null;
+      hasCoordinates: boolean;
+      whiskyCount: number;
+    }>();
+
+    for (const w of missingCoordinates) {
+      if (!distilleriesWithIssues.has(w.distilleryId)) {
+        distilleriesWithIssues.set(w.distilleryId, {
+          id: w.distilleryId,
+          name: w.distillery,
+          country: w.country,
+          region: w.region,
+          hasCoordinates: false,
+          whiskyCount: 1,
+        });
+      } else {
+        const existing = distilleriesWithIssues.get(w.distilleryId)!;
+        existing.whiskyCount++;
+      }
+    }
+
+    return {
+      missingCoordinates,
+      missingCountry,
+      missingRegion,
+      missingRanking,
+      distilleriesWithIssues: Array.from(distilleriesWithIssues.values()),
+      summary: {
+        totalMissingCoordinates: missingCoordinates.length,
+        totalMissingCountry: missingCountry.length,
+        totalMissingRegion: missingRegion.length,
+        totalMissingRanking: missingRanking.length,
+        uniqueDistilleriesWithIssues: distilleriesWithIssues.size,
+      },
+    };
+  }),
+
+  // Get ranking stats summary
+  getRankingStats: publicProcedure.query(async () => {
+    const totalRanked = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(whiskies)
+      .where(sql`${whiskies.ranking} IS NOT NULL`);
+
+    const totalUnranked = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(whiskies)
+      .where(sql`${whiskies.ranking} IS NULL`);
+
+    const gatheringsWithRankings = await db
+      .select({ count: sql<number>`COUNT(DISTINCT ${whiskies.gatheringId})` })
+      .from(whiskies)
+      .where(sql`${whiskies.ranking} IS NOT NULL`);
+
+    const topDistillery = await db
+      .select({
+        distillery: distilleries.name,
+        wins: sql<number>`COUNT(*)`.as('wins'),
+      })
+      .from(whiskies)
+      .innerJoin(distilleries, eq(whiskies.distilleryId, distilleries.id))
+      .where(eq(whiskies.ranking, 1))
+      .groupBy(distilleries.name)
+      .orderBy(sql`COUNT(*) DESC`)
+      .limit(1);
+
+    const topProvider = await db
+      .select({
+        provider: whiskies.provider,
+        wins: sql<number>`COUNT(*)`.as('wins'),
+      })
+      .from(whiskies)
+      .where(eq(whiskies.ranking, 1))
+      .groupBy(whiskies.provider)
+      .orderBy(sql`COUNT(*) DESC`)
+      .limit(1);
+
+    return {
+      totalRanked: totalRanked[0]?.count || 0,
+      totalUnranked: totalUnranked[0]?.count || 0,
+      gatheringsWithRankings: gatheringsWithRankings[0]?.count || 0,
+      topDistillery: topDistillery[0] || null,
+      topProvider: topProvider[0] || null,
+    };
+  }),
 });
