@@ -1,20 +1,25 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useSession } from "next-auth/react";
 import { api } from "@/lib/trpc-client";
-import { Loader2, Building2, Search, Trophy, ArrowUpDown } from "lucide-react";
+import { Loader2, Building2, Search, Trophy, ArrowUpDown, Merge } from "lucide-react";
 import { type Distillery, type WhiskyWithGathering } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { WhiskyCard } from "@/components/whisky/whisky-card";
 import { WhiskyDetail } from "@/components/whisky/whisky-detail";
 import { DistilleryCard } from "./distillery-card";
 import { DistilleryDetail } from "@/components/whisky/distillery-detail";
+import { MergeDistilleriesDialog } from "./merge-distilleries-dialog";
 import { useDebounce } from "@/hooks/use-debounce";
 
 type GroupByOption = "none" | "gathering" | "region" | "country" | "variety" | "provider";
 type SortByOption = "default" | "name" | "avgRanking" | "wins" | "whiskyCount";
 
 export function DistilleryList() {
+  const { data: session } = useSession();
+  const isAdmin = !!session?.user?.admin;
+  const utils = api.useUtils();
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [selectedCountry, setSelectedCountry] = useState<string>("");
@@ -23,6 +28,7 @@ export function DistilleryList() {
   const [selectedDistillery, setSelectedDistillery] = useState<Distillery | null>(null);
   const [selectedWhisky, setSelectedWhisky] = useState<WhiskyWithGathering | null>(null);
   const [showDistilleriesWithWhiskies, setShowDistilleriesWithWhiskies] = useState(false);
+  const [showMergeDialog, setShowMergeDialog] = useState(false);
 
   const { data: distilleries, isLoading } = api.distillery.getAll.useQuery({
     search: debouncedSearchTerm || undefined,
@@ -64,6 +70,13 @@ export function DistilleryList() {
 
     return result;
   }, [whiskies]);
+
+  // Simple name -> whisky count map for the merge dialog
+  const whiskyCountsByName = useMemo(() => {
+    const map = new Map<string, number>();
+    distilleryWhiskiesMap.forEach((data, name) => map.set(name, data.count));
+    return map;
+  }, [distilleryWhiskiesMap]);
 
   // Create a map of distillery performance data by distillery name
   const distilleryPerformanceMap = useMemo(() => {
@@ -244,6 +257,17 @@ export function DistilleryList() {
                   Clear Filters
                 </Button>
               )}
+
+              {isAdmin && (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowMergeDialog(true)}
+                  className="text-amber-400 border-amber-700/60 hover:bg-amber-950/40 text-sm sm:text-base ml-auto"
+                >
+                  <Merge className="w-4 h-4 mr-2" />
+                  Merge
+                </Button>
+              )}
             </div>
           </div>
 
@@ -296,6 +320,22 @@ export function DistilleryList() {
         whisky={selectedWhisky}
         onClose={() => setSelectedWhisky(null)}
       />
+
+      {/* Merge Distilleries Dialog (admin only) */}
+      {isAdmin && showMergeDialog && distilleries && (
+        <MergeDistilleriesDialog
+          distilleries={distilleries}
+          whiskyCounts={whiskyCountsByName}
+          onClose={() => setShowMergeDialog(false)}
+          onMerged={async () => {
+            await Promise.all([
+              utils.distillery.invalidate(),
+              utils.whisky.invalidate(),
+            ]);
+            setShowMergeDialog(false);
+          }}
+        />
+      )}
     </div>
   );
 }

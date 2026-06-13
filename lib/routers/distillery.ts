@@ -1,6 +1,6 @@
 import { createTRPCRouter, publicProcedure, adminProcedure } from "@/lib/trpc";
 import { db } from "@/lib/db";
-import { distilleries } from "@/db/schema";
+import { distilleries, whiskies } from "@/db/schema";
 import { eq, ilike, and, sql, or } from "drizzle-orm";
 import { z } from "zod";
 
@@ -156,6 +156,50 @@ export const distilleryRouter = createTRPCRouter({
       }
 
       return { success: true };
+    }),
+
+  // Merge one distillery into another (admin only).
+  // The "keep" distillery survives with all of its own info; the "merge"
+  // distillery's whiskies are reassigned to it and the merge distillery is deleted.
+  merge: adminProcedure
+    .input(
+      z.object({
+        keepId: z.string().min(1),
+        mergeId: z.string().min(1),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { keepId, mergeId } = input;
+
+      if (keepId === mergeId) {
+        throw new Error("Cannot merge a distillery into itself");
+      }
+
+      const found = await db
+        .select({ id: distilleries.id })
+        .from(distilleries)
+        .where(or(eq(distilleries.id, keepId), eq(distilleries.id, mergeId)));
+
+      const foundIds = new Set(found.map((d) => d.id));
+      if (!foundIds.has(keepId) || !foundIds.has(mergeId)) {
+        throw new Error("Distillery not found");
+      }
+
+      const result = await db.transaction(async (tx) => {
+        // Reassign every whisky from the merged distillery to the surviving one.
+        const moved = await tx
+          .update(whiskies)
+          .set({ distilleryId: keepId, updatedAt: new Date() })
+          .where(eq(whiskies.distilleryId, mergeId))
+          .returning({ id: whiskies.id });
+
+        // Remove the now-empty merged distillery.
+        await tx.delete(distilleries).where(eq(distilleries.id, mergeId));
+
+        return { movedCount: moved.length };
+      });
+
+      return { success: true, keepId, mergeId, movedCount: result.movedCount };
     }),
 
   // Get distillery statistics
