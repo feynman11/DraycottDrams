@@ -38,7 +38,7 @@ Deploys happen from CI only (`.github/workflows/deploy.yml`, `preview.yml`). See
 src/                    # Browser app
   main.tsx              # Entry: providers, router
   router.tsx            # TanStack Router route tree
-  pages/                # One file per route (map, library, members, distilleries, winners, import, signin)
+  pages/                # One file per route (map, library, members, distilleries, winners, signin)
 components/             # React components
   ui/                   # shadcn/ui base components
   whisky/, distillery/, member/, ai/, admin/, layout/
@@ -50,7 +50,9 @@ worker/                 # Cloudflare Worker (server)
   trpc.ts               # tRPC context ({ db, env, session }) & procedures
   auth.ts               # Better Auth config
   db.ts                 # Drizzle over the D1 binding
-  routers/              # tRPC routers (whisky, distillery, gathering, tasting, ai, member, user, import)
+  routers/              # tRPC routers (whisky, distillery, gathering, tasting, ai, member, user, drams)
+  drams-import.ts       # Drams sheet upload: preview (exact/fuzzy/AI distillery matching) and apply
+  data-review.ts        # AI review of site data → suggestions an admin accepts
 db/
   schema.ts             # Drizzle schema (sqlite-core), including Better Auth tables
   migrations/           # Generated SQL, applied by wrangler

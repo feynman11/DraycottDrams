@@ -123,26 +123,26 @@ export const DISTILLERY_COORDINATES: Record<string, [number, number]> = {
   'Starward': [144.950, -37.817], // Australia
   'Pike Creek': [-79.383, 43.650], // Canada
   'Milstone': [4.650, 52.383], // Netherlands
-  'Bains': [18.183, 63.000], // South Africa
   'Abasolo Mexican': [-99.133, 19.433], // Mexico
   'Stillwater Port Dundas': [-4.250, 55.867], // Scotland
   'Invercargill': [168.350, -46.417], // New Zealand
-  'Surroundings': [18.183, 63.000], // Generic
   'Linkwood & Fettercairn': [-3.317, 57.617], // Blend location
   'High Coast': [18.183, 63.000], // Sweden
 };
 
 /**
- * Get coordinates for a distillery, with fallback to region center
+ * Get coordinates for a distillery from the table above, or null. There is deliberately no
+ * region/country centre fallback: those points land in the sea or the wrong place on the map, and
+ * a missing location shows up under Data Issues where it can be fixed properly.
  */
-export function getDistilleryCoordinates(distillery: string, country: string, region: string): [number, number] | null {
+export function getDistilleryCoordinates(distillery: string, _country?: string, _region?: string): [number, number] | null {
   const normalizedName = distillery.trim();
-  
+
   // Try exact match first
   if (DISTILLERY_COORDINATES[normalizedName]) {
     return DISTILLERY_COORDINATES[normalizedName];
   }
-  
+
   // Try case-insensitive match
   const lowerName = normalizedName.toLowerCase();
   for (const [key, coords] of Object.entries(DISTILLERY_COORDINATES)) {
@@ -150,45 +150,6 @@ export function getDistilleryCoordinates(distillery: string, country: string, re
       return coords;
     }
   }
-  
-  // Fallback to region centers for Scotland
-  if (country === 'Scotland') {
-    const regionCenters: Record<string, [number, number]> = {
-      'Campbeltown': [-5.608, 55.425],
-      'Lowland': [-3.500, 55.900],
-      'Islay': [-6.200, 55.750],
-      'Highland': [-4.500, 57.500],
-      'Speyside': [-3.200, 57.400],
-      'Island': [-5.500, 57.000],
-    };
-    
-    if (regionCenters[region]) {
-      return regionCenters[region];
-    }
-  }
-  
-  // Fallback to country centers
-  const countryCenters: Record<string, [number, number]> = {
-    'Scotland': [-4.000, 56.500],
-    'Ireland': [-7.000, 53.000],
-    'Wales': [-3.500, 52.000],
-    'England': [-1.500, 52.500],
-    'Japan': [135.500, 35.000],
-    'USA': [-95.000, 39.000],
-    'India': [77.500, 12.900],
-    'Taiwan': [121.500, 24.500],
-    'Sweden': [18.000, 63.000],
-    'France': [2.000, 46.000],
-    'Denmark': [10.000, 56.000],
-    'South Africa': [25.000, -29.000],
-    'Italy': [12.500, 42.000],
-    'Mexico': [-99.000, 19.000],
-  };
-  
-  return countryCenters[country] || null;
+
+  return null;
 }
-
-
-
-
-

@@ -5,12 +5,12 @@ import { z } from "zod";
 // in the dashboard). Swapping model is this one line; the gateway can also route to other providers.
 const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
-type Message = { role: "system" | "user" | "assistant"; content: string };
+export type Message = { role: "system" | "user" | "assistant"; content: string };
 
-async function complete(env: Env, messages: Message[], json = false): Promise<string> {
+export async function complete(env: Env, messages: Message[], json = false, maxTokens = 1024): Promise<string> {
   const result = await env.AI.run(
     MODEL,
-    { messages, max_tokens: 1024, ...(json ? { response_format: { type: "json_object" as const } } : {}) },
+    { messages, max_tokens: maxTokens, ...(json ? { response_format: { type: "json_object" as const } } : {}) },
     { gateway: { id: env.AI_GATEWAY_ID } },
   );
   const response = (result as { response?: unknown }).response;

@@ -13,14 +13,13 @@ import { AIButton } from "@/components/ai/ai-button";
 import { SommelierPanel } from "@/components/ai/sommelier-panel";
 import SignInPage from "./pages/signin";
 
-// Each page is its own chunk, so the map (MapLibre, D3) and import (xlsx) code only loads where used.
+// Each page is its own chunk, so the map (MapLibre, D3) code only loads where used (xlsx loads on demand).
 // The sign-in page stays in the main bundle: it imports signinRoute from this file.
 const MapPage = lazyRouteComponent(() => import("./pages/map"));
 const LibraryPage = lazyRouteComponent(() => import("./pages/library"));
 const DistilleriesPage = lazyRouteComponent(() => import("./pages/distilleries"));
 const MembersPage = lazyRouteComponent(() => import("./pages/members"));
 const WinnersPage = lazyRouteComponent(() => import("./pages/winners"));
-const ImportPage = lazyRouteComponent(() => import("./pages/import"));
 
 function NotFound() {
   return (
@@ -73,7 +72,6 @@ const distilleriesRoute = createRoute({
 });
 const membersRoute = createRoute({ getParentRoute: () => rootRoute, path: "/members", component: MembersPage });
 const winnersRoute = createRoute({ getParentRoute: () => rootRoute, path: "/winners", component: WinnersPage });
-const importRoute = createRoute({ getParentRoute: () => rootRoute, path: "/import", component: ImportPage });
 
 export type SignInSearch = { error?: string; callbackUrl?: string };
 
@@ -94,7 +92,6 @@ const routeTree = rootRoute.addChildren([
   distilleriesRoute,
   membersRoute,
   winnersRoute,
-  importRoute,
   signinRoute,
 ]);
 

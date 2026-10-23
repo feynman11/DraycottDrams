@@ -3,7 +3,6 @@ import { api } from "@/lib/trpc-client";
 import { Button } from "@/components/ui/button";
 import { Loader2, Edit2, Trash2, Save, X, BookOpen, Plus } from "lucide-react";
 import { type WhiskyWithGathering } from "@/lib/types";
-import { Link } from "@tanstack/react-router";
 import { useDebounce } from "@/hooks/use-debounce";
 
 export function LibraryManagement() {
@@ -162,11 +161,6 @@ export function LibraryManagement() {
             <Plus size={18} className="mr-2" />
             Add Whisky
           </Button>
-          <Link to="/import">
-            <Button className="bg-amber-600 hover:bg-amber-700 text-white">
-              Import CSV
-            </Button>
-          </Link>
         </div>
       </div>
 

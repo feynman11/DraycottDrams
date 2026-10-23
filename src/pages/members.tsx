@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Loader2, Users, BookOpen, Trophy, Building2, Calendar, AlertTriangle } from "lucide-react";
+import { Loader2, Users, BookOpen, Trophy, Building2, Calendar, AlertTriangle, FileSpreadsheet, Sparkles } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth-client";
 import { Header } from "@/components/layout/header";
@@ -9,8 +9,10 @@ import { DistilleryManagement } from "@/components/admin/distillery-management";
 import { GatheringsManagement } from "@/components/admin/gatherings-management";
 import { DataIssues } from "@/components/admin/data-issues";
 import { MyResults } from "@/components/member/my-results";
+import { DramsSheet } from "@/components/member/drams-sheet";
+import { AIReview } from "@/components/admin/ai-review";
 
-type Tab = "members" | "whiskys" | "distilleries" | "gatherings" | "results" | "issues";
+type Tab = "members" | "whiskys" | "distilleries" | "gatherings" | "results" | "issues" | "sheet" | "review";
 
 export default function MembersPage() {
   const { data: session, isPending } = authClient.useSession();
@@ -105,6 +107,17 @@ export default function MembersPage() {
                       <span className="text-sm md:text-base">My Results</span>
                     </button>
                   )}
+                  <button
+                    onClick={() => setActiveTab("sheet")}
+                    className={`px-3 py-3 md:px-4 md:py-2 font-medium transition-colors flex items-center gap-2 whitespace-nowrap min-w-[120px] md:min-w-0 justify-center md:justify-start ${
+                      activeTab === "sheet"
+                        ? "text-amber-400 border-b-2 border-amber-400"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    <FileSpreadsheet size={18} className="flex-shrink-0" />
+                    <span className="text-sm md:text-base">Drams Sheet</span>
+                  </button>
                   {isAdmin && (
                     <>
                       <button
@@ -162,6 +175,17 @@ export default function MembersPage() {
                         <AlertTriangle size={18} className="flex-shrink-0" />
                         <span className="text-sm md:text-base">Data Issues</span>
                       </button>
+                      <button
+                        onClick={() => setActiveTab("review")}
+                        className={`px-3 py-3 md:px-4 md:py-2 font-medium transition-colors flex items-center gap-2 whitespace-nowrap min-w-[120px] md:min-w-0 justify-center md:justify-start ${
+                          activeTab === "review"
+                            ? "text-amber-400 border-b-2 border-amber-400"
+                            : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        <Sparkles size={18} className="flex-shrink-0" />
+                        <span className="text-sm md:text-base">AI Review</span>
+                      </button>
                     </>
                   )}
                 </div>
@@ -174,7 +198,9 @@ export default function MembersPage() {
                 {activeTab === "whiskys" && isAdmin && <LibraryManagement />}
                 {activeTab === "distilleries" && isAdmin && <DistilleryManagement initialSearch={distillerySearch} />}
                 {activeTab === "gatherings" && isAdmin && <GatheringsManagement />}
+                {activeTab === "sheet" && <DramsSheet canUpload={!!isAdmin} />}
                 {activeTab === "issues" && isAdmin && <DataIssues onEditDistillery={handleEditDistillery} />}
+                {activeTab === "review" && isAdmin && <AIReview />}
               </div>
             </div>
           </div>
