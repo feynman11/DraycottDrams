@@ -1,5 +1,3 @@
-"use client";
-
 import { type WhiskyWithGathering } from "@/lib/types";
 import { RankingBadge, RankingBar } from "./ranking-badge";
 

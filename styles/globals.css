@@ -50,6 +50,7 @@
     border-color: var(--color-border);
   }
   body {
+    font-family: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
     background-color: var(--color-background);
     color: var(--color-foreground);
   }

@@ -1,0 +1,10 @@
+# Local secrets for `pnpm dev` (copy to .dev.vars, which is gitignored). Deployed Workers get these
+# from `wrangler secret put <NAME>` instead.
+BETTER_AUTH_SECRET="generate with: openssl rand -base64 32"
+APP_URL="http://localhost:5173"
+# Google Cloud Console → APIs & Services → Credentials → OAuth client (Web application).
+# Authorised redirect URI for local dev: http://localhost:5173/api/auth/callback/google
+GOOGLE_CLIENT_ID="123456789-abc.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+# Optional: map tiles (https://cloud.maptiler.com/account/keys/).
+MAPTILER_API_KEY=""

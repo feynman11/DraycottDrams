@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import { ZoomIn, ZoomOut, RotateCcw, Filter, MapPin, Info } from 'lucide-react';
@@ -158,7 +156,7 @@ export const MapVisualization: React.FC<Props> = ({
     const fetchApiKey = async () => {
       try {
         const response = await fetch('/api/map-key');
-        const data = await response.json();
+        const data = (await response.json()) as { apiKey?: string };
         setMaptilerApiKey(data.apiKey || '');
       } catch (error) {
         console.error('Failed to fetch map API key:', error);

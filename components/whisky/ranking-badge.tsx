@@ -1,5 +1,3 @@
-"use client";
-
 import { Trophy, Medal } from "lucide-react";
 import { cn } from "@/lib/utils";
 

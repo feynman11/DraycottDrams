@@ -4,6 +4,7 @@
  * Usage:
  *   npx tsx scripts/import-wikidata-distilleries.ts --limit 2000 --offset 0
  *   npx tsx scripts/import-wikidata-distilleries.ts --limit 2000 --offset 0 --dry-run
+ *   pnpm db:import:wikidata --limit 2000 --env staging   # target D1: see scripts/lib/d1.ts
  *
  * Notes:
  * - We only UPDATE existing rows when we can add missing info (coords/website/description/founded),
@@ -11,9 +12,9 @@
  * - `region` is required by schema. We set it to the best available admin area label; otherwise "Unknown".
  */
 
-import { db } from "@/lib/db";
 import { distilleries } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
+import { insertChunked, runBatched, withD1, type D1Handle, type Db } from "@/scripts/lib/d1";
 
 type Args = {
   limit: number;
@@ -219,27 +220,27 @@ SELECT ?entity WHERE {
   return Array.from(new Set(ids));
 }
 
-async function getCurrentStats() {
+async function getCurrentStats(db: Db) {
   const [{ total }] = await db
     .select({ total: sql<number>`count(*)` })
     .from(distilleries);
 
   const [{ missingCoords }] = await db
     .select({
-      missingCoords: sql<number>`count(*) filter (where ${distilleries.coordinates} is null)`,
+      missingCoords: sql<number>`sum(case when ${distilleries.coordinates} is null then 1 else 0 end)`,
     })
     .from(distilleries);
 
   return { total: total ?? 0, missingCoords: missingCoords ?? 0 };
 }
 
-async function main() {
+async function main({ db }: D1Handle) {
   const args = parseArgs(process.argv);
 
   console.log("🌍 Wikidata distillery import");
   console.log(`- limit=${args.limit} offset=${args.offset} dryRun=${args.dryRun}`);
 
-  const before = await getCurrentStats();
+  const before = await getCurrentStats(db);
   console.log(`- before: ${before.total} distilleries (${before.missingCoords} missing coordinates)`);
 
   const wikidataRows = await fetchWikidataRows(args);
@@ -306,31 +307,25 @@ async function main() {
     return;
   }
 
-  // Insert in chunks to avoid overly large queries.
-  const CHUNK = 500;
-  for (let i = 0; i < toInsert.length; i += CHUNK) {
-    const chunk = toInsert.slice(i, i + CHUNK);
-    await db.insert(distilleries).values(chunk);
-  }
+  // Insert in chunks (D1 allows ≤100 bound parameters per statement).
+  await insertChunked(db, distilleries, toInsert);
 
-  // Updates are usually far fewer; keep it safe/simple.
-  for (const u of toUpdate) {
-    await db
-      .update(distilleries)
-      .set({ ...u.patch, updatedAt: new Date() })
-      .where(eq(distilleries.id, u.id));
-  }
+  // Updates are usually far fewer; send them in batches.
+  await runBatched(
+    db,
+    toUpdate.map((u) =>
+      db
+        .update(distilleries)
+        .set({ ...u.patch, updatedAt: new Date() })
+        .where(eq(distilleries.id, u.id)),
+    ),
+  );
 
-  const after = await getCurrentStats();
+  const after = await getCurrentStats(db);
   console.log(`✅ done`);
   console.log(`- after: ${after.total} distilleries (${after.missingCoords} missing coordinates)`);
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error("❌ import failed:", err);
-    process.exit(1);
-  });
+withD1(main);
 
 

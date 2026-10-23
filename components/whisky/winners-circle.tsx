@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { api } from "@/lib/trpc-client";
 import { Trophy, Medal, TrendingUp, Users, Building2, Calendar, BarChart3, Globe } from "lucide-react";

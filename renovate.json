@@ -1,0 +1,85 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Version policy (as jotbook): exact pins, weekly grouped PRs, 3-day release age, majors on their own, security fixes at once.",
+  "extends": [
+    "config:recommended"
+  ],
+  "timezone": "Europe/London",
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "rangeStrategy": "pin",
+  "minimumReleaseAge": "3 days",
+  "internalChecksFilter": "strict",
+  "ignoreUnstable": true,
+  "separateMajorMinor": true,
+  "separateMultipleMajor": true,
+  "prConcurrentLimit": 5,
+  "labels": [
+    "dependencies"
+  ],
+  "semanticCommits": "enabled",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+  "postUpdateOptions": [
+    "pnpmDedupe"
+  ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": [
+      "before 6am on monday"
+    ]
+  },
+  "packageRules": [
+    {
+      "description": "One grouped PR a week for every non-major update.",
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
+      "groupName": "weekly non-major",
+      "groupSlug": "weekly-non-major"
+    },
+    {
+      "description": "Majors get their own PR each (tech-plan \u00a72.0).",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "groupName": null,
+      "labels": [
+        "dependencies",
+        "major"
+      ]
+    },
+    {
+      "description": "No betas, RCs, alphas or nightlies on main (tech-plan \u00a72.0).",
+      "matchPackageNames": [
+        "*"
+      ],
+      "allowedVersions": "!/-(alpha|beta|rc|next|canary|nightly|dev|pre)/"
+    },
+    {
+      "description": "wrangler, workerd and the Vite plugin move together.",
+      "matchPackageNames": [
+        "wrangler",
+        "@cloudflare/vite-plugin",
+        "@cloudflare/workerd-*"
+      ],
+      "groupName": "cloudflare tooling"
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "description": "Security fixes go in within 7 days: open at once, outside the weekly schedule.",
+    "enabled": true,
+    "schedule": [
+      "at any time"
+    ],
+    "minimumReleaseAge": null,
+    "labels": [
+      "dependencies",
+      "security"
+    ]
+  }
+}

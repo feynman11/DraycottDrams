@@ -1,361 +1,112 @@
-# Deployment Guide
+# Deployment
 
-This guide covers deploying the Draycott Drambusters whisky club application to production.
+Draycott Drams is one Cloudflare Worker. It serves the React app as static assets and answers
+`/api/*` itself (Hono): tRPC, Better Auth (Google sign-in) and a health check. Data lives in D1,
+and the AI sommelier runs on Workers AI through AI Gateway. There are no servers, containers or
+external databases.
 
-## Prerequisites
-
-- Docker and Docker Compose
-- PostgreSQL database (local or cloud)
-- Google OAuth credentials
-- Google Gemini API key
-- Domain name (optional)
-
-## Quick Start with Docker Compose
-
-### Development Deployment
-
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd draycott-drams-whisky-club
-   ```
-
-2. **Create environment file:**
-   ```bash
-   cp .env.example .env.local
-   ```
-   Fill in your environment variables (see [ENVIRONMENT.md](ENVIRONMENT.md))
-
-3. **Start with Docker Compose:**
-   ```bash
-   docker-compose up --build
-   ```
-
-4. **Access the application:**
-   - Application: http://localhost:3000
-   - Database: localhost:5432
-
-### Production Deployment
-
-1. **Update environment variables:**
-   ```bash
-   # Set production values in .env.local
-   NEXTAUTH_URL=https://yourdomain.com
-   DATABASE_URL=postgresql://user:password@host:5432/dbname
-   ```
-
-2. **Build for production:**
-   ```bash
-   docker-compose -f docker-compose.yml up --build -d
-   ```
-
-## Manual Deployment
-
-### Using Docker
-
-1. **Build the image:**
-   ```bash
-   docker build -t draycott-drams .
-   ```
-
-2. **Run the container:**
-   ```bash
-   docker run -p 3000:3000 \
-     -e DATABASE_URL="postgresql://..." \
-     -e NEXTAUTH_SECRET="..." \
-     -e NEXTAUTH_URL="https://yourdomain.com" \
-     -e GOOGLE_CLIENT_ID="..." \
-     -e GOOGLE_CLIENT_SECRET="..." \
-     -e GEMINI_API_KEY="..." \
-     draycott-drams
-   ```
-
-### Using Bun Directly
-
-1. **Install dependencies:**
-   ```bash
-   bun install
-   ```
-
-2. **Set up database:**
-   ```bash
-   bun run db:push
-   bun run db:seed
-   ```
-
-3. **Build and start:**
-   ```bash
-   bun run build
-   bun run start
-   ```
-
-## Environment Configuration
-
-### Production Environment Variables
-
-```env
-# Database
-DATABASE_URL=postgresql://user:password@host:5432/dbname?sslmode=require
-
-# Authentication
-NEXTAUTH_URL=https://yourdomain.com
-NEXTAUTH_SECRET=your-production-secret-here
-
-# Google OAuth (Production)
-GOOGLE_CLIENT_ID=your-production-client-id
-GOOGLE_CLIENT_SECRET=your-production-client-secret
-
-# AI Services
-GEMINI_API_KEY=your-production-api-key
-
-# Optional
-APP_URL=https://yourdomain.com
+```
+browser ──► Worker draycottdrams ─┬─ static assets (dist/client)   every path except /api/*
+                                  └─ Hono  /api/trpc/*   tRPC routers (worker/routers)
+                                           /api/auth/*   Better Auth (Google)
+                                           /api/health   { service, env, version }
+                                           /api/map-key  MapTiler key for the map
+                      bindings:  DB → D1      AI → Workers AI, via AI Gateway "draycottdrams"
 ```
 
-### Database Setup
+## Environments
 
-#### Using PostgreSQL Cloud Services
+| | Worker | D1 database | URL | Deployed by |
+|---|---|---|---|---|
+| local | `vite dev` (workerd) | `.wrangler/state` | http://localhost:5173 | `pnpm dev` |
+| PR preview | version of `draycottdrams-staging`, alias `pr-<n>` | staging | `https://pr-<n>-draycottdrams-staging.tomseagrave94.workers.dev` | `preview.yml`, every push to a PR |
+| staging | `draycottdrams-staging` | `draycottdrams-staging` | `https://draycottdrams-staging.tomseagrave94.workers.dev` | `deploy.yml`, every push to `main` |
+| production | `draycottdrams` | `draycottdrams` | https://draycottdrams.co.uk (also `https://draycottdrams.tomseagrave94.workers.dev`) | `deploy.yml`, run by hand with target `production` |
 
-**Supabase:**
-```env
-DATABASE_URL=postgresql://postgres:[password]@db.[project].supabase.co:5432/postgres
-```
+- **Previews** are uploaded Worker versions that are never deployed, so staging keeps running
+  `main`. They share staging's database and secrets. A PR's migrations reach staging only when it
+  merges.
+- **Production** deploys need a person: run the *deploy* workflow on `main` with target
+  `production`. Add required reviewers to the GitHub environment `production`.
+- **Each deploy** builds, applies D1 migrations, deploys with `APP_VERSION=<commit>`, then checks
+  `/api/health` reports that commit. Migrations run before the new code, so they must work with the
+  code already live: add columns and tables now, and drop old ones in a later release.
 
-**Neon:**
-```env
-DATABASE_URL=postgresql://[user]:[password]@[host]/[database]?sslmode=require
-```
+## First-time setup
 
-**Railway:**
-```env
-DATABASE_URL=${{ Railway.DATABASE_URL }}
-```
+1. **Cloudflare login:** `pnpm exec wrangler login`.
+2. **Bootstrap:** run `scripts/bootstrap-cloudflare.sh <workers.dev subdomain>`. The subdomain is
+   under *Workers & Pages → Overview*. The script:
+   - creates both D1 databases and writes their ids and URLs into `wrangler.jsonc`;
+   - deploys both Workers once;
+   - sets their secrets (it generates `BETTER_AUTH_SECRET` and asks for the rest);
+   - applies the migrations.
 
-#### Local PostgreSQL
+   Commit the updated `wrangler.jsonc`.
+3. **AI Gateway:** in the dashboard, go to *AI → AI Gateway → Create gateway*, use id
+   `draycottdrams`, and turn on caching and rate limiting to taste. Both Workers use it. Logs and
+   costs show there. To change model, edit `MODEL` in `worker/routers/ai.ts`.
+4. **Google OAuth:** in Google Cloud Console, open *APIs & Services → Credentials → OAuth client
+   (Web)* and add these authorised redirect URIs:
+   - `https://draycottdrams.tomseagrave94.workers.dev/api/auth/callback/google`
+   - `https://draycottdrams-staging.tomseagrave94.workers.dev/api/auth/callback/google`
+   - `http://localhost:5173/api/auth/callback/google`
+
+   Previews don't need their own entry, because their sign-in goes through staging (Better Auth's
+   OAuth proxy).
+5. **GitHub:**
+   - Repository secrets: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The token needs
+     *Workers Scripts: Edit*, *D1: Edit* and *Account Settings: Read*.
+   - Environments: `staging` and `production`.
+
+### Custom domain
+
+Production is served at `draycottdrams.co.uk` (the `routes` entry in `wrangler.jsonc`; Cloudflare
+manages its DNS record). The MapTiler key and the Google OAuth client are both tied to that domain.
+Before 2026-10-23 the domain was a CNAME to the Cloudflare Tunnel
+`d311b940-6741-4f51-a2be-ecbc1f1e927b.cfargotunnel.com` (the old Docker app on hp-server).
+
+To use another custom domain:
+1. Add it under *Worker → Settings → Domains & Routes*.
+2. Set `APP_URL` in `wrangler.jsonc` to the new address.
+3. Add the new redirect URI in Google Cloud Console.
+
+## Moving the data from the old Postgres database
+
+The schema is the same as before, with SQLite types, so the data copies straight across:
 
 ```bash
-# Create database
-createdb draycottdrams
-
-# Or using Docker
-docker run --name postgres -e POSTGRES_PASSWORD=password -d postgres:15
+pnpm db:migrate:production                 # empty schema on the production D1
+OLD_DATABASE_URL=postgres://… pnpm db:migrate-from-postgres --remote   # see the script's header
 ```
 
-### SSL and Security
+It refuses to write into tables that already have rows (pass `--force` to replace them), and fails
+if the row counts differ. Users keep their ids. The first Google sign-in links each person's Google
+account to their existing row, so tastings, admin and member flags carry over.
 
-1. **Enable SSL for database connections:**
-   ```env
-   DATABASE_URL=postgresql://user:password@host:5432/db?sslmode=require
-   ```
+## Secrets and settings
 
-2. **Use secure secrets:**
-   - Generate strong `NEXTAUTH_SECRET`
-   - Use production OAuth credentials
-   - Enable 2FA for Google Cloud Console
+| Name | Where | Notes |
+|---|---|---|
+| `BETTER_AUTH_SECRET` | Worker secret | Signs session cookies. Use a different one per environment. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Worker secret | One OAuth client can serve every environment. |
+| `MAPTILER_API_KEY` | Worker secret | Optional. Map tiles. |
+| `APP_URL`, `APP_ENV`, `AI_GATEWAY_ID` | `wrangler.jsonc` vars | Public. |
+| `APP_VERSION` | set by CI per deploy | The commit that `/api/health` reports. |
 
-## Reverse Proxy Configuration
+Set or rotate one with `pnpm exec wrangler secret put <NAME> [--env staging] -c wrangler.jsonc`.
+Locally, they come from `.dev.vars` (see `.dev.vars.example`).
 
-### Nginx Example
+## Rollback
 
-```nginx
-server {
-    listen 80;
-    server_name yourdomain.com;
+There are two ways back:
+- **Code:** in *Worker → Deployments*, pick an earlier version, or run
+  `pnpm exec wrangler rollback [--env staging]`.
+- **Data:** D1 Time Travel restores any minute in the last 30 days:
+  `pnpm exec wrangler d1 time-travel restore draycottdrams --timestamp <ISO time>`.
 
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
+## Logs
 
-### Apache Example
-
-```apache
-<VirtualHost *:80>
-    ServerName yourdomain.com
-
-    ProxyPass / http://localhost:3000/
-    ProxyPassReverse / http://localhost:3000/
-
-    <Location />
-        Require all granted
-        ProxyPassReverse /
-        RequestHeader set X-Forwarded-Proto "https"
-    </Location>
-</VirtualHost>
-```
-
-## SSL Certificate (HTTPS)
-
-### Using Let's Encrypt
-
-```bash
-# Install certbot
-sudo apt install certbot
-
-# Get certificate
-sudo certbot certonly --standalone -d yourdomain.com
-
-# Automatic renewal
-sudo crontab -e
-# Add: 0 12 * * * /usr/bin/certbot renew --quiet
-```
-
-### Using CloudFlare
-
-1. Sign up for CloudFlare
-2. Add your domain
-3. Update nameservers
-4. Enable SSL/TLS encryption
-
-## Monitoring and Maintenance
-
-### Health Checks
-
-The application includes health check endpoints:
-- `GET /api/health` - Application health
-- `GET /api/trpc/health` - API health
-
-### Database Backups
-
-```bash
-# Manual backup
-pg_dump draycottdrams > backup.sql
-
-# Automated backup script
-#!/bin/bash
-DATE=$(date +%Y%m%d_%H%M%S)
-pg_dump draycottdrams > backup_$DATE.sql
-# Upload to cloud storage...
-```
-
-### Logs
-
-```bash
-# View application logs
-docker-compose logs -f app
-
-# View database logs
-docker-compose logs -f db
-```
-
-## Scaling Considerations
-
-### Database Scaling
-
-1. **Connection Pooling:** Use PgBouncer or similar
-2. **Read Replicas:** For read-heavy operations
-3. **Caching:** Redis for session and API caching
-
-### Application Scaling
-
-1. **Load Balancer:** Nginx or AWS ALB
-2. **Multiple Instances:** Docker Swarm or Kubernetes
-3. **CDN:** CloudFlare or AWS CloudFront for static assets
-
-## Troubleshooting
-
-### Common Issues
-
-**Database Connection Failed:**
-```bash
-# Check database connectivity
-psql $DATABASE_URL -c "SELECT 1"
-
-# Check Docker containers
-docker-compose ps
-```
-
-**OAuth Issues:**
-- Verify `NEXTAUTH_URL` matches your domain
-- Check Google OAuth redirect URIs
-- Ensure HTTPS in production
-
-**Build Failures:**
-```bash
-# Clear build cache
-rm -rf .next
-bun run build
-```
-
-### Performance Optimization
-
-1. **Database Indexes:**
-   ```sql
-   CREATE INDEX CONCURRENTLY idx_whiskies_region ON whiskies(region);
-   CREATE INDEX CONCURRENTLY idx_tastings_user_date ON tastings(user_id, tasting_date);
-   ```
-
-2. **Image Optimization:**
-   - Use Next.js Image component
-   - Implement proper image sizing
-   - Consider CDN for whisky images
-
-3. **API Optimization:**
-   - Implement proper caching
-   - Use database connection pooling
-   - Optimize queries with proper indexes
-
-## Backup and Recovery
-
-### Database Backup
-
-```bash
-# Daily backup script
-#!/bin/bash
-DATE=$(date +%Y%m%d)
-pg_dump draycottdrams > /backups/draycottdrams_$DATE.sql
-
-# Keep last 30 days
-find /backups -name "draycottdrams_*.sql" -mtime +30 -delete
-```
-
-### Application Backup
-
-```bash
-# Backup user uploads and configuration
-tar -czf backup_$(date +%Y%m%d).tar.gz \
-  .env.local \
-  public/uploads/ \
-  --exclude=node_modules
-```
-
-### Recovery
-
-```bash
-# Restore database
-psql draycottdrams < backup.sql
-
-# Restore application files
-tar -xzf backup.tar.gz
-```
-
-## Security Checklist
-
-- [ ] HTTPS enabled
-- [ ] Strong database password
-- [ ] `NEXTAUTH_SECRET` is secure and unique
-- [ ] OAuth credentials are production-only
-- [ ] Database backups are encrypted
-- [ ] Regular security updates
-- [ ] Firewall configured
-- [ ] Rate limiting implemented
-- [ ] Input validation enabled
-- [ ] CORS properly configured
-
-## Support
-
-For deployment issues:
-1. Check application logs: `docker-compose logs app`
-2. Verify environment variables
-3. Test database connectivity
-4. Check network/firewall settings
-5. Review [troubleshooting section](#troubleshooting)
+- **Worker logs:** *Worker → Logs* (observability is on in `wrangler.jsonc`), or
+  `pnpm exec wrangler tail [--env staging]`.
+- **AI requests:** in AI Gateway.

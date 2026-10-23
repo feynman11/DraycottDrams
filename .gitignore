@@ -29,3 +29,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Cloudflare (wrangler dev state, build output, local secrets)
+.wrangler
+.dev.vars
+.dev.vars.*
+!.dev.vars.example

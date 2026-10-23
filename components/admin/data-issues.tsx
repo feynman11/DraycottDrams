@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { api } from "@/lib/trpc-client";
 import { AlertTriangle, MapPin, Globe, Map, Trophy, ChevronDown, ChevronRight, ExternalLink } from "lucide-react";

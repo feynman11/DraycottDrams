@@ -1,5 +1,3 @@
-"use client";
-
 import { api } from "@/lib/trpc-client";
 import { Trophy, Medal, TrendingUp, Users } from "lucide-react";
 

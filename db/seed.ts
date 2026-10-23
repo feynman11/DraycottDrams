@@ -1,6 +1,8 @@
-import { db } from "@/lib/db";
+// Usage: pnpm db:seed [--local | --persist-to <dir> | --env staging | --remote]  (see scripts/lib/d1.ts)
 import { whiskies, distilleries, gatherings, members } from "@/db/schema";
-import { eq, ilike } from "drizzle-orm";
+import { eq, like } from "drizzle-orm";
+import { pathToFileURL } from "node:url";
+import { insertChunked, withD1, type D1Handle } from "@/scripts/lib/d1";
 
 // Helper function to parse date strings like "15 November 2019"
 function parseDate(dateStr: string): Date {
@@ -289,7 +291,7 @@ const formattedData = RAW_WHISKY_DATA.map((whisky, index) => {
   };
 });
 
-async function seedDatabase() {
+async function seedDatabase({ db }: Pick<D1Handle, "db">) {
   console.log("🌱 Starting database seeding...");
 
   try {
@@ -387,7 +389,7 @@ async function seedDatabase() {
       const existing = await db
         .select()
         .from(distilleries)
-        .where(ilike(distilleries.name, name))
+        .where(like(distilleries.name, name)) // SQLite LIKE is case-insensitive (ASCII)
         .limit(1);
       
       if (existing.length > 0) {
@@ -408,7 +410,7 @@ async function seedDatabase() {
 
     // Step 4: Insert whiskies with proper foreign keys
     console.log("🍶 Inserting whisky data...");
-    await db.insert(whiskies).values(
+    await insertChunked(db, whiskies,
       formattedData.map(whisky => {
         const gatheringId = gatheringIdMap.get(whisky.gathering);
         const distilleryId = distilleryIdMap.get(whisky.distillery);
@@ -452,16 +454,11 @@ async function seedDatabase() {
 }
 
 // Run seeding if this file is executed directly
-if (require.main === module) {
-  seedDatabase()
-    .then(() => {
-      console.log("🎉 Seeding complete!");
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error("💥 Seeding failed:", error);
-      process.exit(1);
-    });
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  withD1(async (handle) => {
+    await seedDatabase(handle);
+    console.log("🎉 Seeding complete!");
+  });
 }
 
 export { seedDatabase };

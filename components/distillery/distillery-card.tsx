@@ -1,5 +1,3 @@
-"use client";
-
 import { type Distillery } from "@/lib/types";
 import { Building2, MapPin, Globe, Trophy, Medal } from "lucide-react";
 

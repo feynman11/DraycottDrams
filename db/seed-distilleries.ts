@@ -7,17 +7,19 @@
  * - Coordinate correction for existing records when difference exceeds a threshold (km)
  *
  * Usage:
- *   bun run db:seed:distilleries -- --file data/distilleries.wikidata.json --dry-run
- *   bun run db:seed:distilleries -- --file data/distilleries.wikidata.json --threshold 0.92 --max-keep-distance-km 2
- *   bun run db:seed:distilleries -- --file data/distilleries.wikidata.json --force-coordinates
+ *   pnpm db:seed:distilleries --file data/distilleries.wikidata.json --dry-run
+ *   pnpm db:seed:distilleries --file data/distilleries.wikidata.json --threshold 0.92 --max-keep-distance-km 2
+ *   pnpm db:seed:distilleries --file data/distilleries.wikidata.json --force-coordinates
+ *
+ * Target D1: local by default; --persist-to <dir>, --env staging, --remote (see scripts/lib/d1.ts).
  */
 
 import { readFile } from "node:fs/promises";
-import { db } from "@/lib/db";
 import { distilleries } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { bestFuzzyMatch, normalizeForMatch, tokenSignature } from "@/lib/fuzzy-match";
 import { haversineDistanceKm } from "@/lib/geo";
+import { insertChunked, runBatched, withD1, type D1Handle } from "@/scripts/lib/d1";
 
 type DatasetDistillery = {
   name: string;
@@ -91,7 +93,7 @@ function bucketKey(name: string): string {
   return (n[0] || "#") as string;
 }
 
-async function main() {
+async function main({ db }: D1Handle) {
   const args = parseArgs(process.argv);
   console.log("🏭 Distillery seed/upsert");
   console.log(`- file=${args.file} dryRun=${args.dryRun}`);
@@ -140,6 +142,9 @@ async function main() {
   let coordUpdates = 0;
   let merges = 0;
   let skipped = 0;
+  // Collected and written in chunks/batches at the end (D1: ≤100 bound params per statement).
+  const toInsert: Array<typeof distilleries.$inferInsert> = [];
+  const toUpdate: Array<{ id: string; patch: Partial<typeof distilleries.$inferInsert> }> = [];
 
   for (const d of rows) {
     const norm = normalizeForMatch(d.name);
@@ -160,17 +165,15 @@ async function main() {
     if (!match) {
       // Insert new distillery
       inserts++;
-      if (!args.dryRun) {
-        await db.insert(distilleries).values({
-          name: d.name,
-          country: d.country || "Unknown",
-          region: d.region || "Unknown",
-          coordinates: d.coordinates,
-          website: d.website,
-          description: d.description,
-          founded: d.founded,
-        });
-      }
+      toInsert.push({
+        name: d.name,
+        country: d.country || "Unknown",
+        region: d.region || "Unknown",
+        coordinates: d.coordinates,
+        website: d.website,
+        description: d.description,
+        founded: d.founded,
+      });
       continue;
     }
 
@@ -209,12 +212,20 @@ async function main() {
 
     updates++;
     merges++;
-    if (!args.dryRun) {
-      await db
-        .update(distilleries)
-        .set({ ...patch, updatedAt: new Date() })
-        .where(eq(distilleries.id, match.id));
-    }
+    toUpdate.push({ id: match.id, patch });
+  }
+
+  if (!args.dryRun) {
+    await insertChunked(db, distilleries, toInsert);
+    await runBatched(
+      db,
+      toUpdate.map((u) =>
+        db
+          .update(distilleries)
+          .set({ ...u.patch, updatedAt: new Date() })
+          .where(eq(distilleries.id, u.id)),
+      ),
+    );
   }
 
   console.log("✅ summary");
@@ -227,10 +238,7 @@ async function main() {
   if (args.dryRun) console.log("🧪 dry-run: no DB changes applied");
 }
 
-main().catch((err) => {
-  console.error("❌ seed failed:", err);
-  process.exit(1);
-});
+withD1(main);
 
 
 
