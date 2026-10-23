@@ -1,6 +1,7 @@
-import { db } from "../lib/db";
+// Usage: pnpm exec tsx scripts/update-rankings.ts [--local | --env staging | --remote]  (see scripts/lib/d1.ts)
 import { whiskies } from "../db/schema";
-import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+import { runBatched, withD1, type D1Handle } from "./lib/d1";
 
 // Parse ranking text to number
 function parseRanking(notes: string | null): number | null {
@@ -23,7 +24,7 @@ function parseRanking(notes: string | null): number | null {
   return rankingMap[normalized] || null;
 }
 
-async function updateRankings() {
+async function updateRankings({ db }: D1Handle) {
   console.log("Fetching all whiskies...");
 
   const allWhiskies = await db.select().from(whiskies);
@@ -31,15 +32,13 @@ async function updateRankings() {
 
   let updated = 0;
   let skipped = 0;
+  const updates = [];
 
   for (const whisky of allWhiskies) {
     const ranking = parseRanking(whisky.notes);
 
     if (ranking !== null) {
-      await db
-        .update(whiskies)
-        .set({ ranking })
-        .where(sql`${whiskies.id} = ${whisky.id}`);
+      updates.push(db.update(whiskies).set({ ranking }).where(eq(whiskies.id, whisky.id)));
 
       console.log(`  Updated: ${whisky.id} -> ranking ${ranking} (from "${whisky.notes}")`);
       updated++;
@@ -48,17 +47,14 @@ async function updateRankings() {
     }
   }
 
+  await runBatched(db, updates);
+
   console.log("\n--- Summary ---");
   console.log(`Updated: ${updated} whiskies with rankings`);
   console.log(`Skipped: ${skipped} whiskies (no ranking in notes)`);
 }
 
-updateRankings()
-  .then(() => {
-    console.log("\nDone!");
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error("Error updating rankings:", error);
-    process.exit(1);
-  });
+withD1(async (handle) => {
+  await updateRankings(handle);
+  console.log("\nDone!");
+});

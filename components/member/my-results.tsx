@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { api } from "@/lib/trpc-client";
 import { Loader2, Trophy, Medal, Award, TrendingUp, Calendar, Wine, Home } from "lucide-react";

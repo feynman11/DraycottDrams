@@ -1,8 +1,9 @@
-import { db } from "../lib/db";
+// Usage: pnpm exec tsx scripts/verify-rankings.ts [--local | --env staging | --remote]  (see scripts/lib/d1.ts)
 import { whiskies, gatherings, distilleries } from "../db/schema";
 import { eq, isNotNull, sql } from "drizzle-orm";
+import { withD1, type D1Handle } from "./lib/d1";
 
-async function verifyRankings() {
+async function verifyRankings({ db }: D1Handle) {
   // Count by ranking
   const byRanking = await db
     .select({
@@ -38,9 +39,4 @@ async function verifyRankings() {
   winners.forEach(w => console.log(`  G${w.gathering}: ${w.distillery} ${w.variety}`));
 }
 
-verifyRankings()
-  .then(() => process.exit(0))
-  .catch(err => {
-    console.error(err);
-    process.exit(1);
-  });
+withD1(verifyRankings);

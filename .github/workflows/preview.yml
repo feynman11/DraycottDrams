@@ -1,0 +1,69 @@
+# A preview of every same-repo PR: a version of the staging Worker under the alias pr-<n>
+# (https://pr-<n>-draycottdrams-staging.<subdomain>.workers.dev), uploaded but never deployed, so
+# staging itself keeps running main. Previews use staging's D1 and secrets; migrations in the PR
+# are NOT applied (that happens on merge), so a PR that changes the schema shows a preview against
+# the old schema. Aliases are reused per PR and cost nothing idle, so there is no teardown.
+# Fork PRs never run this (no secrets).
+name: preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  issues: write # the sticky comment (PR comments go through the issues API…)
+  pull-requests: write # …which also needs this on pull_request events
+
+concurrency:
+  group: preview-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  PR: ${{ github.event.pull_request.number }}
+  MARKER: '<!-- draycottdrams-preview -->'
+
+jobs:
+  preview:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      # Tokens are given only to the steps that use them: install and build never see any.
+      - run: pnpm install --frozen-lockfile
+      - run: CLOUDFLARE_ENV=staging pnpm build
+      - name: Upload the preview version
+        id: upload
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          pnpm exec wrangler versions upload --preview-alias "pr-$PR" \
+            --var "APP_VERSION:$GITHUB_SHA" --message "PR #$PR $GITHUB_SHA" | tee "$RUNNER_TEMP/upload.log"
+          url=$(grep -oE "https://pr-$PR-draycottdrams-staging\.[a-z0-9-]+\.workers\.dev" "$RUNNER_TEMP/upload.log" | head -1)
+          [ -n "$url" ] || { echo "::error::no preview alias URL in wrangler's output"; exit 1; }
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - name: Smoke (the preview runs exactly this commit)
+        env:
+          URL: ${{ steps.upload.outputs.url }}
+        run: |
+          get() { curl -fsS --retry 12 --retry-all-errors --retry-delay 5 --max-time 20 "$1"; }
+          get "$URL/map" | grep -q '<div id="root">'
+          version=$(get "$URL/api/health" | jq -r .version)
+          [ "$version" = "$GITHUB_SHA" ] || { echo "::error::$URL runs $version, expected $GITHUB_SHA"; exit 1; }
+      - name: Sticky PR comment with the preview URL
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          URL: ${{ steps.upload.outputs.url }}
+        run: |
+          .github/scripts/sticky-comment.sh "$MARKER
+          ### Preview for #$PR
+          $URL
+
+          Commit \`$GITHUB_SHA\` · updated $(date -u +%FT%TZ) · uses the **staging** database; migrations in this PR are applied to staging only after merge. Google sign-in goes through staging (Better Auth OAuth proxy)."

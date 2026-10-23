@@ -1,7 +1,8 @@
 import * as XLSX from "xlsx";
-import { db } from "../lib/db";
+// Usage: pnpm exec tsx scripts/import-excel-rankings.ts [--local | --env staging | --remote]  (see scripts/lib/d1.ts)
 import { whiskies, gatherings, distilleries } from "../db/schema";
-import { eq, and, ilike } from "drizzle-orm";
+import { eq, and, like } from "drizzle-orm";
+import { withD1, type D1Handle } from "./lib/d1";
 
 // Parse ranking text to number
 function parseRanking(notes: string | null | undefined): number | null {
@@ -24,7 +25,7 @@ function parseRanking(notes: string | null | undefined): number | null {
   return rankingMap[normalized] || null;
 }
 
-async function importRankingsFromExcel() {
+async function importRankingsFromExcel({ db }: D1Handle) {
   const filePath = "data/Drams.xlsx";
   console.log(`Reading Excel file: ${filePath}`);
 
@@ -83,7 +84,7 @@ async function importRankingsFromExcel() {
     const distilleryResult = await db
       .select()
       .from(distilleries)
-      .where(ilike(distilleries.name, row.Distillery.trim()))
+      .where(like(distilleries.name, row.Distillery.trim())) // case-insensitive (ASCII) in SQLite
       .limit(1);
 
     if (distilleryResult.length === 0) {
@@ -103,7 +104,7 @@ async function importRankingsFromExcel() {
         and(
           eq(whiskies.gatheringId, gatheringId),
           eq(whiskies.distilleryId, distilleryId),
-          ilike(whiskies.variety, varietyStr)
+          like(whiskies.variety, varietyStr)
         )
       )
       .limit(1);
@@ -173,12 +174,7 @@ function getOrdinal(n: number): string {
   return s[(v - 20) % 10] || s[v] || s[0];
 }
 
-importRankingsFromExcel()
-  .then(() => {
-    console.log("\nDone!");
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error("Error importing rankings:", error);
-    process.exit(1);
-  });
+withD1(async (handle) => {
+  await importRankingsFromExcel(handle);
+  console.log("\nDone!");
+});

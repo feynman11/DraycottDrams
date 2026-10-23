@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { api } from "@/lib/trpc-client";
 import { Button } from "@/components/ui/button";

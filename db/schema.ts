@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, integer, decimal, jsonb, boolean, uuid } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -18,60 +18,100 @@ export const ParticipationStatus = {
 } as const;
 
 // Tables
-export const users = pgTable("users", {
+// `users` is also Better Auth's user model (worker/auth.ts maps it); role/admin/member/lastLogin
+// are its additional fields.
+export const users = sqliteTable("users", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   email: text("email").unique().notNull(),
-  emailVerified: timestamp("email_verified", { mode: "date" }),
+  emailVerified: integer("email_verified", { mode: "boolean" }).default(false).notNull(),
   name: text("name"),
   image: text("image"),
   role: text("role").$default(() => UserRole.USER).notNull(),
-  admin: boolean("admin").default(false).notNull(),
-  member: boolean("member").default(false).notNull(),
-  lastLogin: timestamp("last_login", { mode: "date" }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  admin: integer("admin", { mode: "boolean" }).default(false).notNull(),
+  member: integer("member", { mode: "boolean" }).default(false).notNull(),
+  lastLogin: integer("last_login", { mode: "timestamp_ms" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
 });
 
-export const members = pgTable("members", {
+// Better Auth's own tables (sessions, linked Google accounts, OAuth state). Column set as
+// required by better-auth 1.x; worker/auth.ts maps its models onto these.
+export const sessions = sqliteTable("sessions", {
+  id: text("id").primaryKey(),
+  token: text("token").notNull().unique(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
+}, (t) => [index("sessions_user_id_idx").on(t.userId)]);
+
+export const accounts = sqliteTable("accounts", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: integer("access_token_expires_at", { mode: "timestamp_ms" }),
+  refreshTokenExpiresAt: integer("refresh_token_expires_at", { mode: "timestamp_ms" }),
+  scope: text("scope"),
+  password: text("password"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
+}, (t) => [index("accounts_user_id_idx").on(t.userId)]);
+
+export const verifications = sqliteTable("verifications", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
+}, (t) => [index("verifications_identifier_idx").on(t.identifier)]);
+
+export const members = sqliteTable("members", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
   userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
   timesHosted: integer("times_hosted").default(0).notNull(),
-  lastHosted: timestamp("last_hosted", { mode: "date" }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  lastHosted: integer("last_hosted", { mode: "timestamp_ms" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
 });
 
-export const distilleries = pgTable("distilleries", {
+export const distilleries = sqliteTable("distilleries", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull().unique(),
   country: text("country").notNull(),
   region: text("region").notNull(),
-  coordinates: jsonb("coordinates").$type<[number, number]>(),
+  coordinates: text("coordinates", { mode: "json" }).$type<[number, number]>(),
   description: text("description"),
   website: text("website"),
   founded: integer("founded"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
 });
 
-export const gatherings = pgTable("gatherings", {
+export const gatherings = sqliteTable("gatherings", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   number: integer("number").notNull().unique(),
-  date: timestamp("date", { mode: "date" }).notNull(),
+  date: integer("date", { mode: "timestamp_ms" }).notNull(),
   hostId: text("host_id").references(() => members.id, { onDelete: "restrict" }).notNull(),
   theme: text("theme"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
 });
 
-export const whiskies = pgTable("whiskies", {
+export const whiskies = sqliteTable("whiskies", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   gatheringId: text("gathering_id").references(() => gatherings.id, { onDelete: "restrict" }).notNull(),
   provider: text("provider").notNull(),
   distilleryId: text("distillery_id").references(() => distilleries.id, { onDelete: "restrict" }).notNull(),
   variety: text("variety").notNull(),
-  abv: decimal("abv", { precision: 4, scale: 1 }).notNull(),
+  abv: text("abv").notNull(),
   notes: text("notes"),
   ranking: integer("ranking"), // 1-6 ranking within gathering (1 = first place, null = unranked)
   // Legacy fields kept for backward compatibility (optional)
@@ -80,8 +120,8 @@ export const whiskies = pgTable("whiskies", {
   age: integer("age"),
   priceRange: text("price_range"),
   description: text("description"),
-  tastingNotes: jsonb("tasting_notes").$type<string[]>(),
-  flavourProfile: jsonb("flavour_profile").$type<{
+  tastingNotes: text("tasting_notes", { mode: "json" }).$type<string[]>(),
+  flavourProfile: text("flavour_profile", { mode: "json" }).$type<{
     peat: number;
     fruit: number;
     floral: number;
@@ -90,27 +130,27 @@ export const whiskies = pgTable("whiskies", {
     sweetness: number;
   }>(),
   imageUrl: text("image_url"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
 });
 
-export const tastings = pgTable("tastings", {
+export const tastings = sqliteTable("tastings", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   whiskyId: text("whisky_id").references(() => whiskies.id, { onDelete: "cascade" }).notNull(),
   rating: integer("rating").notNull(),
   notes: text("notes"),
-  tastingDate: timestamp("tasting_date", { mode: "date" }).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  tastingDate: integer("tasting_date", { mode: "timestamp_ms" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
 });
 
-export const tastingNotes = pgTable("tasting_notes", {
+export const tastingNotes = sqliteTable("tasting_notes", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   tastingId: text("tasting_id").references(() => tastings.id, { onDelete: "cascade" }).notNull(),
   note: text("note").notNull(),
   intensity: integer("intensity").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()).notNull(),
 });
 
 // Zod schemas for validation

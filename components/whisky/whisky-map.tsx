@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useMemo } from "react";
 import { api } from "@/lib/trpc-client";
 import { MapVisualization } from "./map-visualization";

@@ -1,15 +1,19 @@
-"use client";
-
 import { Map, Building2, Droplets, User, LogOut, Users, Menu, X, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { signIn, signOut, useSession } from "next-auth/react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, useLocation } from "@tanstack/react-router";
+import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
 
 export function Header() {
-  const { data: session, status } = useSession();
-  const pathname = usePathname();
+  const { data: session, isPending } = authClient.useSession();
+  const pathname = useLocation({ select: (location) => location.pathname });
+
+  const signIn = () =>
+    authClient.signIn.social({ provider: "google", callbackURL: window.location.href });
+  const signOut = async () => {
+    await authClient.signOut();
+    window.location.reload();
+  };
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMembersPage = pathname === "/members";
   const isMapPage = pathname === "/map" || pathname === "/";
@@ -41,7 +45,7 @@ export function Header() {
           className={isMapPage ? 'bg-amber-700 text-white shadow-amber-900/20 shadow-lg' : 'hover:bg-slate-800 text-slate-400'}
           asChild
         >
-          <Link href="/map" className="flex items-center">
+          <Link to="/map" className="flex items-center">
             <Map size={18} className="mr-2" />
             <span>World Map</span>
           </Link>
@@ -52,7 +56,7 @@ export function Header() {
           className={isDistilleriesPage ? 'bg-amber-700 text-white shadow-amber-900/20 shadow-lg' : 'hover:bg-slate-800 text-slate-400'}
           asChild
         >
-          <Link href="/distilleries" className="flex items-center">
+          <Link to="/distilleries" className="flex items-center">
             <Building2 size={18} className="mr-2" />
             <span>Distilleries</span>
           </Link>
@@ -63,7 +67,7 @@ export function Header() {
           className={isWhiskiesPage ? 'bg-amber-700 text-white shadow-amber-900/20 shadow-lg' : 'hover:bg-slate-800 text-slate-400'}
           asChild
         >
-          <Link href="/library" className="flex items-center">
+          <Link to="/library" className="flex items-center">
             <Droplets size={18} className="mr-2" />
             <span>Whiskies</span>
           </Link>
@@ -74,7 +78,7 @@ export function Header() {
           className={isWinnersPage ? 'bg-amber-700 text-white shadow-amber-900/20 shadow-lg' : 'hover:bg-slate-800 text-slate-400'}
           asChild
         >
-          <Link href="/winners" className="flex items-center">
+          <Link to="/winners" className="flex items-center">
             <Trophy size={18} className="mr-2" />
             <span>Winners</span>
           </Link>
@@ -87,7 +91,7 @@ export function Header() {
             className={isMembersPage ? 'bg-amber-700 text-white shadow-amber-900/20 shadow-lg' : 'hover:bg-slate-800 text-slate-400'}
             asChild
           >
-            <Link href="/members" className="flex items-center">
+            <Link to="/members" className="flex items-center">
               <Users size={18} className="mr-2" />
               <span>Members</span>
             </Link>
@@ -96,7 +100,7 @@ export function Header() {
 
         <div className="w-px h-8 bg-slate-700 mx-2" />
 
-        {status === 'loading' ? (
+        {isPending ? (
           <div className="w-8 h-8 bg-slate-700 rounded-full animate-pulse" />
         ) : session?.user ? (
           <div className="flex items-center gap-2">
@@ -120,7 +124,7 @@ export function Header() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => signIn('google')}
+            onClick={() => signIn()}
             className="text-slate-400 hover:text-slate-200"
           >
             <User size={18} className="mr-2" />
@@ -147,7 +151,7 @@ export function Header() {
         <div className="absolute top-16 left-0 right-0 bg-slate-900 border-b border-amber-900/30 shadow-lg z-30 md:hidden">
           <nav className="flex flex-col py-2">
             <Link
-              href="/map"
+              to="/map"
               onClick={() => setMobileMenuOpen(false)}
               className={`flex items-center gap-3 px-6 py-3 text-sm transition-colors ${
                 isMapPage
@@ -159,7 +163,7 @@ export function Header() {
               <span>World Map</span>
             </Link>
             <Link
-              href="/distilleries"
+              to="/distilleries"
               onClick={() => setMobileMenuOpen(false)}
               className={`flex items-center gap-3 px-6 py-3 text-sm transition-colors ${
                 isDistilleriesPage
@@ -171,7 +175,7 @@ export function Header() {
               <span>Distilleries</span>
             </Link>
             <Link
-              href="/library"
+              to="/library"
               onClick={() => setMobileMenuOpen(false)}
               className={`flex items-center gap-3 px-6 py-3 text-sm transition-colors ${
                 isWhiskiesPage
@@ -183,7 +187,7 @@ export function Header() {
               <span>Whiskies</span>
             </Link>
             <Link
-              href="/winners"
+              to="/winners"
               onClick={() => setMobileMenuOpen(false)}
               className={`flex items-center gap-3 px-6 py-3 text-sm transition-colors ${
                 isWinnersPage
@@ -196,7 +200,7 @@ export function Header() {
             </Link>
             {session?.user?.admin || session?.user?.member ? (
               <Link
-                href="/members"
+                to="/members"
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center gap-3 px-6 py-3 text-sm transition-colors ${
                   isMembersPage
@@ -223,7 +227,7 @@ export function Header() {
             ) : (
               <button
                 onClick={() => {
-                  signIn('google');
+                  signIn();
                   setMobileMenuOpen(false);
                 }}
                 className="flex items-center gap-3 px-6 py-3 text-sm text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors"

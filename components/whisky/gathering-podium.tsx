@@ -1,5 +1,3 @@
-"use client";
-
 import { type WhiskyWithGathering } from "@/lib/types";
 import { Trophy, Medal } from "lucide-react";
 import { cn } from "@/lib/utils";

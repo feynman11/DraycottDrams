@@ -1,0 +1,58 @@
+// One Worker serves everything: the React app (static assets) and /api/* (Hono: tRPC, Better Auth,
+// health). Top level = production; `env.staging` = staging and every PR preview (preview URLs share
+// staging's D1, never production's). Secrets are never here: set them with `wrangler secret put`
+// (see docs/DEPLOYMENT.md). scripts/bootstrap-cloudflare.sh fills in the CHANGE-ME values once.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "draycottdrams",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "not_found_handling": "single-page-application",
+    // API routes reach the Worker; every other path is the app (index.html for client routes).
+    "run_worker_first": ["/api/*"]
+  },
+  "observability": { "enabled": true },
+  "upload_source_maps": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "draycottdrams",
+      "database_id": "29ad810e-91a3-4804-a08a-bcf16247a045",
+      "migrations_dir": "db/migrations"
+    }
+  ],
+  "ai": { "binding": "AI" },
+  "vars": {
+    "APP_ENV": "production",
+    "APP_URL": "https://draycottdrams.tomseagrave94.workers.dev",
+    "AI_GATEWAY_ID": "draycottdrams",
+    "APP_VERSION": "" // set per deploy: wrangler deploy --var APP_VERSION:<sha>
+  },
+  "env": {
+    "staging": {
+      "name": "draycottdrams-staging",
+      "preview_urls": true,
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "draycottdrams-staging",
+          "database_id": "e079a2af-3724-441f-9e9e-4487c5bdee6d",
+          "migrations_dir": "db/migrations"
+        }
+      ],
+      "ai": { "binding": "AI" },
+      "vars": {
+        "APP_ENV": "staging",
+        // PR previews (pr-<n>-draycottdrams-staging.….workers.dev) send Google sign-in through this
+        // URL (Better Auth oAuthProxy), so only it needs registering with Google.
+        "APP_URL": "https://draycottdrams-staging.tomseagrave94.workers.dev",
+        "AI_GATEWAY_ID": "draycottdrams",
+        "APP_VERSION": ""
+      }
+    }
+  }
+}

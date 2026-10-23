@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useMemo } from "react";
 import { api } from "@/lib/trpc-client";
 import { Loader2, Building2, Search, Trophy, ArrowUpDown } from "lucide-react";

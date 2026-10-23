@@ -1,5 +1,3 @@
-"use client";
-
 import { type WhiskyWithGathering } from "@/lib/types";
 import { X, MapPin, Droplets, Banknote, Calendar, Map, Trophy } from 'lucide-react';
 import { RankingBadge, PodiumBadge } from './ranking-badge';

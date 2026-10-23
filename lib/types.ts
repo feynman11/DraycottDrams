@@ -3,7 +3,7 @@
  * All types are derived from Drizzle DB queries via tRPC procedures
  */
 
-import { type AppRouter } from "@/lib/routers/app";
+import { type AppRouter } from "@/worker/routers/app";
 import { type inferProcedureOutput } from "@trpc/server";
 
 // Whisky types

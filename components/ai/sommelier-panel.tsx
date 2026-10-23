@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { X, Send, Bot } from "lucide-react";
 import { api } from "@/lib/trpc-client";

@@ -1,13 +1,12 @@
 # Draycott Drambusters - Whisky Club Management System
 
-[![Next.js](https://img.shields.io/badge/Next.js-15.0-black)](https://nextjs.org/)
-[![Bun](https://img.shields.io/badge/Bun-1.3.4-yellow)](https://bun.sh/)
+[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-orange)](https://developers.cloudflare.com/workers/)
+[![D1](https://img.shields.io/badge/Cloudflare-D1-orange)](https://developers.cloudflare.com/d1/)
+[![React](https://img.shields.io/badge/React-19-blue)](https://react.dev/)
 [![Drizzle](https://img.shields.io/badge/Drizzle-ORM-blue)](https://orm.drizzle.team/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue)](https://postgresql.org/)
-[![Google OAuth](https://img.shields.io/badge/Google-OAuth-red)](https://developers.google.com/identity/protocols/oauth2)
-[![Gemini AI](https://img.shields.io/badge/Gemini-AI-orange)](https://ai.google.dev/)
+[![Better Auth](https://img.shields.io/badge/Better_Auth-Google-red)](https://www.better-auth.com/)
 
-A modern, full-stack whisky club management application built with Next.js, featuring an interactive world map, AI-powered sommelier recommendations, tasting notes, and Google SSO authentication.
+A modern, full-stack whisky club management application running entirely on Cloudflare, featuring an interactive world map, AI-powered sommelier recommendations, tasting notes, and Google sign-in.
 
 ## ✨ Features
 
@@ -24,7 +23,7 @@ A modern, full-stack whisky club management application built with Next.js, feat
 - **Price range information**
 
 ### 🤖 AI Sommelier
-- **Gemini-powered recommendations** based on preferences
+- **AI-powered recommendations** based on preferences
 - **Tasting analysis** and insights
 - **Conversational chat** interface
 - **Personalized suggestions**
@@ -45,175 +44,67 @@ A modern, full-stack whisky club management application built with Next.js, feat
 
 ### Prerequisites
 
-- **Bun** (runtime and package manager)
-- **PostgreSQL** database
-- **Google Cloud** account (for OAuth)
-- **Google AI Studio** account (for Gemini API)
+- **Node 26 + pnpm 12** (`mise install` reads `mise.toml`)
+- **Google Cloud** OAuth client (for sign-in)
+- **Cloudflare** account (only to deploy, or to use the AI sommelier locally)
 
 ### Installation
 
-1. **Clone and install dependencies:**
-   ```bash
-   git clone <repository-url>
-   cd draycott-drams-whisky-club
-   bun install
-   ```
+```bash
+git clone https://github.com/feynman11/DraycottDrams.git
+cd DraycottDrams
+pnpm install
+cp .dev.vars.example .dev.vars   # fill in the values
+pnpm db:migrate:local            # local D1 database, no server needed
+pnpm db:seed                     # optional sample data
+pnpm dev                         # http://localhost:5173
+```
 
-2. **Set up environment variables:**
-   ```bash
-   # Option 1: Use the setup script (recommended)
-   bun run setup:env
-   # or
-   ./scripts/setup-env.sh
-
-   # Option 2: Manual setup
-   cp .env.example .env.local
-   ```
-   Fill in the required values (see [Environment Setup](#environment-setup))
-
-3. **Set up the database:**
-   ```bash
-   # Push schema to database
-   bun run db:push
-
-   # Seed with initial whisky data
-   bun run db:seed
-   ```
-
-4. **Start the development server:**
-   ```bash
-   bun run dev
-   ```
-
-5. **Open [http://localhost:3000](http://localhost:3000)** in your browser
+See [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) for the variables and local workflow.
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **[Next.js 15](https://nextjs.org/)** - React framework with App Router
-- **[React 19](https://react.dev/)** - UI library
-- **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
-- **[shadcn/ui](https://ui.shadcn.com/)** - Modern UI components
-- **[D3.js](https://d3js.org/)** - Data visualization
-- **[Recharts](https://recharts.org/)** - Chart library
+- **Vite + React 19** single-page app with **TanStack Router**
+- **Tailwind CSS 4** and **shadcn/ui**
+- **D3.js**, **Recharts** and **MapLibre GL** for maps and charts
+- **TanStack Query** through tRPC
 
 ### Backend
-- **[tRPC](https://trpc.io/)** - Type-safe API layer
-- **[Drizzle ORM](https://orm.drizzle.team/)** - Database ORM
-- **[PostgreSQL](https://postgresql.org/)** - Primary database
-- **[NextAuth.js](https://next-auth.js.org/)** - Authentication
-- **[Zod](https://zod.dev/)** - Schema validation
+- **Cloudflare Workers** with **Hono**, one Worker for both the app and the API
+- **tRPC** for type-safe API calls
+- **Cloudflare D1** (SQLite) with **Drizzle ORM** and checked-in migrations
+- **Better Auth** for Google sign-in, with sessions stored in D1
 
-### AI & External Services
-- **[Google Gemini](https://ai.google.dev/)** - AI sommelier functionality
-- **[Google OAuth](https://developers.google.com/identity/protocols/oauth2)** - Authentication
+### AI
+- **Workers AI** (Llama 3.3 70B) through **Cloudflare AI Gateway**, which handles caching, rate limits and logs
 
-### Development & Deployment
-- **[Bun](https://bun.sh/)** - Runtime and package manager
-- **[TypeScript](https://typescriptlang.org/)** - Type safety
-- **[ESLint](https://eslint.org/)** - Code linting
-- **[Drizzle Kit](https://orm.drizzle.team/kit)** - Database migrations
+### Delivery
+- **GitHub Actions**: checks on every PR, a preview URL per PR, staging on every merge, and production deploys by hand
+- **Renovate**: dependency updates each week
 
 ## 🗂️ Project Structure
 
 ```
-draycott-drams-whisky-club/
-├── app/                          # Next.js App Router
-│   ├── api/
-│   │   └── trpc/                # tRPC API routes
-│   ├── layout.tsx               # Root layout
-│   ├── page.tsx                 # Homepage
-│   └── globals.css              # Global styles
-├── components/                   # React components
-│   ├── ui/                      # shadcn/ui components
-│   ├── whisky/                  # Whisky-related components
-│   ├── ai/                      # AI sommelier components
-│   └── layout/                  # Layout components
-├── db/                          # Database layer
-│   ├── schema.ts                # Drizzle schema
-│   ├── seed.ts                  # Database seeding
-│   └── migrations/              # Generated migrations
-├── lib/                         # Utility libraries
-│   ├── auth.ts                  # NextAuth configuration
-│   ├── db.ts                    # Database connection
-│   ├── trpc.ts                  # tRPC configuration
-│   └── utils.ts                 # Helper functions
-├── docs/                        # Documentation
-│   ├── ENVIRONMENT.md           # Environment variables
-│   ├── API.md                   # API documentation
-│   └── DEPLOYMENT.md            # Deployment guide
-└── public/                      # Static assets
+src/          React app (entry, router, pages)
+components/   UI components
+lib/          Shared, browser-safe code; auth and tRPC clients
+worker/       Cloudflare Worker: Hono entry, tRPC routers, Better Auth, D1
+db/           Drizzle schema and SQL migrations
+scripts/      Seed/import scripts and Cloudflare bootstrap
+docs/         Deployment, environment and API docs
 ```
-
-## 🌍 Environment Setup
-
-### Required Environment Variables
-
-Create a `.env.local` file with the following variables:
-
-```env
-# Database
-DATABASE_URL="postgresql://user:password@localhost:5432/draycottdrams"
-
-# NextAuth.js
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-generated-secret-here"
-
-# Google OAuth
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
-
-# AI Services
-GEMINI_API_KEY="your-gemini-api-key"
-```
-
-See [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) for detailed setup instructions.
-
-### Database Setup
-
-1. **Install PostgreSQL** locally or use a cloud service
-2. **Create a database** named `draycottdrams`
-3. **Update DATABASE_URL** in your environment variables
-4. **Run migrations:**
-   ```bash
-   bun run db:push
-   ```
-5. **Seed the database:**
-   ```bash
-   bun run db:seed
-   ```
-
-### Google OAuth Setup
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing
-3. Enable Google+ API
-4. Create OAuth 2.0 credentials
-5. Add authorized redirect URIs for your domain
-6. Copy credentials to environment variables
-
-### AI Setup
-
-1. Visit [Google AI Studio](https://aistudio.google.com/)
-2. Generate a Gemini API key
-3. Add to `GEMINI_API_KEY` environment variable
 
 ## 📖 Available Scripts
 
 ```bash
-# Development
-bun run dev          # Start development server
-bun run build        # Build for production
-bun run start        # Start production server
-bun run lint         # Run ESLint
-
-# Database
-bun run db:push      # Push schema changes
-bun run db:studio    # Open Drizzle Studio
-bun run db:seed      # Seed database with whisky data
-
-# Code Generation
-bun run db:generate  # Generate migrations
+pnpm dev                 # app + Worker locally (local D1)
+pnpm dev:ai              # same, with Workers AI (needs `wrangler login`)
+pnpm build               # production build
+pnpm typecheck           # TypeScript
+pnpm db:generate         # new migration from db/schema.ts
+pnpm db:migrate:local    # apply migrations locally
+pnpm db:seed             # seed sample data
 ```
 
 ## 🎯 API Reference
@@ -243,28 +134,19 @@ See [docs/API.md](docs/API.md) for complete API documentation.
 
 ## 🚀 Deployment
 
-### Production Build
+Deploys run from GitHub Actions only:
+- **Previews:** each PR gets one at `pr-<n>-draycottdrams-staging.<sub>.workers.dev`.
+- **Staging:** every merge to `main` deploys there.
+- **Production:** run the *deploy* workflow by hand with target `production`.
 
-```bash
-bun run build
-bun run start
-```
-
-### Environment Considerations
-
-- Set `NEXTAUTH_URL` to your production domain
-- Use secure secrets for production
-- Configure PostgreSQL connection pooling
-- Set up proper CORS policies
-
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for detailed deployment instructions.
+First-time setup is `scripts/bootstrap-cloudflare.sh`. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full guide, including moving data from the old Postgres database.
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Run tests and linting
+4. Run `pnpm typecheck` and `pnpm build`
 5. Submit a pull request
 
 ### Development Guidelines

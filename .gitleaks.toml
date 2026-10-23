@@ -1,0 +1,11 @@
+# gitleaks config: the default rules, plus one allowlist for the placeholder values in
+# .dev.vars.example. Both conditions must hold (AND): the secret is a placeholder, AND it's in that file.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Placeholders in the local secrets template"
+condition = "AND"
+regexTarget = "secret"
+regexes = ['''^generate with''', '''^123456789-abc''', '''^your-google-client-secret$''']
+paths = ['''^\.dev\.vars\.example$''']

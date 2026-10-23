@@ -1,5 +1,3 @@
-"use client";
-
 import { X, MapPin, Droplets, Calendar, Globe, Building2, TrendingUp, Users, ExternalLink } from 'lucide-react';
 import { api } from "@/lib/trpc-client";
 import { useMemo } from "react";

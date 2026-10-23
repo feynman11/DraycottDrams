@@ -1,0 +1,7 @@
+# Single-package repo; this file holds pnpm settings (pnpm 11+ reads them from here, not .npmrc).
+minimumReleaseAge: 4320 # 3 days; new releases wait before install
+strictDepBuilds: true # fail on unreviewed postinstall scripts
+allowBuilds: # all denied: none of these is needed to build or run the app
+  esbuild: false # the platform binary comes from @esbuild/<platform>; postinstall only re-checks it
+  protobufjs: false # postinstall only prints a version notice
+  workerd: false # the runtime binary comes from @cloudflare/workerd-<platform>; postinstall only re-checks it
