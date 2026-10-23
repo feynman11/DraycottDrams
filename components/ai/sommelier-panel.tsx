@@ -79,7 +79,7 @@ export function SommelierPanel({ isOpen, onClose }: SommelierPanelProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="absolute bottom-20 right-6 w-96 max-h-96 bg-slate-900/95 backdrop-blur-xl shadow-2xl border border-slate-700 rounded-xl overflow-hidden z-40">
+    <div className="fixed bottom-24 right-4 left-4 sm:left-auto sm:right-6 sm:w-96 max-h-96 bg-slate-900/95 backdrop-blur-xl shadow-2xl border border-slate-700 rounded-xl overflow-hidden z-[1000]">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-slate-700">
         <div className="flex items-center gap-3">
