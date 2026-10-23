@@ -39,6 +39,7 @@ export const dramsRouter = createTRPCRouter({
         provider: whiskies.provider,
         country: distilleries.country,
         region: distilleries.region,
+        distilleryId: distilleries.id,
         distillery: distilleries.name,
         variety: whiskies.variety,
         abv: whiskies.abv,

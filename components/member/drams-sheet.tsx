@@ -3,6 +3,8 @@ import { api } from "@/lib/trpc-client";
 import { Button } from "@/components/ui/button";
 import { DramsUpload } from "@/components/admin/drams-upload";
 import { RankingBadge } from "@/components/whisky/ranking-badge";
+import { DistilleryDetail } from "@/components/whisky/distillery-detail";
+import { WhiskyDetail } from "@/components/whisky/whisky-detail";
 import { rankingLabel } from "@/lib/drams-sheet";
 import { ArrowDown, ArrowUp, Download, Loader2, Search, Upload, X } from "lucide-react";
 
@@ -25,13 +27,21 @@ const COLUMNS: { key: SortKey | "theme"; label: string; sortable: boolean; class
 const formatDate = (date: Date) =>
   date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/London" });
 
-// The site's drams in the chair's spreadsheet layout; admins can upload a new sheet from here.
+// The site's drams in the chair's spreadsheet layout; distilleries and whiskies open their detail
+// panels, and admins can upload a new sheet from here.
 export function DramsSheet({ canUpload }: { canUpload: boolean }) {
   const { data: rows, isLoading } = api.drams.getSheet.useQuery();
   const [search, setSearch] = useState("");
   const [gathering, setGathering] = useState<number | "all">("all");
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "gathering", dir: "desc" });
   const [showUpload, setShowUpload] = useState(false);
+  // Clicking a distillery or whisky opens the same detail panel as the Distilleries / Whiskies pages
+  const [openDistilleryId, setOpenDistilleryId] = useState<string | null>(null);
+  const [openWhiskyId, setOpenWhiskyId] = useState<string | null>(null);
+  const { data: libraryWhiskies } = api.whisky.getAll.useQuery({ limit: 1000 }, { enabled: !!(openDistilleryId || openWhiskyId) });
+  const openWhisky = libraryWhiskies?.find((w) => w.id === openWhiskyId) ?? null;
+  const openDistilleryWhiskies = libraryWhiskies?.filter((w) => w.distilleryId === openDistilleryId) ?? [];
+  const openDistilleryName = rows?.find((r) => r.distilleryId === openDistilleryId)?.distillery ?? "";
 
   const gatheringNumbers = useMemo(
     () => [...new Set((rows ?? []).map((r) => r.gathering))].sort((a, b) => b - a),
@@ -188,8 +198,23 @@ export function DramsSheet({ canUpload }: { canUpload: boolean }) {
                       <td className="px-3 py-1.5 text-slate-200">{r.provider}</td>
                       <td className="px-3 py-1.5 text-slate-400">{r.country}</td>
                       <td className="px-3 py-1.5 text-slate-400">{r.region}</td>
-                      <td className="px-3 py-1.5 text-amber-50 font-medium">{r.distillery}</td>
-                      <td className="px-3 py-1.5 text-slate-200 max-w-[18rem] truncate" title={r.variety}>{r.variety}</td>
+                      <td className="px-3 py-1.5">
+                        <button
+                          onClick={() => { setOpenWhiskyId(null); setOpenDistilleryId(r.distilleryId); }}
+                          className="text-amber-50 font-medium hover:text-amber-400 hover:underline underline-offset-2 text-left"
+                        >
+                          {r.distillery}
+                        </button>
+                      </td>
+                      <td className="px-3 py-1.5 max-w-[18rem]">
+                        <button
+                          onClick={() => { setOpenDistilleryId(null); setOpenWhiskyId(r.id); }}
+                          title={r.variety}
+                          className="block max-w-full truncate text-slate-200 hover:text-amber-400 hover:underline underline-offset-2 text-left"
+                        >
+                          {r.variety || "—"}
+                        </button>
+                      </td>
                       <td className="px-3 py-1.5 text-right text-slate-300 tabular-nums">{parseFloat(r.abv) ? `${parseFloat(r.abv)}%` : ""}</td>
                       <td className="px-3 py-1.5 text-slate-400">{r.host}</td>
                       <td className="px-3 py-1.5">
@@ -208,6 +233,15 @@ export function DramsSheet({ canUpload }: { canUpload: boolean }) {
           </div>
         </>
       )}
+
+      {openDistilleryId && openDistilleryWhiskies.length > 0 && (
+        <DistilleryDetail
+          distillery={openDistilleryName}
+          whiskies={openDistilleryWhiskies}
+          onClose={() => setOpenDistilleryId(null)}
+        />
+      )}
+      <WhiskyDetail whisky={openWhisky} onClose={() => setOpenWhiskyId(null)} />
     </div>
   );
 }
