@@ -19,9 +19,9 @@ browser ──► Worker draycottdrams ─┬─ static assets (dist/client)   e
 | | Worker | D1 database | URL | Deployed by |
 |---|---|---|---|---|
 | local | `vite dev` (workerd) | `.wrangler/state` | http://localhost:5173 | `pnpm dev` |
-| PR preview | version of `draycottdrams-staging`, alias `pr-<n>` | staging | `https://pr-<n>-draycottdrams-staging.<sub>.workers.dev` | `preview.yml`, every push to a PR |
-| staging | `draycottdrams-staging` | `draycottdrams-staging` | `https://draycottdrams-staging.<sub>.workers.dev` | `deploy.yml`, every push to `main` |
-| production | `draycottdrams` | `draycottdrams` | `https://draycottdrams.<sub>.workers.dev` | `deploy.yml`, run by hand with target `production` |
+| PR preview | version of `draycottdrams-staging`, alias `pr-<n>` | staging | `https://pr-<n>-draycottdrams-staging.tomseagrave94.workers.dev` | `preview.yml`, every push to a PR |
+| staging | `draycottdrams-staging` | `draycottdrams-staging` | `https://draycottdrams-staging.tomseagrave94.workers.dev` | `deploy.yml`, every push to `main` |
+| production | `draycottdrams` | `draycottdrams` | https://draycottdrams.co.uk (also `https://draycottdrams.tomseagrave94.workers.dev`) | `deploy.yml`, run by hand with target `production` |
 
 - **Previews** are uploaded Worker versions that are never deployed, so staging keeps running
   `main`. They share staging's database and secrets. A PR's migrations reach staging only when it
@@ -48,8 +48,8 @@ browser ──► Worker draycottdrams ─┬─ static assets (dist/client)   e
    costs show there. To change model, edit `MODEL` in `worker/routers/ai.ts`.
 4. **Google OAuth:** in Google Cloud Console, open *APIs & Services → Credentials → OAuth client
    (Web)* and add these authorised redirect URIs:
-   - `https://draycottdrams.<sub>.workers.dev/api/auth/callback/google`
-   - `https://draycottdrams-staging.<sub>.workers.dev/api/auth/callback/google`
+   - `https://draycottdrams.tomseagrave94.workers.dev/api/auth/callback/google`
+   - `https://draycottdrams-staging.tomseagrave94.workers.dev/api/auth/callback/google`
    - `http://localhost:5173/api/auth/callback/google`
 
    Previews don't need their own entry, because their sign-in goes through staging (Better Auth's
@@ -61,7 +61,12 @@ browser ──► Worker draycottdrams ─┬─ static assets (dist/client)   e
 
 ### Custom domain
 
-To use a custom domain:
+Production is served at `draycottdrams.co.uk` (the `routes` entry in `wrangler.jsonc`; Cloudflare
+manages its DNS record). The MapTiler key and the Google OAuth client are both tied to that domain.
+Before 2026-10-23 the domain was a CNAME to the Cloudflare Tunnel
+`d311b940-6741-4f51-a2be-ecbc1f1e927b.cfargotunnel.com` (the old Docker app on hp-server).
+
+To use another custom domain:
 1. Add it under *Worker → Settings → Domains & Routes*.
 2. Set `APP_URL` in `wrangler.jsonc` to the new address.
 3. Add the new redirect URI in Google Cloud Console.

@@ -10,6 +10,8 @@
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
   "preview_urls": false,
+  // Production's public address (Cloudflare manages its DNS record). Staging overrides this below.
+  "routes": [{ "pattern": "draycottdrams.co.uk", "custom_domain": true }],
   "assets": {
     "not_found_handling": "single-page-application",
     // API routes reach the Worker; every other path is the app (index.html for client routes).
@@ -28,13 +30,14 @@
   "ai": { "binding": "AI" },
   "vars": {
     "APP_ENV": "production",
-    "APP_URL": "https://draycottdrams.tomseagrave94.workers.dev",
+    "APP_URL": "https://draycottdrams.co.uk",
     "AI_GATEWAY_ID": "draycottdrams",
     "APP_VERSION": "" // set per deploy: wrangler deploy --var APP_VERSION:<sha>
   },
   "env": {
     "staging": {
       "name": "draycottdrams-staging",
+      "routes": [],
       "preview_urls": true,
       "d1_databases": [
         {
