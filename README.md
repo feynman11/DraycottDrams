@@ -77,7 +77,7 @@ See [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) for the variables and local workf
 - **Better Auth** for Google sign-in, with sessions stored in D1
 
 ### AI
-- **Workers AI** (Llama 3.3 70B) through **Cloudflare AI Gateway**, which handles caching, rate limits and logs
+- **Workers AI** (gpt-oss-120b) through **Cloudflare AI Gateway**, which handles caching, rate limits and logs
 
 ### Delivery
 - **GitHub Actions**: checks on every PR, a preview URL per PR, staging on every merge, and production deploys by hand

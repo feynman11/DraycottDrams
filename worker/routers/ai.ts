@@ -1,26 +1,50 @@
-import { createTRPCRouter, publicProcedure, protectedProcedure } from "@/worker/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/worker/trpc";
 import { z } from "zod";
 
 // Workers AI through Cloudflare AI Gateway (caching, rate limits and logs are set on the gateway
-// in the dashboard). Swapping model is this one line; the gateway can also route to other providers.
-const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+// in the dashboard). The gateway can also route to other providers.
+const MODEL = "@cf/openai/gpt-oss-120b";
+
+// gpt-oss reasons before answering, and the reasoning counts against the token limit: keep it
+// low and leave room on top of the answer itself.
+const REASONING_TOKENS = 4096;
 
 export type Message = { role: "system" | "user" | "assistant"; content: string };
 
-export async function complete(env: Env, messages: Message[], json = false, maxTokens = 1024): Promise<string> {
-  const result = await env.AI.run(
-    MODEL,
-    { messages, max_tokens: maxTokens, ...(json ? { response_format: { type: "json_object" as const } } : {}) },
-    { gateway: { id: env.AI_GATEWAY_ID } },
-  );
-  const response = (result as { response?: unknown }).response;
-  // JSON mode can hand back the parsed object rather than a string.
-  return typeof response === "string" ? response : JSON.stringify(response ?? "");
+// Workers AI answers in one of three shapes depending on the model: Responses API (`output`),
+// chat completions (`choices`) or the older `response` field.
+type ModelResult = {
+  output?: { type?: string; content?: { type?: string; text?: string }[] }[];
+  choices?: { message?: { content?: unknown } }[];
+  response?: unknown;
+};
+
+function answerText(result: ModelResult): unknown {
+  const message = result.output?.find((item) => item.type === "message");
+  const outputText = message?.content?.find((part) => part.type === "output_text")?.text;
+  return outputText ?? result.choices?.[0]?.message?.content ?? result.response;
 }
 
+export async function complete(env: Env, messages: Message[], json = false, maxTokens = 1024): Promise<string> {
+  const result = (await env.AI.run(
+    MODEL,
+    {
+      messages,
+      max_completion_tokens: maxTokens + REASONING_TOKENS,
+      reasoning_effort: "low",
+      ...(json ? { response_format: { type: "json_object" as const } } : {}),
+    },
+    { gateway: { id: env.AI_GATEWAY_ID } },
+  )) as ModelResult;
+  // JSON mode can hand back a parsed object rather than a string.
+  const content = answerText(result);
+  return typeof content === "string" ? content : JSON.stringify(content ?? "");
+}
+
+// Every AI call needs a signed-in user: the model is paid per token.
 export const aiRouter = createTRPCRouter({
   // Get whisky recommendations based on preferences
-  getRecommendation: publicProcedure
+  getRecommendation: protectedProcedure
     .input(
       z.object({
         preferences: z.object({
@@ -131,7 +155,7 @@ Keep your response conversational and expert-level, around 200-300 words.`;
     }),
 
   // General whisky chat/conversation
-  chat: publicProcedure
+  chat: protectedProcedure
     .input(
       z.object({
         message: z.string(),

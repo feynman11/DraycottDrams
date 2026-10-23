@@ -11,6 +11,7 @@ import {
 import { useState } from "react";
 import { AIButton } from "@/components/ai/ai-button";
 import { SommelierPanel } from "@/components/ai/sommelier-panel";
+import { authClient } from "@/lib/auth-client";
 import SignInPage from "./pages/signin";
 
 // Each page is its own chunk, so the map (MapLibre, D3) code only loads where used (xlsx loads on demand).
@@ -33,14 +34,15 @@ function NotFound() {
   );
 }
 
-// Every page except sign-in gets the AI sommelier button (bottom right).
+// Signed-in users get the AI sommelier button (bottom right) on every page except sign-in.
 function RootLayout() {
   const [showSommelier, setShowSommelier] = useState(false);
+  const { data: session } = authClient.useSession();
   const onSignIn = useRouterState({ select: (s) => s.location.pathname === "/signin" });
   return (
     <>
       <Outlet />
-      {!onSignIn && (
+      {session?.user && !onSignIn && (
         <>
           <AIButton onClick={() => setShowSommelier(!showSommelier)} isOpen={showSommelier} />
           <SommelierPanel isOpen={showSommelier} onClose={() => setShowSommelier(false)} />

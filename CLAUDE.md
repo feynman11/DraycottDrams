@@ -11,7 +11,7 @@ DraycottDrams is a full-stack whisky club management system featuring interactiv
 - **Frontend:** Vite, React 19, TanStack Router, Tailwind CSS 4, shadcn/ui, D3.js, Recharts, MapLibre GL
 - **Backend:** Cloudflare Workers, Hono, tRPC with React Query, Drizzle ORM, Cloudflare D1 (SQLite)
 - **Auth:** Better Auth with Google OAuth (sessions in D1)
-- **AI:** Workers AI (Llama 3.3 70B) through Cloudflare AI Gateway
+- **AI:** Workers AI (gpt-oss-120b) through Cloudflare AI Gateway; signed-in users only
 - **Tooling:** Node 26 + pnpm 12 (pinned in `mise.toml`), wrangler, `@cloudflare/vite-plugin`
 
 ## Common Commands
