@@ -1,12 +1,17 @@
 import { useMemo, useState } from "react";
 import { api } from "@/lib/trpc-client";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
+import { FilterBar, SearchField } from "@/components/ui/filter-bar";
+import { PageHeader } from "@/components/ui/page-header";
+import { SkeletonRows } from "@/components/ui/skeleton";
 import { DramsUpload } from "@/components/admin/drams-upload";
 import { RankingBadge } from "@/components/whisky/ranking-badge";
 import { DistilleryDetail } from "@/components/whisky/distillery-detail";
 import { WhiskyDetail } from "@/components/whisky/whisky-detail";
 import { rankingLabel } from "@/lib/drams-sheet";
-import { ArrowDown, ArrowUp, Download, Loader2, Search, Upload, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ArrowDown, ArrowUp, Download, Upload, X } from "lucide-react";
 
 type SortKey = "gathering" | "date" | "provider" | "country" | "region" | "distillery" | "variety" | "abv" | "host" | "ranking";
 
@@ -40,8 +45,11 @@ export function DramsSheet({ canUpload }: { canUpload: boolean }) {
   const [openWhiskyId, setOpenWhiskyId] = useState<string | null>(null);
   const { data: libraryWhiskies } = api.whisky.getAll.useQuery({ limit: 1000 }, { enabled: !!(openDistilleryId || openWhiskyId) });
   const openWhisky = libraryWhiskies?.find((w) => w.id === openWhiskyId) ?? null;
-  const openDistilleryWhiskies = libraryWhiskies?.filter((w) => w.distilleryId === openDistilleryId) ?? [];
-  const openDistilleryName = rows?.find((r) => r.distilleryId === openDistilleryId)?.distillery ?? "";
+  const openDistilleryWhiskies = useMemo(
+    () => libraryWhiskies?.filter((w) => w.distilleryId === openDistilleryId) ?? [],
+    [libraryWhiskies, openDistilleryId],
+  );
+  const openDistilleryName = rows?.find((r) => r.distilleryId === openDistilleryId)?.distillery ?? null;
 
   const gatheringNumbers = useMemo(
     () => [...new Set((rows ?? []).map((r) => r.gathering))].sort((a, b) => b - a),
@@ -114,133 +122,136 @@ export function DramsSheet({ canUpload }: { canUpload: boolean }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-bold text-amber-50 mb-1">Drams Sheet</h2>
-          <p className="text-slate-400 text-sm">Every dram the club has tasted, laid out like the chair&apos;s spreadsheet.</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={download} disabled={!rows?.length} className="text-slate-300 hover:bg-slate-800 border border-slate-700">
-            <Download size={16} className="mr-2" /> Download .xlsx
-          </Button>
-          {canUpload && (
-            <Button size="sm" onClick={() => setShowUpload((v) => !v)} className="bg-amber-700 hover:bg-amber-600 text-white">
-              {showUpload ? <X size={16} className="mr-2" /> : <Upload size={16} className="mr-2" />}
-              {showUpload ? "Close upload" : "Upload new sheet"}
+      <PageHeader
+        as="h2"
+        title="Drams sheet"
+        description="Every dram the club has tasted, laid out like the chair's spreadsheet."
+        aside={
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={download} disabled={!rows?.length}>
+              <Download size={16} /> Download .xlsx
             </Button>
-          )}
-        </div>
-      </div>
+            {canUpload && (
+              <Button size="sm" onClick={() => setShowUpload((v) => !v)} aria-expanded={showUpload}>
+                {showUpload ? <X size={16} /> : <Upload size={16} />}
+                {showUpload ? "Close upload" : "Upload new sheet"}
+              </Button>
+            )}
+          </div>
+        }
+      />
 
       {canUpload && showUpload && <DramsUpload onDone={() => setShowUpload(false)} />}
 
-      <div className="flex flex-col sm:flex-row gap-2">
-        <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search distillery, variety, provider, theme…"
-            className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-amber-600"
-          />
-        </div>
-        <select
+      <FilterBar>
+        <SearchField
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search distillery, variety, provider, theme…"
+          aria-label="Search drams"
+          className="md:max-w-md"
+        />
+        <Select
           value={gathering}
           onChange={(e) => setGathering(e.target.value === "all" ? "all" : Number(e.target.value))}
-          className="px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-amber-600"
           aria-label="Gathering"
+          className="col-span-2"
         >
           <option value="all">All gatherings</option>
           {gatheringNumbers.map((n) => (
             <option key={n} value={n}>Gathering {n}</option>
           ))}
-        </select>
-      </div>
+        </Select>
+      </FilterBar>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
-        </div>
+        <div className="rounded-xl border border-border bg-card"><SkeletonRows rows={8} cols={6} /></div>
       ) : (
         <>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-subtle">
             {visible.length} dram{visible.length === 1 ? "" : "s"} across {gatheringCount} gathering{gatheringCount === 1 ? "" : "s"}
           </p>
-          <div className="overflow-auto max-h-[70vh] border border-slate-800 rounded-lg">
-            <table className="w-full text-sm whitespace-nowrap">
-              <thead className="sticky top-0 bg-slate-900 z-10">
-                <tr className="text-left text-slate-400 border-b border-slate-700">
-                  {COLUMNS.map((col) => (
-                    <th key={col.key} className={`px-3 py-2 font-medium ${col.className ?? ""}`}>
-                      {col.sortable ? (
-                        <button onClick={() => toggleSort(col.key as SortKey)} className="inline-flex items-center gap-1 hover:text-amber-400">
-                          {col.label}
-                          {sort.key === col.key && (sort.dir === "asc" ? <ArrowUp size={12} /> : <ArrowDown size={12} />)}
-                        </button>
-                      ) : (
-                        col.label
-                      )}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((r, i) => {
-                  const newGroup = sort.key === "gathering" && i > 0 && visible[i - 1].gathering !== r.gathering;
-                  return (
-                    <tr
-                      key={r.id}
-                      className={`hover:bg-slate-800/50 ${newGroup ? "border-t-2 border-slate-700" : "border-t border-slate-800/60"}`}
-                    >
-                      <td className="px-3 py-1.5 text-right text-amber-400 font-medium">{r.gathering}</td>
-                      <td className="px-3 py-1.5 text-slate-400 max-w-[14rem] truncate" title={r.theme ?? ""}>{r.theme}</td>
-                      <td className="px-3 py-1.5 text-slate-400">{formatDate(r.date)}</td>
-                      <td className="px-3 py-1.5 text-slate-200">{r.provider}</td>
-                      <td className="px-3 py-1.5 text-slate-400">{r.country}</td>
-                      <td className="px-3 py-1.5 text-slate-400">{r.region}</td>
-                      <td className="px-3 py-1.5">
-                        <button
-                          onClick={() => { setOpenWhiskyId(null); setOpenDistilleryId(r.distilleryId); }}
-                          className="text-amber-50 font-medium hover:text-amber-400 hover:underline underline-offset-2 text-left"
-                        >
-                          {r.distillery}
-                        </button>
-                      </td>
-                      <td className="px-3 py-1.5 max-w-[18rem]">
-                        <button
-                          onClick={() => { setOpenDistilleryId(null); setOpenWhiskyId(r.id); }}
-                          title={r.variety}
-                          className="block max-w-full truncate text-slate-200 hover:text-amber-400 hover:underline underline-offset-2 text-left"
-                        >
-                          {r.variety || "—"}
-                        </button>
-                      </td>
-                      <td className="px-3 py-1.5 text-right text-slate-300 tabular-nums">{parseFloat(r.abv) ? `${parseFloat(r.abv)}%` : ""}</td>
-                      <td className="px-3 py-1.5 text-slate-400">{r.host}</td>
-                      <td className="px-3 py-1.5">
-                        {r.ranking ? <RankingBadge ranking={r.ranking} size="sm" /> : <span className="text-xs text-slate-500">Bonus</span>}
-                      </td>
-                    </tr>
-                  );
-                })}
-                {visible.length === 0 && (
-                  <tr>
-                    <td colSpan={COLUMNS.length} className="px-3 py-8 text-center text-slate-500">No drams match.</td>
+          <div className="relative overflow-hidden rounded-xl border border-border bg-card">
+            <div className="max-h-[70vh] overflow-auto">
+              <table className="w-full whitespace-nowrap text-sm">
+                <thead className="sticky top-0 z-10 bg-popover shadow-[0_1px_0_var(--color-border)]">
+                  <tr className="text-left text-[11px] font-medium uppercase tracking-wider text-subtle">
+                    {COLUMNS.map((col) => (
+                      <th key={col.key} className={cn("px-3 py-2.5", col.className)} aria-sort={sort.key === col.key ? (sort.dir === "asc" ? "ascending" : "descending") : undefined}>
+                        {col.sortable ? (
+                          <button
+                            type="button"
+                            onClick={() => toggleSort(col.key as SortKey)}
+                            className="touch-exempt inline-flex items-center gap-1 rounded uppercase transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            {col.label}
+                            {sort.key === col.key && (sort.dir === "asc" ? <ArrowUp size={12} /> : <ArrowDown size={12} />)}
+                          </button>
+                        ) : (
+                          col.label
+                        )}
+                      </th>
+                    ))}
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {visible.map((r, i) => {
+                    const newGroup = sort.key === "gathering" && i > 0 && visible[i - 1].gathering !== r.gathering;
+                    return (
+                      <tr
+                        key={r.id}
+                        className={cn("transition-colors hover:bg-accent/40", newGroup ? "border-t-2 border-border-strong" : "border-t border-border")}
+                      >
+                        <td className="px-3 py-2 text-right font-medium tabular-nums text-primary">{r.gathering}</td>
+                        <td className="max-w-[14rem] truncate px-3 py-2 text-muted-foreground" title={r.theme ?? ""}>{r.theme}</td>
+                        <td className="px-3 py-2 tabular-nums text-muted-foreground">{formatDate(r.date)}</td>
+                        <td className="px-3 py-2 text-foreground">{r.provider}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{r.country}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{r.region}</td>
+                        <td className="px-3 py-2">
+                          <button
+                            type="button"
+                            onClick={() => { setOpenWhiskyId(null); setOpenDistilleryId(r.distilleryId); }}
+                            className="touch-exempt rounded text-left font-medium text-foreground underline-offset-2 transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            {r.distillery}
+                          </button>
+                        </td>
+                        <td className="max-w-[18rem] px-3 py-2">
+                          <button
+                            type="button"
+                            onClick={() => { setOpenDistilleryId(null); setOpenWhiskyId(r.id); }}
+                            title={r.variety}
+                            className="touch-exempt block max-w-full truncate rounded text-left text-foreground underline-offset-2 transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            {r.variety || "—"}
+                          </button>
+                        </td>
+                        <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{parseFloat(r.abv) ? `${parseFloat(r.abv)}%` : ""}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{r.host}</td>
+                        <td className="px-3 py-2">
+                          {r.ranking ? <RankingBadge ranking={r.ranking} size="sm" /> : <span className="text-xs text-subtle">Bonus</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {visible.length === 0 && (
+                    <tr>
+                      <td colSpan={COLUMNS.length} className="px-3 py-10 text-center text-muted-foreground">No drams match.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </>
       )}
 
-      {openDistilleryId && openDistilleryWhiskies.length > 0 && (
-        <DistilleryDetail
-          distillery={openDistilleryName}
-          whiskies={openDistilleryWhiskies}
-          onClose={() => setOpenDistilleryId(null)}
-        />
-      )}
+      <DistilleryDetail
+        distillery={openDistilleryName}
+        whiskies={openDistilleryWhiskies}
+        onClose={() => setOpenDistilleryId(null)}
+      />
       <WhiskyDetail whisky={openWhisky} onClose={() => setOpenWhiskyId(null)} />
     </div>
   );

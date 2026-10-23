@@ -2,8 +2,13 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/trpc-client";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { PageHeader } from "@/components/ui/page-header";
 import type { AcceptedSuggestion, Confidence, ReviewScope, Suggestion } from "@/worker/data-review";
 import { ArrowLeftRight, Check, ExternalLink, Loader2, Sparkles, Square, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const SCOPES: { scope: ReviewScope; label: string; description: string }[] = [
   { scope: "distilleries", label: "Distilleries", description: "Country, region, founding year, website and description of every distillery the club has tasted." },
@@ -11,10 +16,10 @@ const SCOPES: { scope: ReviewScope; label: string; description: string }[] = [
   { scope: "duplicates", label: "Duplicates", description: "Distilleries entered twice under different spellings, to merge into one." },
 ];
 
-const CONFIDENCE_STYLE: Record<Confidence, string> = {
-  high: "bg-emerald-950 text-emerald-300 border-emerald-800",
-  medium: "bg-amber-950 text-amber-300 border-amber-800",
-  low: "bg-slate-800 text-slate-400 border-slate-700",
+const CONFIDENCE_VARIANT: Record<Confidence, "success" | "warning" | "secondary"> = {
+  high: "success",
+  medium: "warning",
+  low: "secondary",
 };
 
 type Item = { suggestion: Suggestion; value: string; selected: boolean; error?: string };
@@ -100,62 +105,68 @@ export function AIReview() {
 
   const shown = items.filter((i) => !hideLow || i.suggestion.confidence !== "low");
   const selectedCount = items.filter((i) => i.selected).length;
+  const pct = progress ? (progress.total ? (Math.min(progress.done, progress.total) / progress.total) * 100 : 100) : 0;
 
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="text-2xl font-bold text-amber-50 mb-1 flex items-center gap-2"><Sparkles className="text-violet-400" size={22} /> AI Data Review</h2>
-        <p className="text-slate-400 text-sm">
-          The AI sommelier checks the site&apos;s data against what it knows and suggests corrections. Review each one: nothing changes until you apply it.
-          It doesn&apos;t suggest map coordinates, as recalled coordinates are often wrong.
-        </p>
-      </div>
+      <PageHeader
+        as="h2"
+        title="AI data review"
+        description="The AI sommelier checks the site's data against what it knows and suggests corrections. Review each one: nothing changes until you apply it. It doesn't suggest map coordinates, as recalled coordinates are often wrong."
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {SCOPES.map((s) => (
-          <button
-            key={s.scope}
-            onClick={() => !running && setScope(s.scope)}
-            disabled={running}
-            className={`p-4 rounded-lg border text-left transition-colors ${
-              scope === s.scope ? "bg-amber-900/30 border-amber-600" : "bg-slate-800/50 border-slate-700 hover:border-slate-600"
-            }`}
-          >
-            <div className="font-medium text-slate-100 mb-1">{s.label}</div>
-            <div className="text-xs text-slate-400">{s.description}</div>
-          </button>
-        ))}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3" role="radiogroup" aria-label="What to review">
+        {SCOPES.map((s) => {
+          const selected = scope === s.scope;
+          return (
+            <button
+              key={s.scope}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              onClick={() => !running && setScope(s.scope)}
+              disabled={running}
+              className={cn(
+                "rounded-xl border p-4 text-left transition-colors duration-(--duration-fast) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60",
+                selected ? "border-primary/50 bg-primary/10" : "border-border bg-card hover:border-border-strong"
+              )}
+            >
+              <div className="mb-1 font-medium text-foreground">{s.label}</div>
+              <div className="text-xs text-muted-foreground">{s.description}</div>
+            </button>
+          );
+        })}
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         {running ? (
-          <Button onClick={() => { stopRef.current = true; }} className="bg-slate-700 hover:bg-slate-600 text-white">
-            <Square size={14} className="mr-2" /> Stop
+          <Button variant="secondary" onClick={() => { stopRef.current = true; }}>
+            <Square size={14} /> Stop
           </Button>
         ) : (
-          <Button onClick={run} className="bg-violet-700 hover:bg-violet-600 text-white">
-            <Sparkles size={16} className="mr-2" /> Review {SCOPES.find((s) => s.scope === scope)!.label.toLowerCase()}
+          <Button onClick={run}>
+            <Sparkles size={16} /> Review {SCOPES.find((s) => s.scope === scope)!.label.toLowerCase()}
           </Button>
         )}
         {progress && (
-          <div className="flex items-center gap-2 text-sm text-slate-400">
-            {running && <Loader2 size={14} className="animate-spin text-violet-400" />}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground" aria-live="polite">
+            {running && <Loader2 size={14} className="animate-spin text-primary" />}
             Reviewed {Math.min(progress.done, progress.total)} of {progress.total}
-            <div className="w-32 h-1.5 bg-slate-800 rounded overflow-hidden">
-              <div className="h-full bg-violet-500" style={{ width: `${progress.total ? (Math.min(progress.done, progress.total) / progress.total) * 100 : 100}%` }} />
+            <div className="h-1.5 w-32 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
+              <div className="h-full bg-primary transition-[width] duration-(--duration-base)" style={{ width: `${pct}%` }} />
             </div>
           </div>
         )}
         {items.length > 0 && (
-          <label className="flex items-center gap-2 text-sm text-slate-400 ml-auto">
-            <input type="checkbox" checked={hideLow} onChange={(e) => setHideLow(e.target.checked)} className="accent-amber-600" />
+          <label className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
+            <input type="checkbox" checked={hideLow} onChange={(e) => setHideLow(e.target.checked)} className="touch-exempt accent-primary" />
             Hide low confidence
           </label>
         )}
       </div>
 
       {!running && progress && items.length === 0 && (
-        <p className="text-sm text-slate-400">No suggestions: the AI found nothing to change.</p>
+        <p className="text-sm text-muted-foreground">No suggestions: the AI found nothing to change.</p>
       )}
 
       {shown.length > 0 && (
@@ -163,70 +174,74 @@ export function AIReview() {
           {shown.map((item) => {
             const s = item.suggestion;
             return (
-              <div key={s.key} className={`bg-slate-900 border rounded-lg p-3 ${item.selected ? "border-amber-700/70" : "border-slate-800"}`}>
+              <div key={s.key} className={cn("rounded-xl border bg-card p-3 transition-colors", item.selected ? "border-primary/50" : "border-border")}>
                 <div className="flex items-start gap-3">
                   <input
                     type="checkbox"
                     checked={item.selected}
                     onChange={(e) => update(s.key, { selected: e.target.checked })}
-                    className="mt-1 accent-amber-600"
+                    className="touch-exempt mt-1 accent-primary"
                     aria-label="Select suggestion"
                   />
-                  <div className="flex-1 min-w-0 space-y-1.5">
+                  <div className="min-w-0 flex-1 space-y-1.5">
                     <div className="flex flex-wrap items-center gap-2">
                       {s.kind === "merge" ? (
-                        <span className="text-slate-100 font-medium">
+                        <span className="font-medium text-foreground">
                           Merge &ldquo;{s.removeName}&rdquo; into &ldquo;{s.keepName}&rdquo;
-                          <span className="text-slate-500 font-normal"> · moves {s.whiskyCount} dram{s.whiskyCount === 1 ? "" : "s"}</span>
+                          <span className="font-normal text-subtle"> · moves {s.whiskyCount} dram{s.whiskyCount === 1 ? "" : "s"}</span>
                         </span>
                       ) : (
-                        <span className="text-slate-100 font-medium">
-                          {s.label} <span className="text-slate-500 font-normal">· {s.field}</span>
+                        <span className="font-medium text-foreground">
+                          {s.label} <span className="font-normal text-subtle">· {s.field}</span>
                         </span>
                       )}
-                      <span className={`text-xs px-1.5 py-0.5 rounded border ${CONFIDENCE_STYLE[s.confidence]}`}>{s.confidence}</span>
+                      <Badge variant={CONFIDENCE_VARIANT[s.confidence]}>{s.confidence}</Badge>
                     </div>
                     {s.kind === "update" && (
-                      <div className="flex flex-col md:flex-row md:items-center gap-2 text-sm">
-                        <span className="text-slate-500 line-through break-words md:max-w-[40%]">{s.current || "empty"}</span>
-                        <span className="text-slate-500 hidden md:inline">→</span>
+                      <div className="flex flex-col gap-2 text-sm md:flex-row md:items-center">
+                        <span className="break-words text-subtle line-through md:max-w-[40%]">{s.current || "empty"}</span>
+                        <span className="hidden text-subtle md:inline">→</span>
                         {s.field === "description" ? (
-                          <textarea
+                          <Textarea
                             value={item.value}
                             onChange={(e) => update(s.key, { value: e.target.value })}
                             rows={2}
-                            className="flex-1 px-2 py-1 bg-slate-800 border border-slate-700 rounded text-slate-200"
+                            aria-label="Suggested value"
+                            className="flex-1"
                           />
                         ) : (
-                          <input
+                          <Input
                             value={item.value}
                             onChange={(e) => update(s.key, { value: e.target.value })}
-                            className="flex-1 px-2 py-1 bg-slate-800 border border-slate-700 rounded text-slate-200"
+                            aria-label="Suggested value"
+                            className="h-9 flex-1"
                           />
                         )}
                         {s.field === "website" && (
-                          <a href={item.value} target="_blank" rel="noreferrer" className="text-amber-500 hover:text-amber-400 inline-flex items-center gap-1 text-xs">
+                          <a href={item.value} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded text-xs text-primary hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                             Check <ExternalLink size={12} />
                           </a>
                         )}
                       </div>
                     )}
-                    {s.reason && <p className="text-xs text-slate-400">{s.reason}</p>}
-                    {item.error && <p className="text-xs text-red-400">{item.error}</p>}
+                    {s.reason && <p className="text-xs text-muted-foreground">{s.reason}</p>}
+                    {item.error && <p className="text-xs text-destructive">{item.error}</p>}
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex shrink-0 gap-1">
                     {s.kind === "merge" && (
-                      <button onClick={() => swapMerge(s.key)} title="Keep the other one" className="p-1.5 text-slate-400 hover:text-slate-200">
+                      <Button variant="ghost" size="icon-sm" className="h-8 w-8" onClick={() => swapMerge(s.key)} aria-label="Keep the other one">
                         <ArrowLeftRight size={16} />
-                      </button>
+                      </Button>
                     )}
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="h-8 w-8 hover:text-destructive"
                       onClick={() => setItems((prev) => prev.filter((i) => i.suggestion.key !== s.key))}
-                      title="Dismiss"
-                      className="p-1.5 text-slate-400 hover:text-red-400"
+                      aria-label="Dismiss"
                     >
                       <X size={16} />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -236,10 +251,10 @@ export function AIReview() {
       )}
 
       {items.length > 0 && (
-        <div className="sticky bottom-0 bg-slate-950/95 border-t border-slate-800 py-3 flex items-center justify-end gap-3">
-          <span className="text-sm text-slate-400">{selectedCount} selected</span>
-          <Button onClick={applySelected} disabled={selectedCount === 0 || applyMutation.isPending || running} className="bg-amber-700 hover:bg-amber-600 text-white">
-            {applyMutation.isPending ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Check size={16} className="mr-2" />}
+        <div className="sticky bottom-[calc(var(--bottom-nav-h)+var(--safe-bottom))] z-10 flex items-center justify-end gap-3 border-t border-border bg-background/95 py-3 backdrop-blur">
+          <span className="text-sm text-muted-foreground">{selectedCount} selected</span>
+          <Button onClick={applySelected} disabled={selectedCount === 0 || applyMutation.isPending || running}>
+            {applyMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
             Apply selected
           </Button>
         </div>

@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { api } from "@/lib/trpc-client";
-import { Building2, Trophy, Medal, TrendingUp, MapPin, Filter } from "lucide-react";
+import { Building2, Trophy, Medal, TrendingUp, MapPin } from "lucide-react";
+import { Select } from "@/components/ui/select";
+import { FilterBar } from "@/components/ui/filter-bar";
+import { Table, TableBody, TableHeader, TableRow, TableScroll } from "@/components/ui/table";
+import { Skeleton, SkeletonRows } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { AvgRank } from "./provider-leaderboard";
+import { rankTone } from "./ranking-badge";
+import { cn } from "@/lib/utils";
 
 export function DistilleryPerformance() {
   const [sortBy, setSortBy] = useState<"wins" | "avgRanking" | "entries">("wins");
@@ -13,19 +21,18 @@ export function DistilleryPerformance() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-amber-500">Loading distillery data...</div>
+      <div className="space-y-6" aria-busy>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
+        </div>
+        <div className="rounded-xl border border-border bg-card"><SkeletonRows rows={6} cols={5} /></div>
       </div>
     );
   }
 
   if (!distilleries || distilleries.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <Building2 className="mx-auto text-slate-600 mb-4" size={48} />
-        <p className="text-slate-400">No ranking data available yet</p>
-      </div>
-    );
+    return <EmptyState icon={<Building2 />} title="No ranking data yet" description="Distillery stats appear once gatherings have positions recorded." />;
   }
 
   // Filter by region
@@ -62,193 +69,135 @@ export function DistilleryPerformance() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 mb-4">
-        <Building2 className="text-green-400" size={20} />
-        <h2 className="text-xl font-bold text-slate-100">Distillery Performance</h2>
+      <div>
+        <h2 className="font-display text-2xl text-foreground">Distillery performance</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Which distilleries consistently produce winning whiskies.</p>
       </div>
-
-      <p className="text-sm text-slate-400 mb-6">
-        See which distilleries consistently produce winning whiskies
-      </p>
 
       {/* Top Performers Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Most Wins */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Trophy className="text-amber-400" size={18} />
-            <h3 className="font-semibold text-slate-200">Most Wins</h3>
-          </div>
-          <div className="space-y-3">
-            {topByWins.map((distillery, index) => (
-              <div key={distillery.distilleryId} className="flex items-center gap-3">
-                <span className={`w-6 text-center font-bold ${
-                  index === 0 ? "text-amber-400" :
-                  index === 1 ? "text-slate-300" :
-                  index === 2 ? "text-amber-600" :
-                  "text-slate-500"
-                }`}>
-                  {index + 1}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <HighlightList icon={<Trophy className="text-gold" />} title="Most wins">
+          {topByWins.map((distillery, index) => (
+            <HighlightRow
+              key={distillery.distilleryId}
+              index={index}
+              title={distillery.distillery}
+              subtitle={`${distillery.region}, ${distillery.country}`}
+              value={
+                <span className="inline-flex items-center gap-1 rounded-md bg-gold/15 px-2 py-1 text-sm font-semibold tabular-nums text-gold">
+                  <Trophy size={12} /> {distillery.wins}
                 </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-200 truncate">{distillery.distillery}</p>
-                  <p className="text-xs text-slate-500">{distillery.region}, {distillery.country}</p>
-                </div>
-                <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded">
-                  <Trophy size={12} className="text-amber-400" />
-                  <span className="text-sm font-bold text-amber-400">{distillery.wins}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+              }
+            />
+          ))}
+        </HighlightList>
 
-        {/* Best Average Ranking */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="text-green-400" size={18} />
-            <h3 className="font-semibold text-slate-200">Best Average Ranking</h3>
-            <span className="text-xs text-slate-500">(min 2 entries)</span>
-          </div>
-          <div className="space-y-3">
-            {topByAvgRank.map((distillery, index) => (
-              <div key={distillery.distilleryId} className="flex items-center gap-3">
-                <span className={`w-6 text-center font-bold ${
-                  index === 0 ? "text-green-400" :
-                  index === 1 ? "text-green-500" :
-                  index === 2 ? "text-green-600" :
-                  "text-slate-500"
-                }`}>
-                  {index + 1}
+        <HighlightList icon={<TrendingUp className="text-success" />} title="Best average place" note="min. 2 entries">
+          {topByAvgRank.map((distillery, index) => (
+            <HighlightRow
+              key={distillery.distilleryId}
+              index={index}
+              title={distillery.distillery}
+              subtitle={`${distillery.totalEntries} entries`}
+              value={
+                <span className="inline-flex items-baseline gap-1 rounded-md bg-success/15 px-2 py-1 text-sm font-semibold tabular-nums text-success">
+                  {distillery.avgRanking?.toFixed(1)} <span className="text-xs font-normal">avg</span>
                 </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-200 truncate">{distillery.distillery}</p>
-                  <p className="text-xs text-slate-500">{distillery.totalEntries} entries</p>
-                </div>
-                <div className="flex items-center gap-1 bg-green-500/10 px-2 py-1 rounded">
-                  <span className="text-sm font-bold text-green-400">
-                    {distillery.avgRanking?.toFixed(1)}
-                  </span>
-                  <span className="text-xs text-green-500">avg</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+              }
+            />
+          ))}
+        </HighlightList>
       </div>
 
-      {/* Filters & Sort */}
-      <div className="flex flex-wrap gap-4 mb-6">
-        <select
-          value={filterRegion}
-          onChange={(e) => setFilterRegion(e.target.value)}
-          className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-        >
-          <option value="">All Regions</option>
+      <FilterBar>
+        <Select aria-label="Region" value={filterRegion} onChange={(e) => setFilterRegion(e.target.value)}>
+          <option value="">All regions</option>
           {regions.map((region) => (
             <option key={region.region} value={region.region}>
               {region.region}
             </option>
           ))}
-        </select>
+        </Select>
 
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-          className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-        >
-          <option value="wins">Sort by Wins</option>
-          <option value="avgRanking">Sort by Average Ranking</option>
-          <option value="entries">Sort by Total Entries</option>
-        </select>
-      </div>
+        <Select aria-label="Sort" value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}>
+          <option value="wins">Most wins</option>
+          <option value="avgRanking">Best average place</option>
+          <option value="entries">Most entries</option>
+        </Select>
+      </FilterBar>
 
-      {/* Full Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-800">
-                <th className="text-left text-xs text-slate-400 uppercase tracking-wider p-4">Distillery</th>
-                <th className="text-left text-xs text-slate-400 uppercase tracking-wider p-4">Region</th>
-                <th className="text-center text-xs text-slate-400 uppercase tracking-wider p-4">
-                  <div className="flex items-center justify-center gap-1">
-                    <Trophy size={12} className="text-amber-400" />
-                    Wins
-                  </div>
-                </th>
-                <th className="text-center text-xs text-slate-400 uppercase tracking-wider p-4">
-                  <div className="flex items-center justify-center gap-1">
-                    <Medal size={12} className="text-slate-400" />
-                    Podiums
-                  </div>
-                </th>
-                <th className="text-center text-xs text-slate-400 uppercase tracking-wider p-4">Entries</th>
-                <th className="text-center text-xs text-slate-400 uppercase tracking-wider p-4">Avg Rank</th>
-                <th className="text-center text-xs text-slate-400 uppercase tracking-wider p-4">Performance</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedDistilleries.map((distillery) => (
-                <tr
-                  key={distillery.distilleryId}
-                  className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors"
-                >
-                  <td className="p-4">
-                    <span className="font-medium text-slate-200">{distillery.distillery}</span>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-1 text-slate-400 text-sm">
-                      <MapPin size={12} />
-                      <span>{distillery.region}</span>
-                    </div>
-                  </td>
-                  <td className="p-4 text-center">
-                    <span className={`font-bold ${Number(distillery.wins) > 0 ? "text-amber-400" : "text-slate-500"}`}>
-                      {distillery.wins}
-                    </span>
-                  </td>
-                  <td className="p-4 text-center">
-                    <span className={`font-medium ${Number(distillery.podiums) > 0 ? "text-slate-300" : "text-slate-500"}`}>
-                      {distillery.podiums}
-                    </span>
-                  </td>
-                  <td className="p-4 text-center text-slate-400">
-                    {distillery.totalEntries}
-                  </td>
-                  <td className="p-4 text-center">
-                    <AvgRankIndicator avgRank={distillery.avgRanking} />
-                  </td>
-                  <td className="p-4">
-                    <PerformanceBar
-                      wins={Number(distillery.wins)}
-                      podiums={Number(distillery.podiums)}
-                      total={distillery.totalEntries}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <TableScroll>
+        <Table>
+          <TableHeader>
+            <tr>
+              <th>Distillery</th>
+              <th>Region</th>
+              <th className="text-center!"><span className="inline-flex items-center gap-1"><Trophy size={12} className="text-gold" /> Wins</span></th>
+              <th className="text-center!"><span className="inline-flex items-center gap-1"><Medal size={12} /> Podiums</span></th>
+              <th className="text-center!">Entries</th>
+              <th className="text-center!">Avg place</th>
+              <th>Podium rate</th>
+            </tr>
+          </TableHeader>
+          <TableBody>
+            {sortedDistilleries.map((distillery) => (
+              <TableRow key={distillery.distilleryId}>
+                <td className="font-medium text-foreground">{distillery.distillery}</td>
+                <td>
+                  <span className="inline-flex items-center gap-1 text-muted-foreground">
+                    <MapPin size={12} className="text-subtle" />
+                    {distillery.region}
+                  </span>
+                </td>
+                <td className={cn("text-center font-semibold tabular-nums", Number(distillery.wins) > 0 ? "text-gold" : "text-subtle")}>
+                  {distillery.wins}
+                </td>
+                <td className={cn("text-center tabular-nums", Number(distillery.podiums) > 0 ? "text-foreground" : "text-subtle")}>
+                  {distillery.podiums}
+                </td>
+                <td className="text-center tabular-nums text-muted-foreground">{distillery.totalEntries}</td>
+                <td className="text-center"><AvgRank value={distillery.avgRanking} /></td>
+                <td>
+                  <PerformanceBar
+                    wins={Number(distillery.wins)}
+                    podiums={Number(distillery.podiums)}
+                    total={distillery.totalEntries}
+                  />
+                </td>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableScroll>
     </div>
   );
 }
 
-function AvgRankIndicator({ avgRank }: { avgRank: number | null }) {
-  if (avgRank === null) return <span className="text-slate-600">-</span>;
-
-  const color =
-    avgRank <= 2 ? "text-green-400" :
-    avgRank <= 3 ? "text-amber-400" :
-    avgRank <= 4 ? "text-orange-400" :
-    "text-slate-400";
-
+function HighlightList({ icon, title, note, children }: { icon: React.ReactNode; title: string; note?: string; children: React.ReactNode }) {
   return (
-    <span className={`font-medium ${color}`}>
-      {avgRank.toFixed(1)}
-    </span>
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className="mb-3 flex items-center gap-2 [&_svg]:size-4">
+        {icon}
+        <h3 className="font-semibold text-foreground">{title}</h3>
+        {note && <span className="text-xs text-subtle">({note})</span>}
+      </div>
+      <ol className="space-y-2.5">{children}</ol>
+    </div>
+  );
+}
+
+function HighlightRow({ index, title, subtitle, value }: { index: number; title: string; subtitle: string; value: React.ReactNode }) {
+  return (
+    <li className="flex items-center gap-3">
+      <span className={cn("w-5 text-center text-sm font-semibold tabular-nums", index < 3 ? rankTone(index + 1).text : "text-subtle")}>
+        {index + 1}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-foreground">{title}</p>
+        <p className="text-xs text-subtle">{subtitle}</p>
+      </div>
+      {value}
+    </li>
   );
 }
 
@@ -259,29 +208,19 @@ interface PerformanceBarProps {
 }
 
 function PerformanceBar({ wins, podiums, total }: PerformanceBarProps) {
-  if (total === 0) return <span className="text-slate-600">-</span>;
+  if (total === 0) return <span className="text-subtle">–</span>;
 
   const winPercent = (wins / total) * 100;
   const podiumPercent = (podiums / total) * 100;
   const otherPodiumPercent = podiumPercent - winPercent;
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="w-20 h-2 bg-slate-800 rounded-full overflow-hidden flex">
-        {/* Wins (gold) */}
-        <div
-          className="h-full bg-amber-400"
-          style={{ width: `${winPercent}%` }}
-        />
-        {/* Other podiums (silver) */}
-        <div
-          className="h-full bg-slate-400"
-          style={{ width: `${otherPodiumPercent}%` }}
-        />
+    <div className="flex items-center gap-2" title={`${Math.round(winPercent)}% wins, ${Math.round(podiumPercent)}% podiums`}>
+      <div className="flex h-1.5 w-20 overflow-hidden rounded-full bg-muted">
+        <div className="h-full bg-gold" style={{ width: `${winPercent}%` }} />
+        <div className="h-full bg-silver" style={{ width: `${otherPodiumPercent}%` }} />
       </div>
-      <span className="text-xs text-slate-500">
-        {Math.round(podiumPercent)}%
-      </span>
+      <span className="text-xs tabular-nums text-muted-foreground">{Math.round(podiumPercent)}%</span>
     </div>
   );
 }

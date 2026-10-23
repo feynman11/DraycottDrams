@@ -1,12 +1,40 @@
 import { useState } from "react";
 import { api } from "@/lib/trpc-client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Loader2, Star, Plus, X } from "lucide-react";
 import { type WhiskyWithGathering } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface TastingFormProps {
   whisky: WhiskyWithGathering;
   onSuccess?: () => void;
+}
+
+// Five-star picker shared by the add and edit forms
+export function StarRating({ value, onChange, size = 24 }: { value: number; onChange: (value: number) => void; size?: number }) {
+  return (
+    <div className="flex gap-0.5" role="radiogroup" aria-label="Rating">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          role="radio"
+          aria-checked={value === star}
+          aria-label={`${star} star${star === 1 ? "" : "s"}`}
+          onClick={() => onChange(star)}
+          className={cn(
+            "rounded-md p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            value >= star ? "text-primary" : "text-subtle hover:text-muted-foreground"
+          )}
+        >
+          <Star size={size} className={value >= star ? "fill-current" : ""} />
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export function TastingForm({ whisky, onSuccess }: TastingFormProps) {
@@ -59,121 +87,72 @@ export function TastingForm({ whisky, onSuccess }: TastingFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
-          Rating *
-        </label>
-        <div className="flex gap-1">
-          {[1, 2, 3, 4, 5].map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setRating(value)}
-              className={`p-2 rounded transition-colors ${
-                rating >= value
-                  ? "text-amber-400"
-                  : "text-slate-500 hover:text-slate-300"
-              }`}
-            >
-              <Star
-                size={24}
-                className={rating >= value ? "fill-current" : ""}
-              />
-            </button>
-          ))}
-        </div>
+        <Label>Rating *</Label>
+        <StarRating value={rating} onChange={setRating} />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
-          Tasting Date *
-        </label>
-        <input
-          type="date"
-          value={tastingDate}
-          onChange={(e) => setTastingDate(e.target.value)}
-          required
-          className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-        />
+        <Label htmlFor="tasting-date">Tasting date *</Label>
+        <Input id="tasting-date" type="date" value={tastingDate} onChange={(e) => setTastingDate(e.target.value)} required />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
-          Notes
-        </label>
-        <textarea
+        <Label htmlFor="tasting-notes">Notes</Label>
+        <Textarea
+          id="tasting-notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={4}
-          className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          placeholder="Add your tasting notes..."
+          placeholder="Add your tasting notes…"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
-          Flavour Notes
-        </label>
+        <Label>Flavour notes</Label>
         <div className="space-y-2">
           {tastingNotes.map((tn, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-2 p-2 bg-slate-800 rounded"
-            >
-              <span className="flex-1 text-slate-200 text-sm">{tn.note}</span>
-              <span className="text-slate-400 text-sm">Intensity: {tn.intensity}</span>
-              <button
-                type="button"
-                onClick={() => removeTastingNote(index)}
-                className="text-red-400 hover:text-red-300"
-              >
+            <div key={index} className="flex items-center gap-2 rounded-md bg-muted px-3 py-2">
+              <span className="flex-1 text-sm text-foreground">{tn.note}</span>
+              <span className="text-sm text-muted-foreground">Intensity {tn.intensity}</span>
+              <Button type="button" variant="ghost" size="icon-sm" aria-label={`Remove ${tn.note}`} onClick={() => removeTastingNote(index)}>
                 <X size={16} />
-              </button>
+              </Button>
             </div>
           ))}
           <div className="flex gap-2">
-            <input
-              type="text"
+            <Input
               value={newNote}
               onChange={(e) => setNewNote(e.target.value)}
-              placeholder="Add flavour note..."
-              className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              placeholder="Add a flavour note…"
+              aria-label="Flavour note"
+              className="flex-1"
             />
-            <input
+            <Input
               type="number"
               min="1"
               max="5"
               value={newIntensity}
               onChange={(e) => setNewIntensity(parseInt(e.target.value) || 3)}
-              className="w-20 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-              placeholder="1-5"
+              aria-label="Intensity, 1 to 5"
+              className="w-20"
             />
-            <Button
-              type="button"
-              onClick={addTastingNote}
-              size="sm"
-              className="bg-amber-600 hover:bg-amber-700 text-white"
-            >
+            <Button type="button" variant="secondary" size="icon" aria-label="Add flavour note" onClick={addTastingNote}>
               <Plus size={16} />
             </Button>
           </div>
         </div>
       </div>
 
-      <Button
-        type="submit"
-        disabled={createMutation.isPending || rating === 0}
-        className="w-full bg-amber-600 hover:bg-amber-700 text-white"
-      >
+      <Button type="submit" disabled={createMutation.isPending || rating === 0} className="w-full">
         {createMutation.isPending ? (
           <>
-            <Loader2 size={16} className="mr-2 animate-spin" />
-            Saving...
+            <Loader2 size={16} className="animate-spin" />
+            Saving…
           </>
         ) : (
-          "Save Tasting"
+          "Save tasting"
         )}
       </Button>
     </form>
   );
 }
-

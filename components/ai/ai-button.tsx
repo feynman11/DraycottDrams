@@ -1,22 +1,26 @@
-import { MessageCircle } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface AIButtonProps {
   onClick: () => void;
   isOpen: boolean;
 }
 
+// Floating sommelier launcher; sits above the mobile tab bar
 export function AIButton({ onClick, isOpen }: AIButtonProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`fixed bottom-6 right-6 z-[1000] p-4 rounded-full shadow-lg transition-all transform hover:scale-105 flex items-center justify-center ${
-        isOpen
-          ? 'bg-amber-700 text-white shadow-amber-900/40'
-          : 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/40'
-      }`}
-      title="Ask the AI Sommelier"
+      aria-label={isOpen ? "Close the AI sommelier" : "Ask the AI sommelier"}
+      aria-expanded={isOpen}
+      className={cn(
+        "fixed right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full text-primary-foreground shadow-lg transition-[transform,background-color,box-shadow] duration-(--duration-base) ease-(--ease-spring) hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-95 md:right-6",
+        "bottom-[calc(var(--bottom-nav-h)+var(--safe-bottom)+1rem)] md:bottom-6",
+        isOpen ? "bg-accent text-foreground" : "bg-primary shadow-glow"
+      )}
     >
-      <MessageCircle className="w-6 h-6" />
+      {isOpen ? <X size={20} /> : <Sparkles size={20} />}
     </button>
   );
 }

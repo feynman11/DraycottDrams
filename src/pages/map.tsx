@@ -1,5 +1,5 @@
 import { WhiskyMap } from "@/components/whisky/whisky-map";
-import { Header } from "@/components/layout/header";
+import { AppShell } from "@/components/layout/app-shell";
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
@@ -20,33 +20,28 @@ export default function MapPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-slate-950 text-slate-200">
-      <Header />
-
-      <main className="flex-1 min-h-0 relative overflow-hidden">
-        <div className="w-full h-full relative bg-slate-950 overflow-hidden">
-          <WhiskyMap />
-          {showAtlasBox && (
-            <div className="absolute bottom-6 left-6 max-w-sm pointer-events-none">
-              <div className="bg-slate-900/80 backdrop-blur-md p-4 rounded-xl border border-slate-700/50 shadow-2xl pointer-events-auto relative">
-                <button
-                  onClick={dismissAtlasBox}
-                  className="absolute top-2 right-2 p-1 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded transition-colors"
-                  title="Dismiss"
-                >
-                  <X size={14} />
-                </button>
-                <h3 className="text-amber-500 font-bold mb-1 pr-6">Interactive Atlas</h3>
-                <p className="text-sm text-slate-300">
-                  Explore the origins of the whiskies tasted by the club. Click a pin to view tasting notes and flavour profiles.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
+    <AppShell fullBleed>
+      <WhiskyMap />
+      {/* First-visit hint; phones need the room, so it's md and up only. Bottom right, clear of
+          the legend (bottom left) and the sommelier button (far right). */}
+      {showAtlasBox && (
+        <aside className="absolute bottom-4 right-20 z-10 hidden max-w-xs animate-rise-in md:block">
+          <div className="relative rounded-xl border border-border bg-popover/90 p-4 pr-10 shadow-lg backdrop-blur-md">
+            <button
+              type="button"
+              onClick={dismissAtlasBox}
+              className="touch-exempt absolute right-2 top-2 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="Dismiss"
+            >
+              <X size={14} />
+            </button>
+            <h2 className="font-display text-xl text-foreground">Interactive atlas</h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              Explore the origins of the whiskies tasted by the club. Click a pin to view tasting notes and flavour profiles.
+            </p>
+          </div>
+        </aside>
+      )}
+    </AppShell>
   );
 }
-
-

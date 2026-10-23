@@ -1,8 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
-import { ZoomIn, ZoomOut, RotateCcw, Filter, MapPin, Info } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, SlidersHorizontal, Info, Loader2, MapPinOff } from 'lucide-react';
 import { type WhiskyWithGathering, type Distillery } from '@/lib/types';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
+import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { cn } from '@/lib/utils';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 interface Props {
@@ -142,6 +148,7 @@ export const MapVisualization: React.FC<Props> = ({
     clusterCountMouseLeave?: () => void;
   }>({});
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
   const [colorMode, setColorMode] = useState<ColorMode>('orange');
@@ -185,6 +192,17 @@ export const MapVisualization: React.FC<Props> = ({
 
     map.current.on('load', () => {
       setMapLoaded(true);
+    });
+
+    // A failed style fetch (offline, bad key) would otherwise leave the loading state forever.
+    // Individual tile/glyph failures carry a `tile`/`sourceId` and are not fatal, so ignore them.
+    map.current.on('error', (e) => {
+      const partial = e as { tile?: unknown; sourceId?: unknown };
+      if (partial.tile || partial.sourceId) return;
+      if (!map.current?.isStyleLoaded()) {
+        console.error('Map style failed to load:', e.error);
+        setMapError(true);
+      }
     });
 
     // Cleanup
@@ -457,18 +475,9 @@ export const MapVisualization: React.FC<Props> = ({
           clusterPopupRef.current = null;
         }
         
-        // Get the dot color for this distillery
+        // The dot's colour becomes a swatch; the popup itself uses the app surface
         const dotColor = props.color || '#f59e0b';
-        
-        // Convert hex to RGB and calculate brightness for text color
-        const hex = dotColor.replace('#', '');
-        const r = parseInt(hex.substring(0, 2), 16);
-        const g = parseInt(hex.substring(2, 4), 16);
-        const b = parseInt(hex.substring(4, 6), 16);
-        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-        const textColor = brightness > 128 ? '#1e293b' : '#f1f5f9'; // slate-800 for light, slate-100 for dark
-        const secondaryTextColor = brightness > 128 ? '#475569' : '#cbd5e1'; // slate-600 for light, slate-300 for dark
-        
+
         hoverPopupRef.current = new maplibregl.Popup({
           offset: 25,
           closeButton: false,
@@ -476,10 +485,13 @@ export const MapVisualization: React.FC<Props> = ({
         })
           .setLngLat(e.lngLat)
           .setHTML(`
-            <div class="distillery-popup-content p-2 rounded-lg" style="background-color: ${dotColor}; color: ${textColor}; border: 2px solid ${dotColor};">
-              <div class="font-bold text-sm" style="color: ${textColor};">${props.distillery}</div>
-              <div class="text-xs" style="color: ${secondaryTextColor};">${props.region}, ${props.country}</div>
-              <div class="text-xs mt-1" style="color: ${secondaryTextColor};">${props.whiskyCount} ${props.whiskyCount === 1 ? 'whisky' : 'whiskies'}</div>
+            <div class="px-3 py-2.5">
+              <div class="flex items-center gap-2">
+                <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background-color: ${dotColor};"></span>
+                <span class="text-sm font-semibold text-foreground">${props.distillery}</span>
+              </div>
+              <div class="mt-0.5 text-xs text-muted-foreground">${props.region}, ${props.country}</div>
+              <div class="mt-0.5 text-xs text-subtle">${props.whiskyCount} ${props.whiskyCount === 1 ? 'whisky' : 'whiskies'}</div>
             </div>
           `)
           .addTo(map.current!);
@@ -725,421 +737,229 @@ export const MapVisualization: React.FC<Props> = ({
     onGatheringChange?.(gathering);
   };
 
+  const regionButtons = (Object.keys(REGION_VIEWS) as (keyof typeof REGION_VIEWS)[]).map((region) => (
+    <Button key={region} variant="secondary" size="sm" onClick={() => handleRegionNavigation(region)}>
+      {region}
+    </Button>
+  ));
+
+  const filtersActive = gatheringFilter !== undefined || showDistilleriesWithWhiskies || showDistilleriesWithoutTastings;
+
+  // One options tree, shown in a floating card on desktop and a bottom sheet on phones
+  const optionsPanel = (
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="map-gathering">Gathering</Label>
+        <Select id="map-gathering" value={gatheringFilter || ''} onChange={handleGatheringFilterChange}>
+          <option value="">All gatherings</option>
+          {gatherings.map((gathering) => {
+            const theme = gatheringThemes.get(gathering);
+            return (
+              <option key={gathering} value={gathering}>
+                {theme ? `Gathering ${gathering} · ${theme}` : `Gathering ${gathering}`}
+              </option>
+            );
+          })}
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="map-colour">Colour key</Label>
+        <Select id="map-colour" value={colorMode} onChange={(e) => setColorMode(e.target.value as ColorMode)}>
+          <option value="orange">Amber shades by age</option>
+          <option value="multi">One colour per gathering</option>
+        </Select>
+      </div>
+
+      <div>
+        <Label>Quick navigation</Label>
+        <div className="grid grid-cols-4 gap-1.5">{regionButtons}</div>
+      </div>
+
+      <div className="space-y-2 border-t border-border pt-4">
+        {onShowDistilleriesWithoutTastingsChange && (
+          <Button
+            variant={showDistilleriesWithoutTastings ? "default" : "outline"}
+            size="sm"
+            aria-pressed={showDistilleriesWithoutTastings}
+            onClick={() => {
+              onShowDistilleriesWithoutTastingsChange(!showDistilleriesWithoutTastings);
+              // Disable other filter when this is enabled
+              if (!showDistilleriesWithoutTastings && onShowDistilleriesWithWhiskiesChange) {
+                onShowDistilleriesWithWhiskiesChange(false);
+              }
+            }}
+            className="w-full"
+          >
+            {showDistilleriesWithoutTastings ? "Showing only untasted distilleries" : "Only untasted distilleries"}
+          </Button>
+        )}
+        {onShowDistilleriesWithWhiskiesChange && (
+          <Button
+            variant={showDistilleriesWithWhiskies ? "default" : "outline"}
+            size="sm"
+            aria-pressed={showDistilleriesWithWhiskies}
+            onClick={() => {
+              onShowDistilleriesWithWhiskiesChange(!showDistilleriesWithWhiskies);
+              // Disable other filter when this is enabled
+              if (!showDistilleriesWithWhiskies && onShowDistilleriesWithoutTastingsChange) {
+                onShowDistilleriesWithoutTastingsChange(false);
+              }
+            }}
+            className="w-full"
+            disabled={showDistilleriesWithoutTastings}
+          >
+            {showDistilleriesWithWhiskies ? "Showing every distillery" : "Show every distillery"}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+
+  const legendPanel = (
+    <ul className="space-y-2">
+      {gatherings.map((gathering) => {
+        const color = getGatheringColor(gathering, colorMode, totalGatherings);
+        const theme = gatheringThemes.get(gathering);
+        return (
+          <li key={gathering} className="flex items-center gap-2.5">
+            <span className="h-3 w-3 shrink-0 rounded-full ring-1 ring-white/20" style={{ backgroundColor: color }} />
+            <span className="min-w-0 text-xs">
+              <span className="font-medium text-foreground">Gathering {gathering}</span>
+              {theme && <span className="block truncate text-muted-foreground">{theme}</span>}
+            </span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+
   return (
-    <div className="w-full h-full bg-slate-950 relative overflow-hidden group/map">
-      <div ref={mapContainer} className="w-full h-full" />
-      
+    <div className="relative h-full w-full overflow-hidden bg-background">
+      <div ref={mapContainer} className="h-full w-full" />
+
       {!mapLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-950 z-10">
-          <div className="animate-pulse flex flex-col items-center">
-            <span className="text-xl font-serif text-amber-600">Loading Map...</span>
-          </div>
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background p-6" aria-busy={!mapError}>
+          {mapError ? (
+            <EmptyState
+              tone="error"
+              icon={<MapPinOff />}
+              title="The map tiles couldn't load"
+              description="Check your connection and try again. The distilleries and whiskies pages still work."
+              action={<Button variant="outline" onClick={() => window.location.reload()}>Try again</Button>}
+              className="w-full max-w-md bg-card"
+            />
+          ) : (
+            <div className="flex flex-col items-center gap-3 animate-fade-in">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="text-sm text-muted-foreground">Loading the atlas…</span>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Options Panel - Desktop */}
-      <div className="hidden md:block absolute top-6 left-6 z-10">
-        <button
-          onClick={() => setShowOptions(!showOptions)}
-          className="p-2.5 bg-slate-900/90 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
-          title="Toggle Options"
-        >
-          <Filter size={20} />
-        </button>
-        
-        {showOptions && (
-          <div className="mt-2 bg-slate-900/95 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-4 min-w-[240px]">
-            <div className="flex items-center gap-2 mb-4">
-              <Filter size={18} className="text-amber-500" />
-              <h3 className="text-sm font-semibold text-slate-200">Map Options</h3>
-            </div>
-            
-            {/* Gathering Filter */}
-            <div className="mb-4">
-              <label className="block text-xs font-medium text-slate-400 mb-2">
-                Filter by Gathering
-              </label>
-              <select
-                value={gatheringFilter || ''}
-                onChange={handleGatheringFilterChange}
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              >
-                <option value="">All Gatherings</option>
-                {gatherings.map((gathering) => {
-                  const theme = gatheringThemes.get(gathering);
-                  const displayText = theme 
-                    ? `Gathering ${gathering} - ${theme}`
-                    : `Gathering ${gathering}`;
-                  return (
-                    <option key={gathering} value={gathering}>
-                      {displayText}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-            
-            {/* Color Mode */}
-            <div className="mb-4">
-              <label className="block text-xs font-medium text-slate-400 mb-2">
-                Color Key
-              </label>
-              <select
-                value={colorMode}
-                onChange={(e) => setColorMode(e.target.value as ColorMode)}
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              >
-                <option value="orange">Orange Shades</option>
-                <option value="multi">Multi-Colored</option>
-              </select>
-            </div>
-            
-            {/* Quick Navigation */}
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <MapPin size={16} className="text-amber-500" />
-                <label className="text-xs font-medium text-slate-400">
-                  Quick Navigation
-                </label>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => handleRegionNavigation('UK')}
-                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-200 text-xs font-medium transition-colors"
-                >
-                  UK
-                </button>
-                <button
-                  onClick={() => handleRegionNavigation('USA')}
-                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-200 text-xs font-medium transition-colors"
-                >
-                  USA
-                </button>
-                <button
-                  onClick={() => handleRegionNavigation('Europe')}
-                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-200 text-xs font-medium transition-colors"
-                >
-                  Europe
-                </button>
-                <button
-                  onClick={() => handleRegionNavigation('Asia')}
-                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-200 text-xs font-medium transition-colors"
-                >
-                  Asia
-                </button>
-              </div>
-            </div>
+      <MapPanel
+        icon={<SlidersHorizontal size={18} />}
+        label="Filters"
+        title="Map options"
+        position="top-left"
+        open={showOptions}
+        onOpenChange={setShowOptions}
+        active={filtersActive}
+      >
+        {optionsPanel}
+      </MapPanel>
 
-            {/* Distillery Filters */}
-            <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
-              {onShowDistilleriesWithoutTastingsChange && (
-                <Button
-                  variant={showDistilleriesWithoutTastings ? "default" : "outline"}
-                  onClick={() => {
-                    onShowDistilleriesWithoutTastingsChange(!showDistilleriesWithoutTastings);
-                    // Disable other filter when this is enabled
-                    if (!showDistilleriesWithoutTastings && onShowDistilleriesWithWhiskiesChange) {
-                      onShowDistilleriesWithWhiskiesChange(false);
-                    }
-                  }}
-                  className={`w-full ${
-                    showDistilleriesWithoutTastings
-                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950"
-                      : "text-slate-400 border-slate-700 hover:bg-slate-800"
-                  }`}
-                >
-                  {showDistilleriesWithoutTastings ? "Showing Only Untasted" : "Show Only Untasted Distilleries"}
-                </Button>
-              )}
-              {onShowDistilleriesWithWhiskiesChange && (
-                <Button
-                  variant={showDistilleriesWithWhiskies ? "default" : "outline"}
-                  onClick={() => {
-                    onShowDistilleriesWithWhiskiesChange(!showDistilleriesWithWhiskies);
-                    // Disable other filter when this is enabled
-                    if (!showDistilleriesWithWhiskies && onShowDistilleriesWithoutTastingsChange) {
-                      onShowDistilleriesWithoutTastingsChange(false);
-                    }
-                  }}
-                  className={`w-full ${
-                    showDistilleriesWithWhiskies
-                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950"
-                      : "text-slate-400 border-slate-700 hover:bg-slate-800"
-                  }`}
-                  disabled={showDistilleriesWithoutTastings}
-                >
-                  {showDistilleriesWithWhiskies ? "Showing All" : "Show All Distilleries"}
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
+      <MapPanel
+        icon={<Info size={18} />}
+        label="Legend"
+        title="Gathering colours"
+        position="bottom-left"
+        open={showLegend}
+        onOpenChange={setShowLegend}
+      >
+        {legendPanel}
+      </MapPanel>
+
+      {/* Zoom and reset */}
+      <div className="absolute right-4 top-4 z-10 flex flex-col overflow-hidden rounded-xl border border-border bg-popover/90 shadow-lg backdrop-blur-md">
+        <MapControl label="Zoom in" onClick={handleZoomIn}><ZoomIn size={18} /></MapControl>
+        <MapControl label="Zoom out" onClick={handleZoomOut}><ZoomOut size={18} /></MapControl>
+        <div className="mx-2 h-px bg-border" />
+        <MapControl label="Reset view" onClick={handleReset} className="text-primary"><RotateCcw size={18} /></MapControl>
       </div>
-
-      {/* Legend Toggle Button - Desktop */}
-      <div className="hidden md:block absolute bottom-6 left-6 z-10">
-        <button
-          onClick={() => setShowLegend(!showLegend)}
-          className="p-2.5 bg-slate-900/90 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
-          title="Toggle Legend"
-        >
-          <Info size={20} />
-        </button>
-        
-        {showLegend && (
-          <div className="mt-2 bg-slate-900/95 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-4 min-w-[240px] max-h-[400px] overflow-y-auto">
-            <div className="flex items-center gap-2 mb-3">
-              <Info size={18} className="text-amber-500" />
-              <h3 className="text-sm font-semibold text-slate-200">Gathering Colors</h3>
-            </div>
-            <div className="space-y-2">
-              {gatherings.map((gathering) => {
-                const color = getGatheringColor(gathering, colorMode, totalGatherings);
-                const theme = gatheringThemes.get(gathering);
-                return (
-                  <div key={gathering} className="flex items-center gap-2">
-                    <div
-                      className="w-4 h-4 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: color }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-medium text-slate-200">
-                        Gathering {gathering}
-                      </div>
-                      {theme && (
-                        <div className="text-xs text-slate-400 truncate">
-                          {theme}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Map Controls - Desktop */}
-      <div className="hidden md:flex absolute top-6 right-6 flex-col gap-2 bg-slate-900/90 backdrop-blur-md border border-slate-700/50 p-2 rounded-xl shadow-2xl z-10">
-        <button
-          onClick={handleZoomIn}
-          className="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors border border-transparent hover:border-slate-600"
-          title="Zoom In"
-        >
-          <ZoomIn size={20} />
-        </button>
-        <button
-          onClick={handleZoomOut}
-          className="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors border border-transparent hover:border-slate-600"
-          title="Zoom Out"
-        >
-          <ZoomOut size={20} />
-        </button>
-        <div className="h-px bg-slate-700 my-1 mx-2"></div>
-        <button
-          onClick={handleReset}
-          className="p-2 text-amber-500 hover:text-amber-400 hover:bg-slate-800 rounded-lg transition-colors border border-transparent hover:border-slate-600"
-          title="Reset View"
-        >
-          <RotateCcw size={20} />
-        </button>
-      </div>
-
-      {/* Options Panel - Mobile */}
-      <div className="md:hidden absolute top-4 left-4 z-10">
-        <button
-          onClick={() => setShowOptions(!showOptions)}
-          className="p-2 bg-slate-900/90 backdrop-blur-md border border-slate-700/50 rounded-lg shadow-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
-          title="Toggle Options"
-        >
-          <Filter size={18} />
-        </button>
-        
-        {showOptions && (
-          <div className="mt-2 bg-slate-900/95 backdrop-blur-md border border-slate-700/50 rounded-lg shadow-lg p-3 min-w-[200px]">
-            <div className="flex items-center gap-2 mb-3">
-              <Filter size={16} className="text-amber-500" />
-              <h3 className="text-xs font-semibold text-slate-200">Options</h3>
-            </div>
-            
-            {/* Gathering Filter */}
-            <div className="mb-3">
-              <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                Gathering
-              </label>
-              <select
-                value={gatheringFilter || ''}
-                onChange={handleGatheringFilterChange}
-                className="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
-              >
-                <option value="">All</option>
-                {gatherings.map((gathering) => {
-                  const theme = gatheringThemes.get(gathering);
-                  const displayText = theme 
-                    ? `#${gathering} - ${theme}`
-                    : `#${gathering}`;
-                  return (
-                    <option key={gathering} value={gathering}>
-                      {displayText}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-            
-            {/* Color Mode */}
-            <div className="mb-3">
-              <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                Color Key
-              </label>
-              <select
-                value={colorMode}
-                onChange={(e) => setColorMode(e.target.value as ColorMode)}
-                className="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
-              >
-                <option value="orange">Orange</option>
-                <option value="multi">Multi</option>
-              </select>
-            </div>
-            
-            {/* Quick Navigation */}
-            <div>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <MapPin size={14} className="text-amber-500" />
-                <label className="text-xs font-medium text-slate-400">
-                  Regions
-                </label>
-              </div>
-              <div className="grid grid-cols-2 gap-1.5">
-                <button
-                  onClick={() => handleRegionNavigation('UK')}
-                  className="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-200 text-xs font-medium transition-colors"
-                >
-                  UK
-                </button>
-                <button
-                  onClick={() => handleRegionNavigation('USA')}
-                  className="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-200 text-xs font-medium transition-colors"
-                >
-                  USA
-                </button>
-                <button
-                  onClick={() => handleRegionNavigation('Europe')}
-                  className="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-200 text-xs font-medium transition-colors"
-                >
-                  Europe
-                </button>
-                <button
-                  onClick={() => handleRegionNavigation('Asia')}
-                  className="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-200 text-xs font-medium transition-colors"
-                >
-                  Asia
-                </button>
-              </div>
-            </div>
-
-            {/* Distillery Filters */}
-            <div className="mt-3 pt-3 border-t border-slate-800 space-y-1.5">
-              {onShowDistilleriesWithoutTastingsChange && (
-                <Button
-                  variant={showDistilleriesWithoutTastings ? "default" : "outline"}
-                  onClick={() => {
-                    onShowDistilleriesWithoutTastingsChange(!showDistilleriesWithoutTastings);
-                    // Disable other filter when this is enabled
-                    if (!showDistilleriesWithoutTastings && onShowDistilleriesWithWhiskiesChange) {
-                      onShowDistilleriesWithWhiskiesChange(false);
-                    }
-                  }}
-                  className={`w-full text-xs ${
-                    showDistilleriesWithoutTastings
-                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950"
-                      : "text-slate-400 border-slate-700 hover:bg-slate-800"
-                  }`}
-                >
-                  {showDistilleriesWithoutTastings ? "Only Untasted" : "Show Untasted Only"}
-                </Button>
-              )}
-              {onShowDistilleriesWithWhiskiesChange && (
-                <Button
-                  variant={showDistilleriesWithWhiskies ? "default" : "outline"}
-                  onClick={() => {
-                    onShowDistilleriesWithWhiskiesChange(!showDistilleriesWithWhiskies);
-                    // Disable other filter when this is enabled
-                    if (!showDistilleriesWithWhiskies && onShowDistilleriesWithoutTastingsChange) {
-                      onShowDistilleriesWithoutTastingsChange(false);
-                    }
-                  }}
-                  className={`w-full text-xs ${
-                    showDistilleriesWithWhiskies
-                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950"
-                      : "text-slate-400 border-slate-700 hover:bg-slate-800"
-                  }`}
-                  disabled={showDistilleriesWithoutTastings}
-                >
-                  {showDistilleriesWithWhiskies ? "All Distilleries" : "Show All"}
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Legend Toggle Button - Mobile */}
-      <div className="md:hidden absolute bottom-4 left-4 z-10">
-        <button
-          onClick={() => setShowLegend(!showLegend)}
-          className="p-2 bg-slate-900/90 backdrop-blur-md border border-slate-700/50 rounded-lg shadow-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
-          title="Toggle Legend"
-        >
-          <Info size={18} />
-        </button>
-        
-        {showLegend && (
-          <div className="mt-2 bg-slate-900/95 backdrop-blur-md border border-slate-700/50 rounded-lg shadow-lg p-3 min-w-[200px] max-h-[300px] overflow-y-auto">
-            <div className="flex items-center gap-2 mb-2">
-              <Info size={16} className="text-amber-500" />
-              <h3 className="text-xs font-semibold text-slate-200">Colors</h3>
-            </div>
-            <div className="space-y-1.5">
-              {gatherings.map((gathering) => {
-                const color = getGatheringColor(gathering, colorMode, totalGatherings);
-                const theme = gatheringThemes.get(gathering);
-                return (
-                  <div key={gathering} className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: color }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-medium text-slate-200">
-                        #{gathering}
-                      </div>
-                      {theme && (
-                        <div className="text-xs text-slate-400 truncate">
-                          {theme}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Reset Button - Mobile Only */}
-      <div className="md:hidden absolute top-4 right-4 z-10">
-        <button
-          onClick={handleReset}
-          className="p-1.5 text-amber-500 hover:text-amber-400 hover:bg-slate-900/90 bg-slate-900/80 backdrop-blur-md rounded-lg transition-colors border border-slate-700/50 shadow-lg"
-          title="Reset View"
-        >
-          <RotateCcw size={16} />
-        </button>
-      </div>
-
     </div>
   );
 };
+
+function MapControl({ label, className, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { label: string }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      className={cn(
+        "flex h-11 w-11 items-center justify-center text-muted-foreground transition-colors duration-(--duration-fast) hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:bg-accent focus-visible:text-foreground",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+interface MapPanelProps {
+  icon: React.ReactNode;
+  label: string;
+  title: string;
+  position: "top-left" | "bottom-left";
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  active?: boolean;
+  children: React.ReactNode;
+}
+
+// A toggle button with its panel: floating card beside it on desktop, bottom sheet on phones
+function MapPanel({ icon, label, title, position, open, onOpenChange, active, children }: MapPanelProps) {
+  const isDesktop = useMediaQuery("(min-width: 48rem)");
+  return (
+    <div className={cn("absolute left-4 z-10", position === "top-left" ? "top-4" : "bottom-4")}>
+      <button
+        type="button"
+        onClick={() => onOpenChange(!open)}
+        aria-expanded={open}
+        aria-label={title}
+        className={cn(
+          "flex h-11 items-center gap-2 rounded-xl border px-3 text-sm font-medium shadow-lg backdrop-blur-md transition-colors duration-(--duration-fast) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          open ? "border-primary/40 bg-popover text-primary" : "border-border bg-popover/90 text-foreground hover:bg-accent"
+        )}
+      >
+        {icon}
+        <span className="hidden sm:inline">{label}</span>
+        {active && <span aria-label="Filters applied" className="h-1.5 w-1.5 rounded-full bg-primary" />}
+      </button>
+
+      {isDesktop ? (
+        open && (
+          <div
+            className={cn(
+              "absolute left-0 w-72 rounded-xl border border-border bg-popover/95 p-4 shadow-lg backdrop-blur-md animate-rise-in",
+              position === "top-left" ? "top-13" : "bottom-13 max-h-[60vh] overflow-y-auto"
+            )}
+          >
+            <h3 className="mb-3 text-sm font-semibold text-foreground">{title}</h3>
+            {children}
+          </div>
+        )
+      ) : (
+        <Sheet open={open} onOpenChange={onOpenChange}>
+          <SheetContent side="bottom" title={title}>
+            <SheetHeader>
+              <SheetTitle>{title}</SheetTitle>
+            </SheetHeader>
+            <SheetBody>{children}</SheetBody>
+          </SheetContent>
+        </Sheet>
+      )}
+    </div>
+  );
+}

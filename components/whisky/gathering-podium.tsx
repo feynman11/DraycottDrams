@@ -1,6 +1,7 @@
 import { type WhiskyWithGathering } from "@/lib/types";
 import { Trophy, Medal } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { rankTone } from "./ranking-badge";
 
 interface GatheringPodiumProps {
   whiskies: WhiskyWithGathering[];
@@ -28,79 +29,60 @@ export function GatheringPodium({ whiskies, gatheringNumber, theme, onWhiskyClic
     return null; // No ranking data for this gathering
   }
 
+  // Second, first, third: the winner stands in the middle on the tallest block
+  const steps: { whisky?: WhiskyWithGathering; position: 1 | 2 | 3; height: string }[] = [
+    { whisky: second, position: 2, height: "h-16" },
+    { whisky: first, position: 1, height: "h-24" },
+    { whisky: third, position: 3, height: "h-12" },
+  ];
+
   return (
-    <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-800">
-      {/* Header */}
-      <div className="text-center mb-6">
-        <h3 className="text-xl font-bold text-amber-400">Gathering {gatheringNumber}</h3>
-        {theme && <p className="text-slate-400 text-sm mt-1">{theme}</p>}
+    <div className="rounded-xl border border-border bg-card p-5 md:p-6">
+      <div className="mb-6 text-center">
+        <h3 className="font-display text-2xl text-foreground">Gathering {gatheringNumber}</h3>
+        {theme && <p className="mt-1 text-sm text-muted-foreground">{theme}</p>}
       </div>
 
-      {/* Podium Display */}
-      <div className="flex items-end justify-center gap-4 mb-6">
-        {/* Second Place */}
-        <div className="flex flex-col items-center">
-          {second && (
-            <PodiumCard
-              whisky={second}
-              position={2}
-              onClick={() => onWhiskyClick?.(second)}
-            />
-          )}
-          <div className="w-24 h-16 bg-gradient-to-b from-slate-400 to-slate-500 rounded-t-lg flex items-center justify-center mt-2">
-            <span className="text-2xl font-bold text-slate-800">2</span>
-          </div>
-        </div>
-
-        {/* First Place (tallest) */}
-        <div className="flex flex-col items-center -mt-4">
-          {first && (
-            <PodiumCard
-              whisky={first}
-              position={1}
-              onClick={() => onWhiskyClick?.(first)}
-            />
-          )}
-          <div className="w-28 h-24 bg-gradient-to-b from-amber-400 to-amber-600 rounded-t-lg flex items-center justify-center mt-2 shadow-lg shadow-amber-500/20">
-            <Trophy className="text-amber-900" size={32} />
-          </div>
-        </div>
-
-        {/* Third Place */}
-        <div className="flex flex-col items-center">
-          {third && (
-            <PodiumCard
-              whisky={third}
-              position={3}
-              onClick={() => onWhiskyClick?.(third)}
-            />
-          )}
-          <div className="w-24 h-12 bg-gradient-to-b from-amber-700 to-amber-800 rounded-t-lg flex items-center justify-center mt-2">
-            <span className="text-2xl font-bold text-amber-200">3</span>
-          </div>
-        </div>
+      <div className="grid grid-cols-3 items-end gap-2 sm:gap-4">
+        {steps.map(({ whisky, position, height }) => {
+          const tone = rankTone(position);
+          return (
+            <div key={position} className="flex min-w-0 flex-col items-center">
+              {whisky && <PodiumCard whisky={whisky} position={position} onClick={() => onWhiskyClick?.(whisky)} />}
+              <div
+                className={cn(
+                  "mt-2 flex w-full items-center justify-center rounded-t-lg border border-b-0 font-display text-2xl",
+                  height,
+                  tone.bg,
+                  tone.border,
+                  tone.text
+                )}
+              >
+                {position === 1 ? <Trophy size={28} /> : position}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Other Rankings */}
       {otherWhiskies.length > 0 && (
-        <div className="border-t border-slate-800 pt-4 mt-4">
-          <p className="text-xs text-slate-500 uppercase tracking-wider mb-3">Also Tasted</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+        <div className="mt-4 border-t border-border pt-4">
+          <p className="mb-3 text-xs font-medium uppercase tracking-wider text-subtle">Also tasted</p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
             {otherWhiskies.map((whisky) => (
               <button
                 key={whisky.id}
+                type="button"
                 onClick={() => onWhiskyClick?.(whisky)}
-                className="flex items-center gap-2 p-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-colors text-left"
+                className="flex items-center gap-2 rounded-lg bg-muted/60 p-2 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {whisky.ranking && (
-                  <span className="text-xs font-bold text-slate-500 w-6">
-                    {whisky.ranking}th
-                  </span>
+                  <span className="w-6 text-xs font-semibold tabular-nums text-subtle">{whisky.ranking}th</span>
                 )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-300 truncate">{whisky.distillery}</p>
-                  <p className="text-xs text-slate-500 truncate">{whisky.variety}</p>
-                </div>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-foreground">{whisky.distillery}</span>
+                  <span className="block truncate text-xs text-subtle">{whisky.variety}</span>
+                </span>
               </button>
             ))}
           </div>
@@ -117,55 +99,21 @@ interface PodiumCardProps {
 }
 
 function PodiumCard({ whisky, position, onClick }: PodiumCardProps) {
-  const positionStyles = {
-    1: {
-      bg: "bg-gradient-to-br from-amber-900/80 to-yellow-900/60",
-      border: "border-amber-500/50",
-      text: "text-amber-400",
-      shadow: "shadow-amber-500/20",
-    },
-    2: {
-      bg: "bg-gradient-to-br from-slate-700/80 to-slate-600/60",
-      border: "border-slate-400/50",
-      text: "text-slate-300",
-      shadow: "shadow-slate-400/10",
-    },
-    3: {
-      bg: "bg-gradient-to-br from-amber-800/80 to-orange-900/60",
-      border: "border-amber-600/50",
-      text: "text-amber-500",
-      shadow: "shadow-amber-600/10",
-    },
-  };
-
-  const styles = positionStyles[position];
+  const tone = rankTone(position);
 
   return (
     <button
+      type="button"
       onClick={onClick}
       className={cn(
-        "w-28 p-3 rounded-lg border transition-all hover:scale-105 cursor-pointer",
-        styles.bg,
-        styles.border,
-        `shadow-lg ${styles.shadow}`
+        "w-full min-w-0 rounded-lg border bg-card p-3 text-center transition-[transform,box-shadow] duration-(--duration-base) hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        tone.border
       )}
     >
-      <div className="flex items-center justify-center mb-2">
-        {position === 1 ? (
-          <Trophy className="text-amber-400" size={20} />
-        ) : (
-          <Medal className={position === 2 ? "text-slate-300" : "text-amber-600"} size={20} />
-        )}
-      </div>
-      <p className={cn("text-sm font-bold truncate text-center", styles.text)}>
-        {whisky.distillery}
-      </p>
-      <p className="text-xs text-slate-400 truncate text-center mt-1">
-        {whisky.variety}
-      </p>
-      <p className="text-xs text-slate-500 text-center mt-1">
-        by {whisky.provider}
-      </p>
+      <span className={cn("mb-2 inline-flex", tone.text)}>{position === 1 ? <Trophy size={20} /> : <Medal size={20} />}</span>
+      <p className={cn("truncate text-sm font-semibold", tone.text)}>{whisky.distillery}</p>
+      <p className="mt-1 truncate text-xs text-muted-foreground">{whisky.variety}</p>
+      <p className="mt-1 truncate text-xs text-subtle">by {whisky.provider}</p>
     </button>
   );
 }
@@ -184,28 +132,25 @@ export function InlinePodium({ whiskies, onWhiskyClick }: InlinePodiumProps) {
   if (top3.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-2 py-2">
-      {top3.map((whisky) => (
-        <button
-          key={whisky.id}
-          onClick={() => onWhiskyClick?.(whisky)}
-          className={cn(
-            "flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors",
-            whisky.ranking === 1
-              ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
-              : whisky.ranking === 2
-                ? "bg-slate-400/20 text-slate-300 hover:bg-slate-400/30"
-                : "bg-amber-700/20 text-amber-500 hover:bg-amber-700/30"
-          )}
-        >
-          {whisky.ranking === 1 ? (
-            <Trophy size={12} />
-          ) : (
-            <Medal size={12} />
-          )}
-          <span className="truncate max-w-[100px]">{whisky.distillery}</span>
-        </button>
-      ))}
+    <div className="flex flex-wrap items-center gap-2 py-2">
+      {top3.map((whisky) => {
+        const tone = rankTone(whisky.ranking);
+        return (
+          <button
+            key={whisky.id}
+            type="button"
+            onClick={() => onWhiskyClick?.(whisky)}
+            className={cn(
+              "touch-exempt inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              tone.bg,
+              tone.text
+            )}
+          >
+            {whisky.ranking === 1 ? <Trophy size={12} /> : <Medal size={12} />}
+            <span className="max-w-[100px] truncate">{whisky.distillery}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

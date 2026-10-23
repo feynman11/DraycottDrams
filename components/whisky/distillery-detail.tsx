@@ -1,36 +1,43 @@
-import { X, MapPin, Droplets, Calendar, Globe, Building2, TrendingUp, Users, ExternalLink } from 'lucide-react';
+import { MapPin, Droplets, Calendar, Globe, Building2, TrendingUp, Users, ExternalLink } from "lucide-react";
 import { api } from "@/lib/trpc-client";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { type WhiskyWithGathering } from "@/lib/types";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { RankingBadge } from "./ranking-badge";
 
 interface DistilleryDetailProps {
-  distillery: string;
+  distillery: string | null;
   whiskies: WhiskyWithGathering[];
   onClose: () => void;
 }
 
 export function DistilleryDetail({ distillery, whiskies, onClose }: DistilleryDetailProps) {
-  // All hooks must be called before any early returns
-  const firstWhisky = whiskies[0];
-  const distilleryId = firstWhisky ? ((firstWhisky as any).distilleryId || (firstWhisky as any).distillery?.id) : undefined;
-  
+  const open = !!distillery && whiskies.length > 0;
+  // Keep the last selection so the panel can animate out after it's cleared
+  const [shown, setShown] = useState<{ distillery: string; whiskies: WhiskyWithGathering[] } | null>(null);
+  if (open && (shown?.distillery !== distillery || shown.whiskies !== whiskies)) setShown({ distillery, whiskies });
+
+  const firstWhisky = shown?.whiskies[0];
+  const distilleryId = firstWhisky?.distilleryId ?? undefined;
+
   // Fetch distillery details - try by ID first, then by name
   const { data: distilleryDetailsById } = api.distillery.getById.useQuery(
     { id: distilleryId! },
-    { enabled: !!distilleryId && !!distillery && whiskies.length > 0 }
+    { enabled: !!distilleryId && !!shown }
   );
-  
+
   const { data: distilleriesList } = api.distillery.getAll.useQuery(
-    { search: distillery, limit: 1 },
-    { enabled: !distilleryDetailsById && !!distillery && whiskies.length > 0 }
+    { search: shown?.distillery ?? "", limit: 1 },
+    { enabled: !distilleryDetailsById && !!shown }
   );
-  
+
   const distilleryDetails = distilleryDetailsById || distilleriesList?.[0];
 
   // Group whiskies by gathering for better display
   const whiskiesByGathering = useMemo(() => {
-    if (!whiskies || whiskies.length === 0) return {} as Record<number, WhiskyWithGathering[]>;
-    return whiskies.reduce((acc, whisky) => {
+    const list = shown?.whiskies ?? [];
+    return list.reduce((acc, whisky) => {
       const key = whisky.gathering;
       if (!acc[key]) {
         acc[key] = [];
@@ -38,211 +45,156 @@ export function DistilleryDetail({ distillery, whiskies, onClose }: DistilleryDe
       acc[key].push(whisky);
       return acc;
     }, {} as Record<number, WhiskyWithGathering[]>);
-  }, [whiskies]);
+  }, [shown]);
 
   const gatherings = Object.keys(whiskiesByGathering)
     .map(Number)
     .sort((a, b) => a - b);
 
-  // Calculate statistics
   const dateRange = useMemo(() => {
-    if (!whiskies || whiskies.length === 0) return null;
-    const dates = whiskies.map(w => new Date(w.date).getTime()).filter(Boolean);
+    const list = shown?.whiskies ?? [];
+    const dates = list.map((w) => new Date(w.date).getTime()).filter(Boolean);
     if (dates.length === 0) return null;
-    const minDate = new Date(Math.min(...dates));
-    const maxDate = new Date(Math.max(...dates));
-    return { min: minDate, max: maxDate };
-  }, [whiskies]);
+    return { min: new Date(Math.min(...dates)), max: new Date(Math.max(...dates)) };
+  }, [shown]);
 
-  // Early return after all hooks have been called
-  if (!distillery || whiskies.length === 0) return null;
+  if (!shown || !firstWhisky) return null;
 
-  const region = firstWhisky.region;
-  const country = firstWhisky.country;
+  const { region, country } = firstWhisky;
   const totalGatherings = gatherings.length;
-  const totalWhiskies = whiskies.length;
+  const totalWhiskies = shown.whiskies.length;
 
   return (
-    <div className="absolute inset-y-0 right-0 w-full md:w-[480px] bg-slate-900/95 backdrop-blur-xl shadow-2xl border-l border-slate-700 transform transition-transform duration-300 z-[100] overflow-y-auto">
-      <div className="relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white hover:bg-slate-700 transition-colors z-50"
-        >
-          <X size={20} />
-        </button>
-
-        <div className="h-56 w-full bg-gradient-to-br from-amber-900 to-slate-900 relative p-8 flex flex-col justify-end">
-          <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIxLjUiLz48L2c+PC9nPjwvc3ZnPg==')]"></div>
-          <h4 className="text-amber-400 text-sm font-bold tracking-widest uppercase mb-2">{distillery}</h4>
-          <div className="flex items-center gap-2 text-slate-300 text-sm mb-3">
-            <MapPin size={16} />
-            <span>{region}, {country}</span>
-            {distilleryDetails?.founded && (
-              <>
-                <span className="text-slate-500">•</span>
-                <Building2 size={14} />
-                <span>Founded {distilleryDetails.founded}</span>
-              </>
+    <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
+      <SheetContent title={shown.distillery} description="Distillery details">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+          {/* Hero */}
+          <div className="relative bg-gradient-to-br from-primary/20 via-primary/5 to-card px-6 pb-6 pt-16">
+            {region && <Badge variant="secondary" className="mb-3">{region}</Badge>}
+            <h2 className="font-display text-display text-foreground">{shown.distillery}</h2>
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin size={14} className="text-subtle" />
+                {region}, {country}
+              </span>
+              {distilleryDetails?.founded && (
+                <span className="inline-flex items-center gap-1.5">
+                  <Building2 size={14} className="text-subtle" />
+                  Founded {distilleryDetails.founded}
+                </span>
+              )}
+            </div>
+            {distilleryDetails?.description && (
+              <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{distilleryDetails.description}</p>
+            )}
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-subtle">
+              <span className="inline-flex items-center gap-1">
+                <TrendingUp size={13} />
+                {totalGatherings} {totalGatherings === 1 ? "gathering" : "gatherings"}
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Droplets size={13} />
+                {totalWhiskies} {totalWhiskies === 1 ? "whisky" : "whiskies"}
+              </span>
+              {dateRange && (
+                <span className="inline-flex items-center gap-1">
+                  <Calendar size={13} />
+                  {dateRange.min.getFullYear()}–{dateRange.max.getFullYear()}
+                </span>
+              )}
+            </div>
+            {distilleryDetails?.website && (
+              <a
+                href={distilleryDetails.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-1.5 rounded text-sm text-primary transition-colors hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Globe size={14} />
+                Visit website
+                <ExternalLink size={12} />
+              </a>
             )}
           </div>
-          {distilleryDetails?.description && (
-            <p className="text-slate-300 text-sm mb-3 line-clamp-2">{distilleryDetails.description}</p>
-          )}
-          <div className="flex items-center gap-4 text-slate-400 text-xs">
-            <div className="flex items-center gap-1">
-              <TrendingUp size={14} />
-              <span>{totalGatherings} {totalGatherings === 1 ? 'gathering' : 'gatherings'}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Droplets size={14} />
-              <span>{totalWhiskies} {totalWhiskies === 1 ? 'whisky' : 'whiskies'}</span>
-            </div>
-            {dateRange && (
-              <div className="flex items-center gap-1">
-                <Calendar size={14} />
-                <span>{dateRange.min.getFullYear()} - {dateRange.max.getFullYear()}</span>
-              </div>
-            )}
-          </div>
-          {distilleryDetails?.website && (
-            <a
-              href={distilleryDetails.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-amber-400 hover:text-amber-300 text-xs mt-2 transition-colors"
-            >
-              <Globe size={12} />
-              <span>Visit Website</span>
-              <ExternalLink size={10} />
-            </a>
-          )}
-        </div>
 
-        <div className="px-8 pt-8 pb-8 space-y-6">
-          {gatherings.map((gathering) => {
-            const gatheringWhiskies = whiskiesByGathering[gathering];
-            const firstGatheringWhisky = gatheringWhiskies[0];
-            const theme = firstGatheringWhisky.theme;
-            const date = firstGatheringWhisky.date;
-            const host = firstGatheringWhisky.host;
+          <div className="space-y-4 px-6 pb-[calc(1.5rem+var(--safe-bottom))] pt-6">
+            {gatherings.map((gathering) => {
+              const gatheringWhiskies = whiskiesByGathering[gathering];
+              const { theme, date, host } = gatheringWhiskies[0];
 
-            return (
-              <div key={gathering} className="bg-slate-800/50 p-5 rounded-lg border border-slate-700">
-                {/* Gathering Header */}
-                <div className="mb-4 pb-3 border-b border-slate-700">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-slate-400 font-medium">Gathering #{gathering}</p>
-                      {host && (
-                        <div className="flex items-center gap-1 text-xs text-slate-500">
-                          <Users size={12} />
-                          <span>{host}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 text-slate-400 text-xs">
-                      <Calendar size={14} />
-                      <span>
-                        {new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+              return (
+                <section key={gathering} className="rounded-xl border border-border bg-muted/30 p-4">
+                  <div className="mb-3 border-b border-border pb-3">
+                    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="font-medium text-foreground">Gathering {gathering}</span>
+                        {host && (
+                          <span className="inline-flex items-center gap-1 text-subtle">
+                            <Users size={12} />
+                            {host}
+                          </span>
+                        )}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Calendar size={12} />
+                        {new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                       </span>
                     </div>
+                    {theme && <p className="mt-1 text-base font-semibold text-primary">{theme}</p>}
                   </div>
-                  {theme && (
-                    <p className="text-lg font-bold text-amber-400">{theme}</p>
-                  )}
-                </div>
 
-                {/* Whiskies from this gathering */}
-                <div className="space-y-3">
-                  {gatheringWhiskies.map((whisky) => {
-                    const age = whisky.age;
-                    const type = whisky.type;
-                    const tastingNotes = whisky.tastingNotes;
-                    const flavourProfile = whisky.flavourProfile;
-                    const description = whisky.description;
-
-                    return (
-                      <div key={whisky.id} className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-slate-200">{whisky.variety || 'No variety specified'}</p>
+                  <div className="space-y-2">
+                    {gatheringWhiskies.map((whisky) => (
+                      <div key={whisky.id} className="rounded-lg border border-border bg-card p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-foreground">{whisky.variety || "No variety specified"}</p>
                             {whisky.name && whisky.name !== whisky.variety && (
-                              <p className="text-xs text-slate-400 mt-0.5">{whisky.name}</p>
+                              <p className="mt-0.5 text-xs text-muted-foreground">{whisky.name}</p>
                             )}
-                            <div className="flex flex-wrap items-center gap-3 mt-2">
-                              <div className="flex items-center gap-1 text-xs text-slate-400">
-                                <Droplets size={12} className="text-amber-500" />
-                                <span>{whisky.abv}% ABV</span>
-                              </div>
-                              {age && (
-                                <div className="text-xs text-slate-400">
-                                  {age} {age === 1 ? 'year' : 'years'} old
-                                </div>
-                              )}
-                              {type && (
-                                <div className="text-xs text-slate-400">
-                                  {type}
-                                </div>
-                              )}
-                              <div className="text-xs text-slate-500">
-                                Provider: {whisky.provider}
-                              </div>
-                            </div>
                           </div>
+                          <RankingBadge ranking={whisky.ranking} size="sm" />
                         </div>
-                        {description && (
-                          <p className="text-xs text-slate-300 mt-2">{description}</p>
-                        )}
-                        {whisky.notes && (
-                          <p className="text-xs text-slate-400 mt-2 italic">{whisky.notes}</p>
-                        )}
-                        {tastingNotes && Array.isArray(tastingNotes) && tastingNotes.length > 0 && (
-                          <div className="mt-3 pt-3 border-t border-slate-700/50">
-                            <p className="text-xs font-semibold text-slate-400 mb-1.5">Tasting Notes:</p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {tastingNotes.map((note, idx) => (
-                                <span
-                                  key={idx}
-                                  className="px-2 py-0.5 bg-amber-900/30 text-amber-300 text-xs rounded border border-amber-800/50"
-                                >
-                                  {note}
-                                </span>
-                              ))}
-                            </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          <span className="inline-flex items-center gap-1">
+                            <Droplets size={12} className="text-primary" />
+                            {whisky.abv}% ABV
+                          </span>
+                          {whisky.age && <span>{whisky.age} {whisky.age === 1 ? "year" : "years"} old</span>}
+                          {whisky.type && <span>{whisky.type}</span>}
+                          <span className="text-subtle">Provider: {whisky.provider}</span>
+                        </div>
+                        {whisky.description && <p className="mt-2 text-xs text-muted-foreground">{whisky.description}</p>}
+                        {whisky.notes && <p className="mt-2 text-xs italic text-muted-foreground">{whisky.notes}</p>}
+                        {whisky.tastingNotes && whisky.tastingNotes.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-1.5 border-t border-border pt-3">
+                            {whisky.tastingNotes.map((note, idx) => (
+                              <Badge key={idx}>{note}</Badge>
+                            ))}
                           </div>
                         )}
-                        {flavourProfile && typeof flavourProfile === 'object' && (
-                          <div className="mt-3 pt-3 border-t border-slate-700/50">
-                            <p className="text-xs font-semibold text-slate-400 mb-2">Flavour Profile:</p>
-                            <div className="grid grid-cols-2 gap-2">
-                              {Object.entries(flavourProfile).map(([key, value]) => (
-                                <div key={key} className="flex items-center justify-between">
-                                  <span className="text-xs text-slate-400 capitalize">{key}:</span>
-                                  <div className="flex-1 mx-2 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                                    <div
-                                      className="h-full bg-amber-500"
-                                      style={{ width: `${(value as number) * 20}%` }}
-                                    />
-                                  </div>
-                                  <span className="text-xs text-slate-500 w-6 text-right">{value as number}/5</span>
+                        {whisky.flavourProfile && typeof whisky.flavourProfile === "object" && (
+                          <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 border-t border-border pt-3">
+                            {Object.entries(whisky.flavourProfile).map(([key, value]) => (
+                              <div key={key} className="flex items-center gap-2 text-xs">
+                                <span className="w-16 capitalize text-muted-foreground">{key}</span>
+                                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                                  <div className="h-full bg-primary" style={{ width: `${(value as number) * 20}%` }} />
                                 </div>
-                              ))}
-                            </div>
+                                <span className="w-6 text-right tabular-nums text-subtle">{value as number}</span>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
         </div>
-      </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 }
-
-
-

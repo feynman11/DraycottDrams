@@ -1,16 +1,33 @@
 import { useState } from "react";
 import { api } from "@/lib/trpc-client";
-import { Trophy, Medal, TrendingUp, Users, Building2, Calendar, BarChart3, Globe } from "lucide-react";
-import { RankingBadge } from "./ranking-badge";
+import { Trophy, Medal, Users, Building2, Calendar, BarChart3, Globe } from "lucide-react";
 import { WhiskyDetail } from "./whisky-detail";
 import { type WhiskyWithGathering } from "@/lib/types";
 import { ProviderLeaderboard } from "./provider-leaderboard";
 import { DistilleryPerformance } from "./distillery-performance";
+import { PageContainer } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatCard } from "@/components/ui/stat-card";
+import { Tabs } from "@/components/ui/tabs";
+import { Select } from "@/components/ui/select";
+import { FilterBar } from "@/components/ui/filter-bar";
+import { Skeleton, SkeletonCard } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Badge } from "@/components/ui/badge";
+
+type WinnersTab = "winners" | "providers" | "distilleries" | "analytics";
+
+const TABS = [
+  { value: "winners" as const, label: "Winners", icon: <Trophy /> },
+  { value: "providers" as const, label: "Providers", icon: <Users /> },
+  { value: "distilleries" as const, label: "Distilleries", icon: <Building2 /> },
+  { value: "analytics" as const, label: "Analytics", icon: <BarChart3 /> },
+];
 
 export function WinnersCircle() {
   const [selectedYear, setSelectedYear] = useState<number | undefined>();
   const [selectedRegion, setSelectedRegion] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<"winners" | "providers" | "distilleries" | "analytics">("winners");
+  const [activeTab, setActiveTab] = useState<WinnersTab>("winners");
   const [selectedWhisky, setSelectedWhisky] = useState<WhiskyWithGathering | null>(null);
 
   const { data: winners, isLoading: winnersLoading } = api.whisky.getWinners.useQuery({
@@ -30,259 +47,158 @@ export function WinnersCircle() {
     ? [...new Set(winners.map(w => new Date(w.date).getFullYear()))].sort((a, b) => b - a)
     : [];
 
-  const isLoading = winnersLoading || statsLoading;
-
   return (
-    <div className="w-full h-full bg-slate-950 overflow-y-auto">
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-12">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-amber-500/20 rounded-lg">
-              <Trophy className="text-amber-400" size={28} />
-            </div>
-            <h1 className="text-3xl font-bold text-amber-50">Winners Circle</h1>
-          </div>
-          <p className="text-slate-400">
-            Celebrating the best whiskies from every gathering
-          </p>
-        </div>
+    <PageContainer>
+      <PageHeader
+        title="Winners Circle"
+        description="Celebrating the best whisky from every gathering, and the members who brought them."
+        className="mb-6 md:mb-8"
+      />
 
-        {/* Stats Summary */}
-        {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+      {/* Stats Summary */}
+      <div className="mb-6 grid grid-cols-2 gap-3 md:mb-8 md:grid-cols-4 md:gap-4">
+        {statsLoading || !stats ? (
+          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)
+        ) : (
+          <>
+            <StatCard icon={<Trophy />} label="Winners" value={stats.totalRanked > 0 ? Math.floor(stats.gatheringsWithRankings) : 0} accent />
+            <StatCard icon={<Calendar />} label="Gatherings ranked" value={stats.gatheringsWithRankings} />
             <StatCard
-              icon={<Trophy className="text-amber-400" size={20} />}
-              label="Total Winners"
-              value={stats.totalRanked > 0 ? Math.floor(stats.gatheringsWithRankings) : 0}
-            />
-            <StatCard
-              icon={<Calendar className="text-blue-400" size={20} />}
-              label="Gatherings Ranked"
-              value={stats.gatheringsWithRankings}
-            />
-            <StatCard
-              icon={<Building2 className="text-green-400" size={20} />}
-              label="Top Distillery"
+              icon={<Building2 />}
+              label="Top distillery"
               value={stats.topDistillery?.distillery || "N/A"}
               subtitle={stats.topDistillery ? `${stats.topDistillery.wins} wins` : undefined}
             />
             <StatCard
-              icon={<Users className="text-purple-400" size={20} />}
-              label="Top Provider"
+              icon={<Users />}
+              label="Top provider"
               value={stats.topProvider?.provider || "N/A"}
               subtitle={stats.topProvider ? `${stats.topProvider.wins} wins` : undefined}
             />
-          </div>
+          </>
         )}
+      </div>
 
-        {/* Tabs - Scrollable on mobile */}
-        <div className="mb-6 border-b border-slate-800 pb-4">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0">
-            <TabButton
-              active={activeTab === "winners"}
-              onClick={() => setActiveTab("winners")}
-              icon={<Trophy size={16} />}
-              label="Winners"
-            />
-            <TabButton
-              active={activeTab === "providers"}
-              onClick={() => setActiveTab("providers")}
-              icon={<Users size={16} />}
-              label="Provider Leaderboard"
-            />
-            <TabButton
-              active={activeTab === "distilleries"}
-              onClick={() => setActiveTab("distilleries")}
-              icon={<Building2 size={16} />}
-              label="Distillery Stats"
-            />
-            <TabButton
-              active={activeTab === "analytics"}
-              onClick={() => setActiveTab("analytics")}
-              icon={<BarChart3 size={16} />}
-              label="Analytics"
-            />
-          </div>
-        </div>
+      <Tabs items={TABS} value={activeTab} onChange={setActiveTab} label="Winners sections" className="mb-6" />
 
-        {/* Tab Content */}
-        {activeTab === "winners" && (
-          <>
-            {/* Filters */}
-            <div className="flex flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-6">
-              <select
-                value={selectedYear || ""}
-                onChange={(e) => setSelectedYear(e.target.value ? parseInt(e.target.value) : undefined)}
-                className="px-3 sm:px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-amber-500"
-              >
-                <option value="">All Years</option>
-                {years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
+      {activeTab === "winners" && (
+        <>
+          <FilterBar className="mb-6">
+            <Select
+              aria-label="Year"
+              value={selectedYear || ""}
+              onChange={(e) => setSelectedYear(e.target.value ? parseInt(e.target.value) : undefined)}
+            >
+              <option value="">All years</option>
+              {years.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </Select>
 
-              <select
-                value={selectedRegion}
-                onChange={(e) => setSelectedRegion(e.target.value)}
-                className="px-3 sm:px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-amber-500"
-              >
-                <option value="">All Regions</option>
-                {regions.map((region) => (
-                  <option key={region.region} value={region.region}>
-                    {region.region}
-                  </option>
-                ))}
-              </select>
+            <Select aria-label="Region" value={selectedRegion} onChange={(e) => setSelectedRegion(e.target.value)}>
+              <option value="">All regions</option>
+              {regions.map((region) => (
+                <option key={region.region} value={region.region}>
+                  {region.region}
+                </option>
+              ))}
+            </Select>
+          </FilterBar>
+
+          {winnersLoading ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" aria-busy>
+              {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
             </div>
+          ) : winners && winners.length > 0 ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {winners.map((winner) => (
+                <WinnerCard
+                  key={winner.id}
+                  winner={winner}
+                  onClick={() => {
+                    // Create a WhiskyWithGathering-like object for the detail view
+                    setSelectedWhisky({
+                      id: winner.id,
+                      provider: winner.provider,
+                      variety: winner.variety,
+                      abv: winner.abv,
+                      ranking: winner.ranking,
+                      distillery: winner.distillery,
+                      country: winner.country,
+                      region: winner.region,
+                      gathering: winner.gathering,
+                      theme: winner.theme || '',
+                      date: winner.date,
+                      host: winner.host || '',
+                    } as WhiskyWithGathering);
+                  }}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState icon={<Trophy />} title="No winners for these filters" description="Try another year or region." />
+          )}
+        </>
+      )}
 
-            {/* Winners Grid */}
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-amber-500">Loading winners...</div>
-              </div>
-            ) : winners && winners.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {winners.map((winner) => (
-                  <WinnerCard
-                    key={winner.id}
-                    winner={winner}
-                    onClick={() => {
-                      // Create a WhiskyWithGathering-like object for the detail view
-                      setSelectedWhisky({
-                        id: winner.id,
-                        provider: winner.provider,
-                        variety: winner.variety,
-                        abv: winner.abv,
-                        ranking: winner.ranking,
-                        distillery: winner.distillery,
-                        country: winner.country,
-                        region: winner.region,
-                        gathering: winner.gathering,
-                        theme: winner.theme || '',
-                        date: winner.date,
-                        host: winner.host || '',
-                      } as WhiskyWithGathering);
-                    }}
-                  />
+      {activeTab === "providers" && <ProviderLeaderboard />}
+      {activeTab === "distilleries" && <DistilleryPerformance />}
+
+      {activeTab === "analytics" && (
+        <div className="space-y-10">
+          <section>
+            <SectionTitle icon={<BarChart3 />} title="Average place by strength" />
+            {strengthStatsLoading ? (
+              <BreakdownSkeleton />
+            ) : strengthStats && strengthStats.length > 0 ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 md:gap-4">
+                {strengthStats.map((stat, index) => (
+                  <BreakdownCard key={index} title={stat.range} stat={stat} />
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <Trophy className="mx-auto text-slate-600 mb-4" size={48} />
-                <p className="text-slate-400">No winners found for the selected filters</p>
-              </div>
+              <EmptyState icon={<BarChart3 />} title="No strength data yet" />
             )}
-          </>
-        )}
+          </section>
 
-        {activeTab === "providers" && <ProviderLeaderboard />}
-        {activeTab === "distilleries" && <DistilleryPerformance />}
-        
-        {activeTab === "analytics" && (
-          <div className="space-y-6 sm:space-y-8">
-            {/* Strength Range Stats */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <BarChart3 className="text-amber-400" size={20} />
-                <h2 className="text-xl font-bold text-amber-50">Average Ranking by Strength</h2>
+          <section>
+            <SectionTitle icon={<Globe />} title="Average place by country" />
+            {countryStatsLoading ? (
+              <BreakdownSkeleton />
+            ) : countryStats && countryStats.length > 0 ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 md:gap-4">
+                {countryStats.map((stat) => (
+                  <BreakdownCard key={stat.country} title={stat.country} stat={stat} />
+                ))}
               </div>
-              {strengthStatsLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-amber-500">Loading strength stats...</div>
-                </div>
-              ) : strengthStats && strengthStats.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                  {strengthStats.map((stat, index) => (
-                    <StrengthStatCard key={index} stat={stat} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <BarChart3 className="mx-auto text-slate-600 mb-4" size={48} />
-                  <p className="text-slate-400">No strength data available</p>
-                </div>
-              )}
-            </div>
+            ) : (
+              <EmptyState icon={<Globe />} title="No country data yet" />
+            )}
+          </section>
+        </div>
+      )}
 
-            {/* Country Stats */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Globe className="text-amber-400" size={20} />
-                <h2 className="text-xl font-bold text-amber-50">Average Ranking by Country</h2>
-              </div>
-              {countryStatsLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-amber-500">Loading country stats...</div>
-                </div>
-              ) : countryStats && countryStats.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                  {countryStats.map((stat) => (
-                    <CountryStatCard key={stat.country} stat={stat} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Globe className="mx-auto text-slate-600 mb-4" size={48} />
-                  <p className="text-slate-400">No country data available</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Whisky Detail Panel */}
-      <WhiskyDetail
-        whisky={selectedWhisky}
-        onClose={() => setSelectedWhisky(null)}
-      />
-    </div>
+      <WhiskyDetail whisky={selectedWhisky} onClose={() => setSelectedWhisky(null)} />
+    </PageContainer>
   );
 }
 
-interface StatCardProps {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-  subtitle?: string;
-}
-
-function StatCard({ icon, label, value, subtitle }: StatCardProps) {
+function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 sm:p-4">
-      <div className="flex items-center gap-2 mb-2">
-        {icon}
-        <span className="text-xs text-slate-400 uppercase tracking-wider">{label}</span>
-      </div>
-      <p className="text-xl font-bold text-slate-100">{value}</p>
-      {subtitle && <p className="text-xs text-slate-500 mt-1">{subtitle}</p>}
-    </div>
-  );
-}
-
-interface TabButtonProps {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
-}
-
-function TabButton({ active, onClick, icon, label }: TabButtonProps) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap flex-shrink-0 ${
-        active
-          ? "bg-amber-600 text-white"
-          : "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200"
-      }`}
-    >
+    <h2 className="mb-4 flex items-center gap-2 font-display text-2xl text-foreground [&_svg]:size-5 [&_svg]:text-primary">
       {icon}
-      <span className="font-medium text-sm md:text-base">{label}</span>
-    </button>
+      {title}
+    </h2>
+  );
+}
+
+function BreakdownSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 md:gap-4" aria-busy>
+      {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+    </div>
   );
 }
 
@@ -307,125 +223,75 @@ interface WinnerCardProps {
 function WinnerCard({ winner, onClick }: WinnerCardProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="group bg-gradient-to-br from-amber-900/30 to-slate-900 border border-amber-600/30 rounded-xl p-0 overflow-hidden hover:border-amber-500/50 transition-all cursor-pointer shadow-lg hover:shadow-amber-900/20 text-left w-full"
+      className="group relative flex w-full flex-col rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 to-card p-5 text-left shadow-sm transition-[transform,border-color,box-shadow] duration-(--duration-base) ease-(--ease-out-quart) hover:-translate-y-0.5 hover:border-gold/60 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0"
     >
-      {/* Gold bar at top */}
-      <div className="h-2 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 w-full" />
+      <span aria-hidden className="absolute inset-y-5 left-0 w-0.5 rounded-r-full bg-gold" />
 
-      <div className="p-5">
-        {/* Trophy and gathering info */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-amber-500/20 rounded-lg">
-              <Trophy className="text-amber-400" size={16} />
-            </div>
-            <div>
-              <p className="text-xs text-amber-500 font-semibold">Gathering {winner.gathering}</p>
-              <p className="text-xs text-slate-500">{winner.theme}</p>
-            </div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gold/15 text-gold">
+            <Trophy size={15} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-gold">Gathering {winner.gathering}</p>
+            {winner.theme && <p className="truncate text-xs text-muted-foreground">{winner.theme}</p>}
           </div>
-          <span className="text-xs text-slate-500">
-            {new Date(winner.date).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
-          </span>
         </div>
+        <span className="shrink-0 text-xs tabular-nums text-subtle">
+          {new Date(winner.date).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
+        </span>
+      </div>
 
-        {/* Distillery and variety */}
-        <h3 className="text-lg font-bold text-amber-400 group-hover:text-amber-300 transition-colors mb-1">
-          {winner.distillery}
-        </h3>
-        <p className="text-sm text-slate-400 mb-2">{winner.variety}</p>
+      <h3 className="mt-4 text-lg font-semibold leading-tight tracking-tight text-foreground transition-colors group-hover:text-primary">
+        {winner.distillery}
+      </h3>
+      <p className="mt-0.5 text-sm text-muted-foreground">{winner.variety}</p>
 
-        {/* Provider */}
-        <div className="flex items-center justify-between pt-3 border-t border-slate-800">
-          <span className="text-xs text-slate-500">
-            Provided by <span className="text-slate-400">{winner.provider}</span>
-          </span>
-          <span className="text-xs text-slate-600">{winner.region}, {winner.country}</span>
-        </div>
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3 text-xs text-subtle">
+        <span className="truncate">
+          Provided by <span className="font-medium text-muted-foreground">{winner.provider}</span>
+        </span>
+        <span className="shrink-0 truncate">{[winner.region, winner.country].filter(Boolean).join(", ")}</span>
       </div>
     </button>
   );
 }
 
-interface CountryStatCardProps {
-  stat: {
-    country: string;
-    avgRanking: number | null;
-    totalEntries: number;
-    rankedEntries: number;
-    wins: number;
-  };
+interface BreakdownStat {
+  avgRanking: number | null;
+  totalEntries: number;
+  rankedEntries: number;
+  wins: number;
 }
 
-function CountryStatCard({ stat }: CountryStatCardProps) {
+// One card for the by-country and by-strength breakdowns
+function BreakdownCard({ title, stat }: { title: string; stat: BreakdownStat }) {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 sm:p-4 hover:border-amber-600/30 transition-colors">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-bold text-amber-400">{stat.country}</h3>
+    <div className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-border-strong">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h3 className="truncate text-base font-semibold text-foreground">{title}</h3>
         {stat.avgRanking !== null && (
-          <div className="flex items-center gap-1">
-            <Medal className="text-amber-500" size={16} />
-            <span className="text-lg font-bold text-slate-100">{stat.avgRanking.toFixed(2)}</span>
-          </div>
+          <Badge variant="default" title="Average place">
+            <Medal /> {stat.avgRanking.toFixed(2)}
+          </Badge>
         )}
       </div>
-      <div className="grid grid-cols-3 gap-2 text-xs">
+      <dl className="grid grid-cols-3 gap-2 text-xs">
         <div>
-          <span className="text-slate-500">Entries</span>
-          <p className="text-slate-200 font-semibold">{stat.totalEntries}</p>
+          <dt className="text-subtle">Entries</dt>
+          <dd className="font-semibold tabular-nums text-foreground">{stat.totalEntries}</dd>
         </div>
         <div>
-          <span className="text-slate-500">Ranked</span>
-          <p className="text-slate-200 font-semibold">{stat.rankedEntries}</p>
+          <dt className="text-subtle">Ranked</dt>
+          <dd className="font-semibold tabular-nums text-foreground">{stat.rankedEntries}</dd>
         </div>
         <div>
-          <span className="text-slate-500">Wins</span>
-          <p className="text-amber-400 font-semibold">{stat.wins}</p>
+          <dt className="text-subtle">Wins</dt>
+          <dd className="font-semibold tabular-nums text-gold">{stat.wins}</dd>
         </div>
-      </div>
-    </div>
-  );
-}
-
-interface StrengthStatCardProps {
-  stat: {
-    range: string;
-    min: number;
-    max: number | null;
-    avgRanking: number | null;
-    totalEntries: number;
-    rankedEntries: number;
-    wins: number;
-  };
-}
-
-function StrengthStatCard({ stat }: StrengthStatCardProps) {
-  return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 sm:p-4 hover:border-amber-600/30 transition-colors">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-bold text-amber-400">{stat.range}</h3>
-        {stat.avgRanking !== null && (
-          <div className="flex items-center gap-1">
-            <Medal className="text-amber-500" size={16} />
-            <span className="text-lg font-bold text-slate-100">{stat.avgRanking.toFixed(2)}</span>
-          </div>
-        )}
-      </div>
-      <div className="grid grid-cols-3 gap-2 text-xs">
-        <div>
-          <span className="text-slate-500">Entries</span>
-          <p className="text-slate-200 font-semibold">{stat.totalEntries}</p>
-        </div>
-        <div>
-          <span className="text-slate-500">Ranked</span>
-          <p className="text-slate-200 font-semibold">{stat.rankedEntries}</p>
-        </div>
-        <div>
-          <span className="text-slate-500">Wins</span>
-          <p className="text-amber-400 font-semibold">{stat.wins}</p>
-        </div>
-      </div>
+      </dl>
     </div>
   );
 }

@@ -3,6 +3,9 @@ import { api } from "@/lib/trpc-client";
 import { MapVisualization } from "./map-visualization";
 import { DistilleryDetail } from "./distillery-detail";
 import { type WhiskyWithGathering } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Loader2, MapPinOff } from "lucide-react";
 
 export function WhiskyMap() {
   const [selectedDistillery, setSelectedDistillery] = useState<string | null>(null);
@@ -10,16 +13,16 @@ export function WhiskyMap() {
   const [gatheringFilter, setGatheringFilter] = useState<number | undefined>(undefined);
   const [showDistilleriesWithWhiskies, setShowDistilleriesWithWhiskies] = useState(false);
   const [showDistilleriesWithoutTastings, setShowDistilleriesWithoutTastings] = useState(false);
-  
-  const { data: whiskies, isLoading } = api.whisky.getAll.useQuery({
+
+  const { data: whiskies, isLoading, isError, refetch } = api.whisky.getAll.useQuery({
     gathering: gatheringFilter,
     limit: 1000, // Get all whiskies when filtered
   });
-  
+
   const { data: allDistilleries } = api.distillery.getAll.useQuery({
     limit: 1000,
   });
-  
+
   const { data: stats } = api.whisky.getStats.useQuery();
 
   const handleWhiskySelect = (whisky: WhiskyWithGathering) => {
@@ -47,7 +50,7 @@ export function WhiskyMap() {
   // Create a map of distillery names to whisky counts
   const distilleryWhiskiesMap = useMemo(() => {
     if (!whiskies) return new Map<string, WhiskyWithGathering[]>();
-    
+
     const map = new Map<string, WhiskyWithGathering[]>();
     whiskies.forEach((whisky) => {
       const distilleryName = whisky.distillery;
@@ -59,33 +62,29 @@ export function WhiskyMap() {
     return map;
   }, [whiskies]);
 
-  // Filter distilleries based on whisky count
-  const filteredWhiskies = useMemo(() => {
-    if (!whiskies || !allDistilleries) return whiskies || [];
-    
-    if (showDistilleriesWithWhiskies) {
-      // Show all distilleries (including those without whiskies)
-      // For distilleries without whiskies, we'll need to handle them in MapVisualization
-      return whiskies;
-    } else {
-      // Default: Show only distilleries with whiskies
-      return whiskies;
-    }
-  }, [whiskies, allDistilleries, showDistilleriesWithWhiskies]);
-
   // Early returns after all hooks have been called
   if (isLoading) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-slate-950">
-        <div className="text-amber-500">Loading whisky atlas...</div>
+      <div className="flex h-full w-full items-center justify-center" aria-busy>
+        <div className="flex flex-col items-center gap-3 animate-fade-in">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <span className="text-sm text-muted-foreground">Loading the whisky atlas…</span>
+        </div>
       </div>
     );
   }
 
-  if (!whiskies) {
+  if (isError || !whiskies) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-slate-950">
-        <div className="text-red-500">Failed to load whiskies</div>
+      <div className="flex h-full w-full items-center justify-center p-6">
+        <EmptyState
+          tone="error"
+          icon={<MapPinOff />}
+          title="The atlas couldn't load"
+          description="The whisky list didn't come back from the server. Check your connection and try again."
+          action={<Button variant="outline" onClick={() => refetch()}>Try again</Button>}
+          className="w-full max-w-md"
+        />
       </div>
     );
   }
@@ -104,9 +103,9 @@ export function WhiskyMap() {
   });
 
   return (
-    <div className="w-full h-full relative overflow-hidden">
+    <div className="relative h-full w-full overflow-hidden">
       <MapVisualization
-        whiskies={filteredWhiskies}
+        whiskies={whiskies}
         allDistilleries={showDistilleriesWithWhiskies || showDistilleriesWithoutTastings ? allDistilleries : undefined}
         distilleryWhiskiesMap={distilleryWhiskiesMap}
         onSelect={handleWhiskySelect}
@@ -121,13 +120,11 @@ export function WhiskyMap() {
         showDistilleriesWithoutTastings={showDistilleriesWithoutTastings}
         onShowDistilleriesWithoutTastingsChange={setShowDistilleriesWithoutTastings}
       />
-      {selectedDistillery && (
-        <DistilleryDetail
-          distillery={selectedDistillery}
-          whiskies={selectedDistilleryWhiskies}
-          onClose={closeDetail}
-        />
-      )}
+      <DistilleryDetail
+        distillery={selectedDistillery}
+        whiskies={selectedDistilleryWhiskies}
+        onClose={closeDetail}
+      />
     </div>
   );
 }

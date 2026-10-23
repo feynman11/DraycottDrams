@@ -24,10 +24,10 @@ const WinnersPage = lazyRouteComponent(() => import("./pages/winners"));
 
 function NotFound() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-slate-200 p-6">
-      <h1 className="text-3xl font-bold text-amber-50 mb-2">Page not found</h1>
-      <p className="text-slate-400 mb-6">The page you were looking for doesn&apos;t exist.</p>
-      <Link to="/map" className="text-amber-500 hover:text-amber-400 underline">
+    <div className="flex min-h-dvh flex-col items-center justify-center p-6 text-center">
+      <h1 className="font-display text-display text-foreground mb-2">Page not found</h1>
+      <p className="text-muted-foreground mb-6">The page you were looking for doesn&apos;t exist.</p>
+      <Link to="/map" className="text-primary underline underline-offset-4 hover:text-primary/80">
         Back to the map
       </Link>
     </div>
@@ -97,7 +97,7 @@ const routeTree = rootRoute.addChildren([
   signinRoute,
 ]);
 
-export const router = createRouter({ routeTree, defaultPreload: "intent" });
+export const router = createRouter({ routeTree, defaultPreload: "intent", defaultViewTransition: true });
 
 declare module "@tanstack/react-router" {
   interface Register {

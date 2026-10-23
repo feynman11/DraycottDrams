@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { api } from "@/lib/trpc-client";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, XCircle, Shield, UserCheck, Users, Plus, Save, X, Edit2, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { PageHeader } from "@/components/ui/page-header";
+import { SkeletonRows } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Table, TableBody, TableHeader, TableRow, TableScroll } from "@/components/ui/table";
+import { Loader2, CheckCircle2, XCircle, Shield, UserCheck, Users, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { EditRow, Field, FormActions, FormCard, FormGrid, RowActions } from "./admin-ui";
 
 export function MembersManagement() {
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
@@ -102,11 +110,7 @@ export function MembersManagement() {
   };
 
   if (isLoading || membersLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
-      </div>
-    );
+    return <div className="rounded-xl border border-border bg-card" aria-busy><SkeletonRows rows={6} cols={5} /></div>;
   }
 
   // Calculate last hosts and next hosting
@@ -145,419 +149,246 @@ export function MembersManagement() {
     gathering: g,
   }));
 
+  // The create and edit forms are the same fields
+  const memberFields = (
+    <FormGrid>
+      <Field label="Name *" htmlFor="member-name">
+        <Input id="member-name" value={memberForm.name} onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })} />
+      </Field>
+      <Field label="Linked user (optional)" htmlFor="member-user">
+        <Select id="member-user" value={memberForm.userId} onChange={(e) => setMemberForm({ ...memberForm, userId: e.target.value })}>
+          <option value="">No user linked</option>
+          {users?.map((user) => (
+            <option key={user.id} value={user.id}>
+              {user.name || user.email}
+            </option>
+          ))}
+        </Select>
+      </Field>
+    </FormGrid>
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-amber-50 flex items-center gap-2">
-            <Users className="w-6 h-6" />
-            Members Management
-          </h2>
-          <p className="text-slate-400 mt-1">
-            Manage members and link them to signed-in users. Members can host gatherings.
-          </p>
-        </div>
-        <Button
-          onClick={handleCreateMember}
-          className="bg-amber-600 hover:bg-amber-700 text-white"
-        >
-          <Plus size={18} className="mr-2" />
-          Add Member
-        </Button>
-      </div>
+      <PageHeader
+        as="h2"
+        title="Members"
+        description="Manage members and link them to signed-in users. Members can host gatherings."
+        aside={
+          <Button onClick={handleCreateMember} disabled={isCreatingMember}>
+            <Plus size={18} />
+            Add member
+          </Button>
+        }
+      />
 
       {/* Last Hosts and Next Hosting */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Last Hosts */}
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-amber-400 mb-4">Last Hosts</h3>
-          {lastHosts.length === 0 ? (
-            <p className="text-slate-400 text-sm">No past gatherings found.</p>
-          ) : (
-            <div className="space-y-3">
-              {lastHosts.map((item, index) => (
-                <div key={item.gathering.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                  <div>
-                    <div className="text-slate-200 font-medium">{item.member?.name || "Unknown"}</div>
-                    <div className="text-sm text-slate-400">
-                      Gathering #{item.gathering.number} • {item.gathering.date ? new Date(item.gathering.date).toLocaleDateString() : "—"}
-                    </div>
-                  </div>
-                  <div className="text-xs text-slate-500">#{index + 1}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Next Hosting */}
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-amber-400 mb-4">Next Hosting</h3>
-          {nextHosting.length === 0 ? (
-            <p className="text-slate-400 text-sm">No upcoming gatherings scheduled.</p>
-          ) : (
-            <div className="space-y-3">
-              {nextHosting.map((item, index) => (
-                <div key={item.gathering.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                  <div>
-                    <div className="text-slate-200 font-medium">{item.member?.name || "Unknown"}</div>
-                    <div className="text-sm text-slate-400">
-                      Gathering #{item.gathering.number} • {item.gathering.date ? new Date(item.gathering.date).toLocaleDateString() : "—"}
-                    </div>
-                  </div>
-                  <div className="text-xs text-slate-500">#{index + 1}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <HostList title="Last hosts" items={lastHosts} empty="No past gatherings found." />
+        <HostList title="Next hosting" items={nextHosting} empty="No upcoming gatherings scheduled." />
       </div>
 
-      {/* Create Member Form */}
       {isCreatingMember && (
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 mb-6">
-          <h3 className="text-lg font-semibold text-amber-400 mb-4">Create New Member</h3>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-slate-300 mb-1">Name *</label>
-                <input
-                  type="text"
-                  value={memberForm.name}
-                  onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-200"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-slate-300 mb-1">Link to User (Optional)</label>
-                <select
-                  value={memberForm.userId}
-                  onChange={(e) => setMemberForm({ ...memberForm, userId: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-200"
-                >
-                  <option value="">No user linked</option>
-                  {users?.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name || user.email}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCancelMember}
-                className="text-slate-400 border-slate-700"
-              >
-                <X size={16} className="mr-1" />
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleSaveMember}
-                disabled={createMemberMutation.isPending || !memberForm.name}
-                className="bg-amber-600 hover:bg-amber-700 text-white"
-              >
-                {createMemberMutation.isPending ? (
-                  <Loader2 size={16} className="mr-1 animate-spin" />
-                ) : (
-                  <Save size={16} className="mr-1" />
-                )}
-                Create
-              </Button>
-            </div>
-          </div>
-        </div>
+        <FormCard title="New member">
+          {memberFields}
+          <FormActions onCancel={handleCancelMember} onSave={handleSaveMember} pending={createMemberMutation.isPending} disabled={!memberForm.name} saveLabel="Create" />
+        </FormCard>
       )}
 
-      {/* Members List */}
-      <div>
-        <h3 className="text-lg font-semibold text-amber-400 mb-4">Members</h3>
+      <section>
+        <h3 className="mb-3 text-lg font-semibold text-foreground">Members</h3>
         {!members || members.length === 0 ? (
-          <div className="bg-slate-900 border border-slate-800 rounded-lg p-8 text-center mb-6">
-            <p className="text-slate-400">No members found.</p>
-          </div>
+          <EmptyState icon={<Users />} title="No members yet" action={<Button variant="outline" onClick={handleCreateMember}>Add the first member</Button>} />
         ) : (
-          <div className="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden mb-6">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-800 border-b border-slate-700">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-amber-400">Name</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-amber-400">Linked User</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-amber-400">Times Hosted</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-amber-400">Last Hosted</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-amber-400">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800">
-                  {members.map((member) => (
-                    <tr key={member.id} className="hover:bg-slate-800/50 transition-colors">
-                      {editingMemberId === member.id ? (
-                        <td colSpan={5} className="px-6 py-4">
-                          <div className="space-y-4 bg-slate-800/50 p-4 rounded-lg">
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <label className="block text-sm text-slate-300 mb-1">Name</label>
-                                <input
-                                  type="text"
-                                  value={memberForm.name}
-                                  onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })}
-                                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-200 text-sm"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm text-slate-300 mb-1">Link to User</label>
-                                <select
-                                  value={memberForm.userId}
-                                  onChange={(e) => setMemberForm({ ...memberForm, userId: e.target.value })}
-                                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-200 text-sm"
-                                >
-                                  <option value="">No user linked</option>
-                                  {users?.map((user) => (
-                                    <option key={user.id} value={user.id}>
-                                      {user.name || user.email}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            </div>
-                            <div className="flex gap-2 justify-end">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleCancelMember}
-                                className="text-slate-400 border-slate-700"
-                              >
-                                <X size={16} className="mr-1" />
-                                Cancel
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={handleSaveMember}
-                                disabled={updateMemberMutation.isPending}
-                                className="bg-amber-600 hover:bg-amber-700 text-white"
-                              >
-                                {updateMemberMutation.isPending ? (
-                                  <Loader2 size={16} className="mr-1 animate-spin" />
-                                ) : (
-                                  <Save size={16} className="mr-1" />
-                                )}
-                                Save
-                              </Button>
-                            </div>
-                          </div>
-                        </td>
-                      ) : (
-                        <>
-                          <td className="px-6 py-4 text-slate-200 font-medium">{member.name}</td>
-                          <td className="px-6 py-4 text-slate-200">
-                            {member.user ? (
-                              <div className="flex items-center gap-2">
-                                {member.user.image && (
-                                  <img
-                                    src={member.user.image}
-                                    alt={member.user.name || member.user.email}
-                                    className="w-6 h-6 rounded-full"
-                                  />
-                                )}
-                                <span>{member.user.name || member.user.email}</span>
-                              </div>
-                            ) : (
-                              <span className="text-slate-500">Not linked</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-center text-slate-200">{member.timesHosted}</td>
-                          <td className="px-6 py-4 text-slate-400 text-sm">
-                            {member.lastHosted
-                              ? new Date(member.lastHosted).toLocaleDateString()
-                              : "Never"}
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditMember(member)}
-                                className="text-slate-400 hover:text-amber-400"
-                              >
-                                <Edit2 size={16} />
-                              </Button>
-                              {deleteConfirmId === member.id ? (
-                                <div className="flex gap-1">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleDeleteMember(member.id)}
-                                    disabled={deleteMemberMutation.isPending}
-                                    className="text-red-400 hover:text-red-300"
-                                  >
-                                    {deleteMemberMutation.isPending ? (
-                                      <Loader2 size={16} className="animate-spin" />
-                                    ) : (
-                                      "Confirm"
-                                    )}
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setDeleteConfirmId(null)}
-                                    className="text-slate-400"
-                                  >
-                                    <X size={16} />
-                                  </Button>
-                                </div>
-                              ) : (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setDeleteConfirmId(member.id)}
-                                  className="text-slate-400 hover:text-red-400"
-                                >
-                                  <Trash2 size={16} />
-                                </Button>
-                              )}
-                            </div>
-                          </td>
-                        </>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Users List */}
-      <div>
-        <h3 className="text-lg font-semibold text-amber-400 mb-4">Users</h3>
-        {!users || users.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-8 text-center">
-          <p className="text-slate-400">No users found.</p>
-        </div>
-      ) : (
-        <div className="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-800 border-b border-slate-700">
+          <TableScroll>
+            <Table>
+              <TableHeader>
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-amber-400">
-                    User
-                  </th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-amber-400">
-                    Member
-                  </th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-amber-400">
-                    Admin
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-amber-400">
-                    Joined
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-amber-400">
-                    Last Login
-                  </th>
+                  <th>Name</th>
+                  <th>Linked user</th>
+                  <th className="text-center!">Times hosted</th>
+                  <th>Last hosted</th>
+                  <th className="text-right!">Actions</th>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800">
-                {users.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="hover:bg-slate-800/50 transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        {user.image ? (
-                          <img
-                            src={user.image}
-                            alt={user.name || user.email}
-                            className="w-10 h-10 rounded-full"
+              </TableHeader>
+              <TableBody>
+                {members.map((member) => (
+                  <TableRow key={member.id}>
+                    {editingMemberId === member.id ? (
+                      <EditRow colSpan={5}>
+                        {memberFields}
+                        <FormActions onCancel={handleCancelMember} onSave={handleSaveMember} pending={updateMemberMutation.isPending} />
+                      </EditRow>
+                    ) : (
+                      <>
+                        <td className="font-medium text-foreground">{member.name}</td>
+                        <td>
+                          {member.user ? (
+                            <span className="inline-flex items-center gap-2 text-foreground">
+                              {member.user.image && (
+                                <img src={member.user.image} alt="" className="h-6 w-6 rounded-full ring-1 ring-border" />
+                              )}
+                              {member.user.name || member.user.email}
+                            </span>
+                          ) : (
+                            <span className="text-subtle">Not linked</span>
+                          )}
+                        </td>
+                        <td className="text-center tabular-nums text-foreground">{member.timesHosted}</td>
+                        <td className="text-muted-foreground">
+                          {member.lastHosted ? new Date(member.lastHosted).toLocaleDateString() : "Never"}
+                        </td>
+                        <td>
+                          <RowActions
+                            name={member.name}
+                            confirming={deleteConfirmId === member.id}
+                            deleting={deleteMemberMutation.isPending}
+                            onEdit={() => handleEditMember(member)}
+                            onDeleteRequest={() => setDeleteConfirmId(member.id)}
+                            onDeleteConfirm={() => handleDeleteMember(member.id)}
+                            onDeleteCancel={() => setDeleteConfirmId(null)}
                           />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
-                            <Users className="w-5 h-5 text-slate-400" />
-                          </div>
-                        )}
-                        <div>
-                          <div className="font-medium text-slate-200">
-                            {user.name || "No name"}
-                          </div>
-                          <div className="text-sm text-slate-400">{user.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => handleToggleMember(user.id, user.member)}
-                        disabled={updatingUserId === user.id}
-                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                          user.member
-                            ? "bg-green-900/30 text-green-400 hover:bg-green-900/50"
-                            : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-                        } ${updatingUserId === user.id ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-                      >
-                        {updatingUserId === user.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : user.member ? (
-                          <>
-                            <CheckCircle2 className="w-4 h-4" />
-                            Member
-                          </>
-                        ) : (
-                          <>
-                            <XCircle className="w-4 h-4" />
-                            Not Member
-                          </>
-                        )}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => handleToggleAdmin(user.id, user.admin)}
-                        disabled={updatingUserId === user.id}
-                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                          user.admin
-                            ? "bg-amber-900/30 text-amber-400 hover:bg-amber-900/50"
-                            : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-                        } ${updatingUserId === user.id ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-                      >
-                        {updatingUserId === user.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : user.admin ? (
-                          <>
-                            <Shield className="w-4 h-4" />
-                            Admin
-                          </>
-                        ) : (
-                          <>
-                            <UserCheck className="w-4 h-4" />
-                            Not Admin
-                          </>
-                        )}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-slate-400 text-sm">
-                      {user.createdAt
-                        ? new Date(user.createdAt).toLocaleDateString()
-                        : "N/A"}
-                    </td>
-                    <td className="px-6 py-4 text-slate-400 text-sm">
-                      {user.lastLogin
-                        ? new Date(user.lastLogin).toLocaleDateString()
-                        : "Never"}
-                    </td>
-                  </tr>
+                        </td>
+                      </>
+                    )}
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              </TableBody>
+            </Table>
+          </TableScroll>
         )}
-      </div>
+      </section>
+
+      <section>
+        <h3 className="mb-3 text-lg font-semibold text-foreground">Users</h3>
+        {!users || users.length === 0 ? (
+          <EmptyState icon={<Users />} title="No users have signed in yet" />
+        ) : (
+          <TableScroll>
+            <Table>
+              <TableHeader>
+                <tr>
+                  <th>User</th>
+                  <th className="text-center!">Member</th>
+                  <th className="text-center!">Admin</th>
+                  <th>Joined</th>
+                  <th>Last login</th>
+                </tr>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => {
+                  const updating = updatingUserId === user.id;
+                  return (
+                    <TableRow key={user.id}>
+                      <td>
+                        <div className="flex items-center gap-3">
+                          {user.image ? (
+                            <img src={user.image} alt="" className="h-9 w-9 rounded-full ring-1 ring-border" />
+                          ) : (
+                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                              <Users size={16} />
+                            </span>
+                          )}
+                          <div className="min-w-0">
+                            <div className="truncate font-medium text-foreground">{user.name || "No name"}</div>
+                            <div className="truncate text-xs text-muted-foreground">{user.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="text-center">
+                        <RoleToggle
+                          on={user.member}
+                          onLabel="Member"
+                          offLabel="Not a member"
+                          onIcon={<CheckCircle2 />}
+                          offIcon={<XCircle />}
+                          tone="success"
+                          pending={updating}
+                          onClick={() => handleToggleMember(user.id, user.member)}
+                        />
+                      </td>
+                      <td className="text-center">
+                        <RoleToggle
+                          on={user.admin}
+                          onLabel="Admin"
+                          offLabel="Not an admin"
+                          onIcon={<Shield />}
+                          offIcon={<UserCheck />}
+                          tone="primary"
+                          pending={updating}
+                          onClick={() => handleToggleAdmin(user.id, user.admin)}
+                        />
+                      </td>
+                      <td className="text-muted-foreground">
+                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
+                      </td>
+                      <td className="text-muted-foreground">
+                        {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : "Never"}
+                      </td>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableScroll>
+        )}
+      </section>
     </div>
   );
 }
 
+function HostList({ title, items, empty }: { title: string; items: { member: { name: string } | null; gathering: { id: string; number: number; date: Date | null } }[]; empty: string }) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-5">
+      <h3 className="mb-3 text-base font-semibold text-foreground">{title}</h3>
+      {items.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{empty}</p>
+      ) : (
+        <ol className="space-y-2">
+          {items.map((item, index) => (
+            <li key={item.gathering.id} className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2.5">
+              <div className="min-w-0">
+                <div className="truncate font-medium text-foreground">{item.member?.name || "Unknown"}</div>
+                <div className="text-xs text-muted-foreground">
+                  Gathering {item.gathering.number} · {item.gathering.date ? new Date(item.gathering.date).toLocaleDateString() : "—"}
+                </div>
+              </div>
+              <span className="text-xs tabular-nums text-subtle">#{index + 1}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  );
+}
+
+interface RoleToggleProps {
+  on: boolean;
+  onLabel: string;
+  offLabel: string;
+  onIcon: React.ReactNode;
+  offIcon: React.ReactNode;
+  tone: "success" | "primary";
+  pending: boolean;
+  onClick: () => void;
+}
+
+function RoleToggle({ on, onLabel, offLabel, onIcon, offIcon, tone, pending, onClick }: RoleToggleProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={pending}
+      aria-pressed={on}
+      className={cn(
+        "touch-exempt inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 [&_svg]:size-3.5",
+        on
+          ? tone === "success" ? "bg-success/15 text-success hover:bg-success/25" : "bg-primary/15 text-primary hover:bg-primary/25"
+          : "bg-muted text-muted-foreground hover:bg-accent hover:text-foreground"
+      )}
+    >
+      {pending ? <Loader2 className="animate-spin" /> : on ? onIcon : offIcon}
+      {on ? onLabel : offLabel}
+    </button>
+  );
+}
