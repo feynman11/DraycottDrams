@@ -31,6 +31,10 @@ interface Props {
   onShowDistilleriesWithoutTastingsChange?: (show: boolean) => void;
 }
 
+// Pins merge into a cluster when closer than about one pin width on screen (px)
+const CLUSTER_RADIUS = 22;
+const MAP_MAX_ZOOM = 15;
+
 // Region view coordinates
 const REGION_VIEWS = {
   UK: { center: [-2, 54] as [number, number], zoom: 4 },
@@ -144,7 +148,7 @@ export const MapVisualization: React.FC<Props> = ({
     unclusteredClick?: (e: maplibregl.MapLayerMouseEvent) => void;
     unclusteredMouseEnter?: (e: maplibregl.MapLayerMouseEvent) => void;
     unclusteredMouseLeave?: () => void;
-    clusterMouseEnter?: () => void;
+    clusterMouseEnter?: (e: maplibregl.MapLayerMouseEvent) => void;
     clusterMouseLeave?: () => void;
     clusterCountMouseEnter?: () => void;
     clusterCountMouseLeave?: () => void;
@@ -190,7 +194,7 @@ export const MapVisualization: React.FC<Props> = ({
       center: REGION_VIEWS.UK.center,
       zoom: REGION_VIEWS.UK.zoom,
       minZoom: 1,
-      maxZoom: 15,
+      maxZoom: MAP_MAX_ZOOM,
     });
 
     map.current.on('load', () => {
@@ -435,8 +439,68 @@ export const MapVisualization: React.FC<Props> = ({
     // Remove any existing listeners first
     removeEventListeners(clusterLayerId, clusterCountLayerId, unclusteredLayerId);
 
-    // Cluster click handlers are disabled since clustering is off
-    // No need to attach cluster listeners
+    const source = () => map.current?.getSource(sourceId) as maplibregl.GeoJSONSource | undefined;
+    const closePopups = () => {
+      hoverPopupRef.current?.remove();
+      hoverPopupRef.current = null;
+      clusterPopupRef.current?.remove();
+      clusterPopupRef.current = null;
+    };
+
+    // A cluster zooms in until it splits; one that never splits (shared coordinates) lists its
+    // distilleries to pick from
+    const handleClusterClick = async (e: maplibregl.MapLayerMouseEvent) => {
+      const feature = map.current?.queryRenderedFeatures(e.point, { layers: [clusterLayerId] })[0];
+      const src = source();
+      if (!feature || !src || !map.current) return;
+      const clusterId = feature.properties.cluster_id as number;
+      const center = (feature.geometry as { coordinates: [number, number] }).coordinates;
+      const expansionZoom = await src.getClusterExpansionZoom(clusterId);
+      closePopups();
+
+      if (expansionZoom <= MAP_MAX_ZOOM && map.current.getZoom() < MAP_MAX_ZOOM) {
+        map.current.easeTo({ center, zoom: expansionZoom, duration: 500 });
+        return;
+      }
+
+      const leaves = await src.getClusterLeaves(clusterId, 50, 0);
+      const list = document.createElement('div');
+      list.className = 'px-1.5 py-1.5';
+      for (const leaf of leaves) {
+        const props = leaf.properties as { distillery: string; whiskyCount: number; color?: string };
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-foreground hover:bg-accent';
+        const swatch = document.createElement('span');
+        swatch.className = 'h-2.5 w-2.5 shrink-0 rounded-full';
+        swatch.style.backgroundColor = props.color || '#f59e0b';
+        const name = document.createElement('span');
+        name.className = 'flex-1 font-medium';
+        name.textContent = props.distillery;
+        const count = document.createElement('span');
+        count.className = 'text-xs text-subtle tabular-nums';
+        count.textContent = String(props.whiskyCount);
+        item.appendChild(swatch);
+        item.appendChild(name);
+        item.appendChild(count);
+        item.addEventListener('click', () => {
+          closePopups();
+          onDistillerySelect?.(
+            props.distillery,
+            distilleryWhiskiesMap?.get(props.distillery) || whiskies.filter((w) => w.distillery === props.distillery),
+          );
+        });
+        list.appendChild(item);
+      }
+      clusterPopupRef.current = new maplibregl.Popup({ offset: 18, maxWidth: '260px' })
+        .setLngLat(center)
+        .setDOMContent(list)
+        .addTo(map.current);
+    };
+
+    // The count label sits on the disc, so a click on either hits the disc layer: listen there only
+    eventHandlersRef.current.clusterClick = handleClusterClick;
+    map.current.on('click', clusterLayerId, handleClusterClick);
 
     // Handle distillery point clicks
     const handleUnclusteredClick = (e: maplibregl.MapLayerMouseEvent) => {
@@ -518,12 +582,39 @@ export const MapVisualization: React.FC<Props> = ({
         }
       };
       
-      const handleClusterMouseEnter = () => {
+      // Hovering a cluster names what's inside it
+      const handleClusterMouseEnter = async (e: maplibregl.MapLayerMouseEvent) => {
         map.current!.getCanvas().style.cursor = 'pointer';
+        const feature = e.features?.[0];
+        const src = map.current?.getSource(sourceId) as maplibregl.GeoJSONSource | undefined;
+        if (!feature || !src || clusterPopupRef.current) return;
+        const { cluster_id, point_count, whiskyCount } = feature.properties as { cluster_id: number; point_count: number; whiskyCount: number };
+        const leaves = await src.getClusterLeaves(cluster_id, 5, 0);
+        const names = leaves.map((leaf) => leaf.properties?.distillery as string);
+        const more = point_count - names.length;
+
+        const body = document.createElement('div');
+        body.className = 'px-3 py-2.5';
+        const title = document.createElement('div');
+        title.className = 'text-sm font-semibold text-foreground';
+        title.textContent = `${point_count} distilleries · ${whiskyCount} ${whiskyCount === 1 ? 'whisky' : 'whiskies'}`;
+        const detail = document.createElement('div');
+        detail.className = 'mt-0.5 text-xs text-muted-foreground';
+        detail.textContent = names.join(', ') + (more > 0 ? ` and ${more} more` : '');
+        body.appendChild(title);
+        body.appendChild(detail);
+
+        hoverPopupRef.current?.remove();
+        hoverPopupRef.current = new maplibregl.Popup({ offset: 18, closeButton: false, maxWidth: '260px' })
+          .setLngLat((feature.geometry as { coordinates: [number, number] }).coordinates)
+          .setDOMContent(body)
+          .addTo(map.current!);
       };
-      
+
       const handleClusterMouseLeave = () => {
         map.current!.getCanvas().style.cursor = '';
+        hoverPopupRef.current?.remove();
+        hoverPopupRef.current = null;
       };
       
       const handleClusterCountMouseEnter = () => {
@@ -584,23 +675,58 @@ export const MapVisualization: React.FC<Props> = ({
         removeEventListeners(clusterLayerId, clusterCountLayerId, unclusteredLayerId);
         
         const countLabelLayerId = 'distilleries-count-label';
-        if (map.current.getLayer(countLabelLayerId)) map.current.removeLayer(countLabelLayerId);
-        if (map.current.getLayer(unclusteredLayerId)) map.current.removeLayer(unclusteredLayerId);
+        for (const id of [countLabelLayerId, unclusteredLayerId, clusterCountLayerId, clusterLayerId]) {
+          if (map.current.getLayer(id)) map.current.removeLayer(id);
+        }
         map.current.removeSource(sourceId);
       }
 
-      // Add source without clustering
+      // Pins that would overlap on screen merge into a cluster; the radius is about a pin's width so
+      // pins that merely sit close keep their own colour. Clustering runs to the map's max zoom, so
+      // distilleries sharing coordinates stay grouped and a click lists them instead.
       map.current.addSource(sourceId, {
         type: 'geojson',
         data: geoJSON,
-        cluster: false,
+        cluster: true,
+        clusterRadius: CLUSTER_RADIUS,
+        clusterMaxZoom: MAP_MAX_ZOOM,
+        clusterProperties: { whiskyCount: ['+', ['get', 'whiskyCount']] },
       });
 
-      // Add points layer (no clustering, so all points are shown individually)
+      // Clusters: a dark disc with an amber ring, sized by how many distilleries it holds, so it never
+      // reads as a gathering-coloured pin
+      map.current.addLayer({
+        id: clusterLayerId,
+        type: 'circle',
+        source: sourceId,
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': '#211c17',
+          'circle-radius': ['step', ['get', 'point_count'], 12, 4, 15, 10, 18, 25, 22],
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#f7a830',
+        },
+      });
+
+      map.current.addLayer({
+        id: clusterCountLayerId,
+        type: 'symbol',
+        source: sourceId,
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': ['get', 'point_count_abbreviated'],
+          'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+          'text-size': 12,
+          'text-allow-overlap': true,
+        },
+        paint: { 'text-color': '#ffffff' },
+      });
+
       map.current.addLayer({
         id: unclusteredLayerId,
         type: 'circle',
         source: sourceId,
+        filter: ['!', ['has', 'point_count']],
         paint: {
           'circle-color': [
             'case',
@@ -632,7 +758,7 @@ export const MapVisualization: React.FC<Props> = ({
         type: 'symbol',
         source: sourceId,
         minzoom: 5, // Only show labels when zoomed in (zoom level 5 or higher)
-        filter: ['>', ['get', 'whiskyCount'], 1],
+        filter: ['all', ['!', ['has', 'point_count']], ['>', ['get', 'whiskyCount'], 1]],
         layout: {
           'text-field': ['to-string', ['get', 'whiskyCount']],
           'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
