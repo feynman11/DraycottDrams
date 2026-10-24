@@ -1,7 +1,28 @@
 import { createTRPCRouter, publicProcedure, adminProcedure, memberProcedure } from "@/worker/trpc";
+import type { Db } from "@/worker/db";
 import { members, users, whiskies, distilleries, gatherings } from "@/db/schema";
 import { eq, like, desc, sql } from "drizzle-orm";
 import { z } from "zod";
+import { linkUserForMember, normalizeEmail } from "@/worker/member-link";
+
+// Empty string clears the email; anything else must be a valid address.
+const emailInput = z
+  .string()
+  .trim()
+  .transform((v) => (v ? normalizeEmail(v) : null))
+  .pipe(z.string().email().nullable());
+
+// Emails are for admins only: these member queries are public.
+function withoutEmails<T extends { email: string | null; user: { email: string } | null }>(row: T, isAdmin: boolean): T {
+  if (isAdmin) return row;
+  return { ...row, email: null, user: row.user ? { ...row.user, email: "" } : null };
+}
+
+async function assertEmailFree(db: Db, email: string | null | undefined, exceptId?: string) {
+  if (!email) return;
+  const [other] = await db.select({ id: members.id, name: members.name }).from(members).where(eq(members.email, email)).limit(1);
+  if (other && other.id !== exceptId) throw new Error(`${other.name} already has that email`);
+}
 
 export const memberRouter = createTRPCRouter({
   // Get all members
@@ -10,6 +31,7 @@ export const memberRouter = createTRPCRouter({
       .select({
         id: members.id,
         name: members.name,
+        email: members.email,
         userId: members.userId,
         timesHosted: members.timesHosted,
         lastHosted: members.lastHosted,
@@ -25,15 +47,17 @@ export const memberRouter = createTRPCRouter({
       .leftJoin(users, eq(members.userId, users.id))
       .orderBy(desc(members.timesHosted), members.name);
 
-    return result.map((row) => ({
+    const isAdmin = !!ctx.session?.user?.admin;
+    return result.map((row) => withoutEmails({
       id: row.id,
       name: row.name,
+      email: row.email,
       userId: row.userId,
       timesHosted: row.timesHosted,
       lastHosted: row.lastHosted,
       createdAt: row.createdAt,
       user: row.user || null,
-    }));
+    }, isAdmin));
   }),
 
   // Get member by ID
@@ -46,6 +70,7 @@ export const memberRouter = createTRPCRouter({
         .select({
           id: members.id,
           name: members.name,
+          email: members.email,
           userId: members.userId,
           timesHosted: members.timesHosted,
           lastHosted: members.lastHosted,
@@ -67,15 +92,16 @@ export const memberRouter = createTRPCRouter({
       }
 
       const row = result[0];
-      return {
+      return withoutEmails({
         id: row.id,
         name: row.name,
+        email: row.email,
         userId: row.userId,
         timesHosted: row.timesHosted,
         lastHosted: row.lastHosted,
         createdAt: row.createdAt,
         user: row.user || null,
-      };
+      }, !!ctx.session?.user?.admin);
     }),
 
   // Get or create member by name (for import)
@@ -112,18 +138,22 @@ export const memberRouter = createTRPCRouter({
     .input(
       z.object({
         name: z.string().min(1),
+        email: emailInput.optional(),
         userId: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
+      await assertEmailFree(ctx.db, input.email);
       const result = await ctx.db
         .insert(members)
         .values({
           name: input.name.trim(),
+          email: input.email ?? null,
           userId: input.userId || undefined,
         })
         .returning();
 
+      await linkUserForMember(ctx.db, result[0]);
       return result[0];
     }),
 
@@ -133,11 +163,13 @@ export const memberRouter = createTRPCRouter({
       z.object({
         id: z.string(),
         name: z.string().min(1).optional(),
+        email: emailInput.optional(),
         userId: z.string().nullable().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...updateData } = input;
+      await assertEmailFree(ctx.db, updateData.email, id);
 
       const result = await ctx.db
         .update(members)
@@ -152,6 +184,7 @@ export const memberRouter = createTRPCRouter({
         throw new Error("Member not found");
       }
 
+      await linkUserForMember(ctx.db, result[0]);
       return result[0];
     }),
 

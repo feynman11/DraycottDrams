@@ -75,6 +75,8 @@ export const verifications = sqliteTable("verifications", {
 export const members = sqliteTable("members", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
+  // Lowercased. A Google sign-in with this email links to this member and grants member access.
+  email: text("email").unique(),
   userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
   timesHosted: integer("times_hosted").default(0).notNull(),
   lastHosted: integer("last_hosted", { mode: "timestamp_ms" }),

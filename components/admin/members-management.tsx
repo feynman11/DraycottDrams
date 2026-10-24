@@ -15,7 +15,7 @@ export function MembersManagement() {
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [isCreatingMember, setIsCreatingMember] = useState(false);
-  const [memberForm, setMemberForm] = useState<{ name: string; userId: string }>({ name: "", userId: "" });
+  const [memberForm, setMemberForm] = useState<{ name: string; email: string; userId: string }>({ name: "", email: "", userId: "" });
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const { data: users, isLoading, refetch: refetchUsers } = api.user.getAll.useQuery();
@@ -36,7 +36,7 @@ export function MembersManagement() {
     onSuccess: () => {
       refetchMembers();
       setIsCreatingMember(false);
-      setMemberForm({ name: "", userId: "" });
+      setMemberForm({ name: "", email: "", userId: "" });
     },
   });
 
@@ -44,7 +44,7 @@ export function MembersManagement() {
     onSuccess: () => {
       refetchMembers();
       setEditingMemberId(null);
-      setMemberForm({ name: "", userId: "" });
+      setMemberForm({ name: "", email: "", userId: "" });
     },
   });
 
@@ -73,13 +73,14 @@ export function MembersManagement() {
 
   const handleCreateMember = () => {
     setIsCreatingMember(true);
-    setMemberForm({ name: "", userId: "" });
+    setMemberForm({ name: "", email: "", userId: "" });
   };
 
   const handleEditMember = (member: any) => {
     setEditingMemberId(member.id);
     setMemberForm({
       name: member.name,
+      email: member.email || "",
       userId: member.userId || "",
     });
   };
@@ -88,12 +89,14 @@ export function MembersManagement() {
     if (isCreatingMember) {
       createMemberMutation.mutate({
         name: memberForm.name,
+        email: memberForm.email,
         userId: memberForm.userId || undefined,
       });
     } else if (editingMemberId) {
       updateMemberMutation.mutate({
         id: editingMemberId,
         name: memberForm.name,
+        email: memberForm.email,
         userId: memberForm.userId || null,
       });
     }
@@ -102,7 +105,7 @@ export function MembersManagement() {
   const handleCancelMember = () => {
     setIsCreatingMember(false);
     setEditingMemberId(null);
-    setMemberForm({ name: "", userId: "" });
+    setMemberForm({ name: "", email: "", userId: "" });
   };
 
   const handleDeleteMember = (id: string) => {
@@ -149,11 +152,28 @@ export function MembersManagement() {
     gathering: g,
   }));
 
+  // Zod failures arrive as JSON; show something readable instead.
+  const saveError = createMemberMutation.error ?? updateMemberMutation.error;
+  const saveErrorMessage = saveError
+    ? saveError.data?.code === "BAD_REQUEST" ? "Check the email address." : saveError.message
+    : null;
+
   // The create and edit forms are the same fields
   const memberFields = (
+    <>
     <FormGrid>
       <Field label="Name *" htmlFor="member-name">
         <Input id="member-name" value={memberForm.name} onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })} />
+      </Field>
+      <Field label="Google email (links them when they sign in)" htmlFor="member-email">
+        <Input
+          id="member-email"
+          type="email"
+          autoComplete="off"
+          placeholder="name@gmail.com"
+          value={memberForm.email}
+          onChange={(e) => setMemberForm({ ...memberForm, email: e.target.value })}
+        />
       </Field>
       <Field label="Linked user (optional)" htmlFor="member-user">
         <Select id="member-user" value={memberForm.userId} onChange={(e) => setMemberForm({ ...memberForm, userId: e.target.value })}>
@@ -166,6 +186,8 @@ export function MembersManagement() {
         </Select>
       </Field>
     </FormGrid>
+    {saveErrorMessage && <p role="alert" className="mt-3 text-sm text-destructive">{saveErrorMessage}</p>}
+    </>
   );
 
   return (
@@ -231,7 +253,9 @@ export function MembersManagement() {
                               {member.user.name || member.user.email}
                             </span>
                           ) : (
-                            <span className="text-subtle">Not linked</span>
+                            <span className="text-subtle">
+                              {member.email ? <>Links on sign-in<span className="block text-xs">{member.email}</span></> : "Not linked"}
+                            </span>
                           )}
                         </td>
                         <td className="text-center tabular-nums text-foreground">{member.timesHosted}</td>

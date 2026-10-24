@@ -4,8 +4,10 @@ import { oAuthProxy } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { accounts, sessions, users, verifications } from "@/db/schema";
 import type { Db } from "@/worker/db";
+import { linkMemberForUser } from "@/worker/member-link";
 
-// Google sign-in with sessions in D1. Every user can sign in; admins mark members in the app.
+// Google sign-in with sessions in D1. Every user can sign in; admins mark members in the app,
+// or give a member record an email so that sign-in links it automatically.
 // Built per request because the D1 binding and secrets only exist inside a request.
 export function createAuth(env: Env, db: Db) {
   const isStaging = env.APP_ENV === "staging";
@@ -37,6 +39,14 @@ export function createAuth(env: Env, db: Db) {
       },
     },
     databaseHooks: {
+      user: {
+        create: {
+          // An admin may have given a member this email before they ever signed in.
+          after: async (user) => {
+            await linkMemberForUser(db, user);
+          },
+        },
+      },
       session: {
         create: {
           after: async (session) => {
