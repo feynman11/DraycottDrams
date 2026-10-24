@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api } from "@/lib/trpc-client";
+import { authClient } from "@/lib/auth-client";
 import { Trophy, Medal, Users, Building2, Calendar, BarChart3, Globe } from "lucide-react";
 import { WhiskyDetail } from "./whisky-detail";
 import { type WhiskyWithGathering } from "@/lib/types";
@@ -19,7 +20,7 @@ type WinnersTab = "winners" | "providers" | "distilleries" | "analytics";
 
 const TABS = [
   { value: "winners" as const, label: "Winners", icon: <Trophy /> },
-  { value: "providers" as const, label: "Providers", icon: <Users /> },
+  { value: "providers" as const, label: "Providers", icon: <Users />, signedInOnly: true },
   { value: "distilleries" as const, label: "Distilleries", icon: <Building2 /> },
   { value: "analytics" as const, label: "Analytics", icon: <BarChart3 /> },
 ];
@@ -29,6 +30,10 @@ export function WinnersCircle() {
   const [selectedRegion, setSelectedRegion] = useState<string>("");
   const [activeTab, setActiveTab] = useState<WinnersTab>("winners");
   const [selectedWhisky, setSelectedWhisky] = useState<WhiskyWithGathering | null>(null);
+  // The provider leaderboard names members, so it is for signed-in visitors only
+  const { data: session } = authClient.useSession();
+  const tabs = TABS.filter((t) => !("signedInOnly" in t) || !!session?.user);
+  const shownTab = tabs.some((t) => t.value === activeTab) ? activeTab : "winners";
 
   const { data: winners, isLoading: winnersLoading } = api.whisky.getWinners.useQuery({
     year: selectedYear,
@@ -79,9 +84,9 @@ export function WinnersCircle() {
         )}
       </div>
 
-      <Tabs items={TABS} value={activeTab} onChange={setActiveTab} label="Winners sections" className="mb-6" />
+      <Tabs items={tabs} value={shownTab} onChange={setActiveTab} label="Winners sections" className="mb-6" />
 
-      {activeTab === "winners" && (
+      {shownTab === "winners" && (
         <>
           <FilterBar className="mb-6">
             <Select
@@ -143,10 +148,10 @@ export function WinnersCircle() {
         </>
       )}
 
-      {activeTab === "providers" && <ProviderLeaderboard />}
-      {activeTab === "distilleries" && <DistilleryPerformance />}
+      {shownTab === "providers" && <ProviderLeaderboard />}
+      {shownTab === "distilleries" && <DistilleryPerformance />}
 
-      {activeTab === "analytics" && (
+      {shownTab === "analytics" && (
         <div className="space-y-10">
           <section>
             <SectionTitle icon={<BarChart3 />} title="Average place by strength" />
