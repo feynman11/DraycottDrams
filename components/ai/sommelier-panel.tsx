@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { MarkdownMessage } from "./markdown-message";
 
 interface SommelierPanelProps {
   isOpen: boolean;
@@ -122,7 +123,9 @@ export function SommelierPanel({ isOpen, onClose }: SommelierPanelProps) {
                       : 'rounded-bl-md bg-muted text-foreground'
                   )}
                 >
-                  <p className="whitespace-pre-wrap">{message.content}</p>
+                  {message.role === 'assistant'
+                    ? <MarkdownMessage content={message.content} />
+                    : <p className="whitespace-pre-wrap">{message.content}</p>}
                   <p className={cn("mt-1 text-[10px] tabular-nums", message.role === 'user' ? "text-primary-foreground/70" : "text-subtle")}>
                     {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
