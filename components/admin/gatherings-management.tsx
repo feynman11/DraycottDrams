@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatDate } from "@/lib/utils";
 import { api } from "@/lib/trpc-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -173,7 +174,7 @@ export function GatheringsManagement() {
                   <>
                     <td className="font-medium tabular-nums text-foreground">#{gathering.number}</td>
                     <td className="tabular-nums text-foreground">
-                      {gathering.date ? new Date(gathering.date).toLocaleDateString() : "—"}
+                      {gathering.date ? formatDate(gathering.date) : "—"}
                     </td>
                     <td className="text-foreground">{gathering.host?.name || "—"}</td>
                     <td className="text-muted-foreground">{gathering.theme || "—"}</td>

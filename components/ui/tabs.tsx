@@ -23,6 +23,11 @@ interface TabsProps<T extends string> {
 export function Tabs<T extends string>({ items, value, onChange, label, className }: TabsProps<T>) {
   const refs = React.useRef<Map<T, HTMLButtonElement>>(new Map())
 
+  // Keep the active tab in view when the list scrolls (phones show three or four at a time)
+  React.useEffect(() => {
+    refs.current.get(value)?.scrollIntoView({ block: "nearest", inline: "nearest" })
+  }, [value])
+
   const onKeyDown = (e: React.KeyboardEvent, index: number) => {
     const keys: Record<string, number> = { ArrowRight: index + 1, ArrowLeft: index - 1, Home: 0, End: items.length - 1 }
     if (!(e.key in keys)) return

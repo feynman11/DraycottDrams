@@ -12,8 +12,9 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, aside, className, as: Heading = "h1" }: PageHeaderProps) {
   return (
-    <div className={cn("flex items-start justify-between gap-4 md:items-end md:gap-6", className)}>
-      <div className="min-w-0 flex-1">
+    // The aside wraps under the title when it won't fit beside it (a row of buttons on a phone)
+    <div className={cn("flex flex-wrap items-start justify-between gap-4 md:items-end md:gap-6", className)}>
+      <div className="min-w-0 flex-1 basis-48">
         <Heading
           className={cn(
             "font-display tracking-tight text-foreground",

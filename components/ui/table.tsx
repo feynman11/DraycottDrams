@@ -15,7 +15,8 @@ function TableScroll({ className, children, ...props }: React.HTMLAttributes<HTM
 
 const Table = React.forwardRef<HTMLTableElement, React.TableHTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
-    <table ref={ref} className={cn("w-full text-sm", className)} {...props} />
+    // Cells don't wrap: narrow screens scroll the table sideways instead of stacking words
+    <table ref={ref} className={cn("w-full whitespace-nowrap text-sm", className)} {...props} />
   )
 )
 Table.displayName = "Table"

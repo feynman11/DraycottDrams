@@ -8,7 +8,7 @@ import { SkeletonRows } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Table, TableBody, TableHeader, TableRow, TableScroll } from "@/components/ui/table";
 import { Loader2, CheckCircle2, XCircle, Shield, UserCheck, Users, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { EditRow, Field, FormActions, FormCard, FormGrid, RowActions } from "./admin-ui";
 
 export function MembersManagement() {
@@ -236,7 +236,7 @@ export function MembersManagement() {
                         </td>
                         <td className="text-center tabular-nums text-foreground">{member.timesHosted}</td>
                         <td className="text-muted-foreground">
-                          {member.lastHosted ? new Date(member.lastHosted).toLocaleDateString() : "Never"}
+                          {member.lastHosted ? formatDate(member.lastHosted) : "Never"}
                         </td>
                         <td>
                           <RowActions
@@ -320,10 +320,10 @@ export function MembersManagement() {
                         />
                       </td>
                       <td className="text-muted-foreground">
-                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
+                        {user.createdAt ? formatDate(user.createdAt) : "N/A"}
                       </td>
                       <td className="text-muted-foreground">
-                        {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : "Never"}
+                        {user.lastLogin ? formatDate(user.lastLogin) : "Never"}
                       </td>
                     </TableRow>
                   );
@@ -350,7 +350,7 @@ function HostList({ title, items, empty }: { title: string; items: { member: { n
               <div className="min-w-0">
                 <div className="truncate font-medium text-foreground">{item.member?.name || "Unknown"}</div>
                 <div className="text-xs text-muted-foreground">
-                  Gathering {item.gathering.number} · {item.gathering.date ? new Date(item.gathering.date).toLocaleDateString() : "—"}
+                  Gathering {item.gathering.number} · {item.gathering.date ? formatDate(item.gathering.date) : "—"}
                 </div>
               </div>
               <span className="text-xs tabular-nums text-subtle">#{index + 1}</span>

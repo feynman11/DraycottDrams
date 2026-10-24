@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { formatDate } from "@/lib/utils";
 import { api } from "@/lib/trpc-client";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -124,7 +125,7 @@ export function MyTastings() {
               <option value="">All gatherings</option>
               {uniqueGatherings.map((gathering) => (
                 <option key={gathering.id} value={gathering.id}>
-                  Gathering #{gathering.number} - {new Date(gathering.date).toLocaleDateString()}
+                  Gathering #{gathering.number} - {formatDate(gathering.date)}
                   {gathering.theme && ` - ${gathering.theme}`}
                 </option>
               ))}
@@ -172,12 +173,12 @@ export function MyTastings() {
                       </div>
                       {item.gathering && (
                         <p className="mt-0.5 text-xs text-subtle">
-                          {new Date(item.gathering.date).toLocaleDateString()}
+                          {formatDate(item.gathering.date)}
                           {item.gathering.theme && ` • ${item.gathering.theme}`}
                         </p>
                       )}
                       <p className="mt-1 text-sm text-muted-foreground">
-                        Tasted on {new Date(item.tasting.tastingDate).toLocaleDateString()}
+                        Tasted on {formatDate(item.tasting.tastingDate)}
                       </p>
                       <div className="mt-2 flex items-center gap-1" aria-label={`${item.tasting.rating} out of 5`}>
                         {[1, 2, 3, 4, 5].map((value) => (

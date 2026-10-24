@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/trpc-client";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -10,8 +10,8 @@ import { RankingBadge } from "@/components/whisky/ranking-badge";
 import { DistilleryDetail } from "@/components/whisky/distillery-detail";
 import { WhiskyDetail } from "@/components/whisky/whisky-detail";
 import { rankingLabel } from "@/lib/drams-sheet";
-import { cn } from "@/lib/utils";
-import { ArrowDown, ArrowUp, Download, Upload, X } from "lucide-react";
+import { cn, formatDate } from "@/lib/utils";
+import { ArrowDown, ArrowUp, Calendar, Download, Upload, Users, X } from "lucide-react";
 
 type SortKey = "gathering" | "date" | "provider" | "country" | "region" | "distillery" | "variety" | "abv" | "host" | "ranking";
 
@@ -29,8 +29,34 @@ const COLUMNS: { key: SortKey | "theme"; label: string; sortable: boolean; class
   { key: "ranking", label: "Position", sortable: true },
 ];
 
-const formatDate = (date: Date) =>
-  date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/London" });
+// Phones sort by a few keys instead of clicking column headers
+const MOBILE_SORTS: { value: `${SortKey}:${"asc" | "desc"}`; label: string }[] = [
+  { value: "gathering:desc", label: "Newest gathering" },
+  { value: "gathering:asc", label: "Oldest gathering" },
+  { value: "distillery:asc", label: "Distillery A–Z" },
+  { value: "provider:asc", label: "Provider A–Z" },
+  { value: "ranking:asc", label: "Position" },
+];
+
+// True while the element can still scroll further right, so a fade can hint at hidden columns
+function useCanScrollRight<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [more, setMore] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const check = () => setMore(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+    check();
+    el.addEventListener("scroll", check, { passive: true });
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => {
+      el.removeEventListener("scroll", check);
+      observer.disconnect();
+    };
+  });
+  return [ref, more] as const;
+}
 
 // The site's drams in the chair's spreadsheet layout; distilleries and whiskies open their detail
 // panels, and admins can upload a new sheet from here.
@@ -119,6 +145,10 @@ export function DramsSheet({ canUpload }: { canUpload: boolean }) {
   };
 
   const gatheringCount = new Set(visible.map((r) => r.gathering)).size;
+  const [scrollRef, canScrollRight] = useCanScrollRight<HTMLDivElement>();
+
+  const openDistillery = (r: (typeof visible)[number]) => { setOpenWhiskyId(null); setOpenDistilleryId(r.distilleryId); };
+  const openWhiskyRow = (r: (typeof visible)[number]) => { setOpenDistilleryId(null); setOpenWhiskyId(r.id); };
 
   return (
     <div className="space-y-4">
@@ -155,11 +185,23 @@ export function DramsSheet({ canUpload }: { canUpload: boolean }) {
           value={gathering}
           onChange={(e) => setGathering(e.target.value === "all" ? "all" : Number(e.target.value))}
           aria-label="Gathering"
-          className="col-span-2"
         >
           <option value="all">All gatherings</option>
           {gatheringNumbers.map((n) => (
             <option key={n} value={n}>Gathering {n}</option>
+          ))}
+        </Select>
+        <Select
+          value={`${sort.key}:${sort.dir}`}
+          onChange={(e) => {
+            const [key, dir] = e.target.value.split(":") as [SortKey, "asc" | "desc"];
+            setSort({ key, dir });
+          }}
+          aria-label="Sort"
+          className="md:hidden"
+        >
+          {MOBILE_SORTS.map((s) => (
+            <option key={s.value} value={s.value}>{s.label}</option>
           ))}
         </Select>
       </FilterBar>
@@ -171,8 +213,60 @@ export function DramsSheet({ canUpload }: { canUpload: boolean }) {
           <p className="text-xs text-subtle">
             {visible.length} dram{visible.length === 1 ? "" : "s"} across {gatheringCount} gathering{gatheringCount === 1 ? "" : "s"}
           </p>
-          <div className="relative overflow-hidden rounded-xl border border-border bg-card">
-            <div className="max-h-[70vh] overflow-auto">
+          {/* Phones: one card per dram, grouped visually by gathering; the table needs a wider screen */}
+          <ul className="space-y-2 md:hidden">
+            {visible.map((r, i) => {
+              const newGroup = sort.key === "gathering" && (i === 0 || visible[i - 1].gathering !== r.gathering);
+              return (
+                <li key={r.id} className={cn(newGroup && i > 0 && "pt-3")}>
+                  {newGroup && (
+                    <div className="mb-2 flex items-baseline justify-between gap-3 px-1">
+                      <span className="text-sm font-semibold text-primary">Gathering {r.gathering}</span>
+                      <span className="flex items-center gap-1 text-xs text-subtle"><Calendar size={12} aria-hidden /> {formatDate(r.date)}</span>
+                    </div>
+                  )}
+                  <div className="rounded-xl border border-border bg-card p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <button type="button" onClick={() => openDistillery(r)} className="touch-exempt rounded text-left font-medium text-foreground underline-offset-2 hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                          {r.distillery}
+                        </button>
+                        {r.variety && (
+                          <button type="button" onClick={() => openWhiskyRow(r)} className="touch-exempt mt-0.5 block rounded text-left text-sm text-muted-foreground underline-offset-2 hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                            {r.variety}
+                          </button>
+                        )}
+                      </div>
+                      <div className="shrink-0">
+                        {r.ranking ? <RankingBadge ranking={r.ranking} size="sm" /> : <span className="text-xs text-subtle">Bonus</span>}
+                      </div>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1"><Users size={12} aria-hidden /> {r.provider}</span>
+                      {(r.region || r.country) && <span>{[r.region, r.country].filter(Boolean).join(", ")}</span>}
+                      {parseFloat(r.abv) ? <span className="tabular-nums">{parseFloat(r.abv)}% ABV</span> : null}
+                      {sort.key !== "gathering" && <span className="text-subtle">Gathering {r.gathering}</span>}
+                    </div>
+                    {r.theme && <p className="mt-1.5 truncate text-xs text-subtle" title={r.theme}>{r.theme}</p>}
+                  </div>
+                </li>
+              );
+            })}
+            {visible.length === 0 && (
+              <li className="rounded-xl border border-border bg-card px-3 py-10 text-center text-muted-foreground">No drams match.</li>
+            )}
+          </ul>
+
+          <div className="relative hidden overflow-hidden rounded-xl border border-border bg-card md:block">
+            {/* Right-edge fade while there are more columns off-screen */}
+            <div
+              aria-hidden
+              className={cn(
+                "pointer-events-none absolute inset-y-0 right-0 z-20 w-12 bg-gradient-to-l from-card to-transparent transition-opacity duration-(--duration-fast)",
+                canScrollRight ? "opacity-100" : "opacity-0",
+              )}
+            />
+            <div ref={scrollRef} className="max-h-[70vh] overflow-auto">
               <table className="w-full whitespace-nowrap text-sm">
                 <thead className="sticky top-0 z-10 bg-popover shadow-[0_1px_0_var(--color-border)]">
                   <tr className="text-left text-[11px] font-medium uppercase tracking-wider text-subtle">
@@ -211,7 +305,7 @@ export function DramsSheet({ canUpload }: { canUpload: boolean }) {
                         <td className="px-3 py-2">
                           <button
                             type="button"
-                            onClick={() => { setOpenWhiskyId(null); setOpenDistilleryId(r.distilleryId); }}
+                            onClick={() => openDistillery(r)}
                             className="touch-exempt rounded text-left font-medium text-foreground underline-offset-2 transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           >
                             {r.distillery}
@@ -220,7 +314,7 @@ export function DramsSheet({ canUpload }: { canUpload: boolean }) {
                         <td className="max-w-[18rem] px-3 py-2">
                           <button
                             type="button"
-                            onClick={() => { setOpenDistilleryId(null); setOpenWhiskyId(r.id); }}
+                            onClick={() => openWhiskyRow(r)}
                             title={r.variety}
                             className="touch-exempt block max-w-full truncate rounded text-left text-foreground underline-offset-2 transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           >

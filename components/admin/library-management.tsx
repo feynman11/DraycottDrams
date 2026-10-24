@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatDate } from "@/lib/utils";
 import { api } from "@/lib/trpc-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -158,7 +159,7 @@ export function LibraryManagement() {
             <option value="">Select a gathering…</option>
             {gatherings?.map((gathering) => (
               <option key={gathering.id} value={gathering.id}>
-                #{gathering.number} - {gathering.host?.name || "Unknown"} ({gathering.date ? new Date(gathering.date).toLocaleDateString() : ""})
+                #{gathering.number} - {gathering.host?.name || "Unknown"} ({gathering.date ? formatDate(gathering.date) : ""})
               </option>
             ))}
           </Select>
