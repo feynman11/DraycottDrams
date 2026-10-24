@@ -6,9 +6,9 @@ export const REGION_SOURCE_ID = 'whisky-regions-source';
 export const REGION_FILL_LAYER_ID = 'whisky-regions-fill';
 export const REGION_LINE_LAYER_ID = 'whisky-regions-line';
 
-// Low enough that an opaque pin drawn above it is unaffected, and the basemap still shows through
-const REGION_FILL_OPACITY = 0.14;
-const REGION_LINE_OPACITY = 0.35;
+// Strong enough to read against the hillshade; pins are opaque and drawn above, so unaffected
+const REGION_FILL_OPACITY = 0.3;
+const REGION_LINE_OPACITY = 0.55;
 
 // ['match', ['get', 'region'], 'Islands', '#…', 'Highland', '#…', …, fallback]
 const regionColor = [
@@ -19,15 +19,21 @@ const regionColor = [
 ] as unknown as maplibregl.ExpressionSpecification;
 
 /**
- * Adds the region source with a fill and a hairline outline. Both go in beneath the basemap's first
- * symbol layer so place labels stay crisp, which also keeps them beneath any pin layers added later
- * (those are appended on top). Does nothing if the source already exists.
+ * Adds the region source with a fill and a hairline outline. Both go in beneath the basemap's water
+ * layer: the polygons follow a coarse coastline, and the basemap's precise water polygons paint over
+ * whatever spills into the sea or a sea loch, so the shading ends exactly at the shore. That also
+ * keeps them beneath the labels and any pin layers added later (those are appended on top). Falls
+ * back to the first symbol layer on a style without a water fill. Does nothing if the source exists.
  */
 export function addWhiskyRegionLayers(map: maplibregl.Map, visible: boolean) {
   if (map.getSource(REGION_SOURCE_ID)) return;
 
   const visibility = visible ? 'visible' : 'none';
-  const beforeId = map.getStyle().layers.find((layer) => layer.type === 'symbol')?.id;
+  const layers = map.getStyle().layers;
+  const beforeId = (
+    layers.find((layer) => layer.type === 'fill' && 'source-layer' in layer && layer['source-layer'] === 'water') ??
+    layers.find((layer) => layer.type === 'symbol')
+  )?.id;
 
   map.addSource(REGION_SOURCE_ID, {
     type: 'geojson',
