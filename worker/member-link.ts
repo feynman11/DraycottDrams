@@ -1,9 +1,17 @@
 import { eq, sql } from "drizzle-orm";
+import type { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import { members, users } from "@/db/schema";
 import type { Db } from "@/worker/db";
 
+// Lowercased, with @googlemail.com folded into @gmail.com (the same Google account; UK accounts
+// can report either).
 export function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase();
+  return email.trim().toLowerCase().replace(/@googlemail\.com$/, "@gmail.com");
+}
+
+/** SQL form of normalizeEmail, for comparing stored user emails. */
+export function normalizedEmailSql(column: SQLiteColumn) {
+  return sql`replace(lower(${column}), '@googlemail.com', '@gmail.com')`;
 }
 
 // Link an unlinked member record to a user and give that user member access. Only fills an
@@ -32,7 +40,7 @@ export async function linkUserForMember(db: Db, member: { id: string; email: str
   const [user] = await db
     .select({ id: users.id })
     .from(users)
-    .where(eq(sql`lower(${users.email})`, member.email))
+    .where(eq(normalizedEmailSql(users.email), member.email))
     .limit(1);
   if (!user) return;
   const [taken] = await db.select({ id: members.id }).from(members).where(eq(members.userId, user.id)).limit(1);

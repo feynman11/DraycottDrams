@@ -1,7 +1,7 @@
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { members, users } from "@/db/schema";
 import type { Db } from "@/worker/db";
-import { normalizeEmail } from "@/worker/member-link";
+import { normalizeEmail, normalizedEmailSql } from "@/worker/member-link";
 
 const FROM = { email: "signin@draycottdrams.co.uk", name: "Draycott Drambusters" };
 
@@ -10,7 +10,7 @@ const FROM = { email: "signin@draycottdrams.co.uk", name: "Draycott Drambusters"
 async function isKnownEmail(db: Db, email: string): Promise<boolean> {
   const [member] = await db.select({ id: members.id }).from(members).where(eq(members.email, email)).limit(1);
   if (member) return true;
-  const [user] = await db.select({ id: users.id }).from(users).where(eq(sql`lower(${users.email})`, email)).limit(1);
+  const [user] = await db.select({ id: users.id }).from(users).where(eq(normalizedEmailSql(users.email), email)).limit(1);
   return !!user;
 }
 
