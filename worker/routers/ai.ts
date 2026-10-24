@@ -171,7 +171,9 @@ Keep your response conversational and expert-level, around 200-300 words.`;
       const { message, context = [] } = input;
 
       try {
-        const systemPrompt = `You are an AI sommelier for the Draycott Drambusters whisky club. You are knowledgeable about whisky, its production, tasting, and the specific whiskies in our collection. Be helpful, engaging, and expert-level in your responses. Keep responses conversational but informative.`;
+        const systemPrompt = `You are an AI sommelier for the Draycott Drambusters whisky club. You are knowledgeable about whisky, its production, tasting, and the specific whiskies in our collection. Be helpful, engaging, and expert-level in your responses. Keep responses conversational but informative.
+
+Your replies appear in a narrow chat panel, often on a phone. Keep them short (usually under 150 words). Format with plain paragraphs, **bold** for whisky names, and short bullet lists where they help. Do not use tables, headings, horizontal rules or emoji.`;
 
         const text = await complete(ctx.env, [
           { role: "system", content: systemPrompt },
