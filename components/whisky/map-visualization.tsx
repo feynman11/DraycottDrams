@@ -9,6 +9,8 @@ import { Select } from '@/components/ui/select';
 import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/lib/utils';
+import { WHISKY_REGION_COLORS, WHISKY_REGION_NAMES } from '@/lib/whisky-regions';
+import { addWhiskyRegionLayers, setWhiskyRegionsVisible } from './map-regions';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 interface Props {
@@ -152,6 +154,7 @@ export const MapVisualization: React.FC<Props> = ({
   const [showOptions, setShowOptions] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
   const [colorMode, setColorMode] = useState<ColorMode>('orange');
+  const [showRegions, setShowRegions] = useState(true);
   const [maptilerApiKey, setMaptilerApiKey] = useState<string>('');
   const [apiKeyFetched, setApiKeyFetched] = useState(false);
   
@@ -213,6 +216,14 @@ export const MapVisualization: React.FC<Props> = ({
       }
     };
   }, [apiKeyFetched, maptilerApiKey]);
+
+  // Region shading: added once the style is in, before the pin layers below so pins stay on top;
+  // toggling only flips visibility
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+    addWhiskyRegionLayers(map.current, showRegions);
+    setWhiskyRegionsVisible(map.current, showRegions);
+  }, [mapLoaded, showRegions]);
 
   // Group whiskies by distillery and convert to GeoJSON
   const distilleriesToGeoJSON = (whiskiesList: WhiskyWithGathering[], colorMode: ColorMode, totalGatherings: number) => {
@@ -613,13 +624,15 @@ export const MapVisualization: React.FC<Props> = ({
         },
       });
 
-      // Add text label layer to show whisky count (only when zoomed in)
+      // Add text label layer to show whisky count (only when zoomed in, and only when there is more
+      // than one: a bare "1" on every pin is noise, and untasted distilleries carry 0)
       const countLabelLayerId = 'distilleries-count-label';
       map.current.addLayer({
         id: countLabelLayerId,
         type: 'symbol',
         source: sourceId,
         minzoom: 5, // Only show labels when zoomed in (zoom level 5 or higher)
+        filter: ['>', ['get', 'whiskyCount'], 1],
         layout: {
           'text-field': ['to-string', ['get', 'whiskyCount']],
           'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
@@ -777,6 +790,15 @@ export const MapVisualization: React.FC<Props> = ({
       </div>
 
       <div className="space-y-2 border-t border-border pt-4">
+        <Button
+          variant={showRegions ? "default" : "outline"}
+          size="sm"
+          aria-pressed={showRegions}
+          onClick={() => setShowRegions(!showRegions)}
+          className="w-full"
+        >
+          {showRegions ? "Shading Scotland's regions" : "Shade Scotland's regions"}
+        </Button>
         {onShowDistilleriesWithoutTastingsChange && (
           <Button
             variant={showDistilleriesWithoutTastings ? "default" : "outline"}
@@ -817,21 +839,44 @@ export const MapVisualization: React.FC<Props> = ({
   );
 
   const legendPanel = (
-    <ul className="space-y-2">
-      {gatherings.map((gathering) => {
-        const color = getGatheringColor(gathering, colorMode, totalGatherings);
-        const theme = gatheringThemes.get(gathering);
-        return (
-          <li key={gathering} className="flex items-center gap-2.5">
-            <span className="h-3 w-3 shrink-0 rounded-full ring-1 ring-white/20" style={{ backgroundColor: color }} />
-            <span className="min-w-0 text-xs">
-              <span className="font-medium text-foreground">Gathering {gathering}</span>
-              {theme && <span className="block truncate text-muted-foreground">{theme}</span>}
-            </span>
-          </li>
-        );
-      })}
-    </ul>
+    <div className="space-y-4">
+      <ul className="space-y-2">
+        {gatherings.map((gathering) => {
+          const color = getGatheringColor(gathering, colorMode, totalGatherings);
+          const theme = gatheringThemes.get(gathering);
+          return (
+            <li key={gathering} className="flex items-center gap-2.5">
+              <span className="h-3 w-3 shrink-0 rounded-full ring-1 ring-white/20" style={{ backgroundColor: color }} />
+              <span className="min-w-0 text-xs">
+                <span className="font-medium text-foreground">Gathering {gathering}</span>
+                {theme && <span className="block truncate text-muted-foreground">{theme}</span>}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+
+      {/* Square, translucent swatches so the regions never read as pins */}
+      {showRegions && (
+        <div className="border-t border-border pt-3">
+          <h4 className="mb-2 text-xs font-medium text-subtle">Scotch regions</h4>
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+            {WHISKY_REGION_NAMES.map((name) => {
+              const color = WHISKY_REGION_COLORS[name];
+              return (
+                <li key={name} className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span
+                    className="h-3 w-3 shrink-0 rounded-[2px] border"
+                    style={{ borderColor: color, backgroundColor: `${color}66` }}
+                  />
+                  {name}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 
   return (
