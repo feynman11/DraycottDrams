@@ -1,10 +1,11 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { oAuthProxy } from "better-auth/plugins";
+import { magicLink, oAuthProxy } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { accounts, sessions, users, verifications } from "@/db/schema";
 import type { Db } from "@/worker/db";
 import { linkMemberForUser } from "@/worker/member-link";
+import { sendSignInLink } from "@/worker/sign-in-email";
 
 // Google sign-in with sessions in D1. Every user can sign in; admins mark members in the app,
 // or give a member record an email so that sign-in links it automatically.
@@ -55,7 +56,11 @@ export function createAuth(env: Env, db: Db) {
         },
       },
     },
-    plugins: isStaging ? [oAuthProxy({ productionURL: env.APP_URL })] : [],
+    plugins: [
+      // Emailed sign-in links, for members without a Google account.
+      magicLink({ expiresIn: 15 * 60, sendMagicLink: (data) => sendSignInLink(env, db, data) }),
+      ...(isStaging ? [oAuthProxy({ productionURL: env.APP_URL })] : []),
+    ],
   });
 }
 

@@ -2,7 +2,8 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { useEffect, useState } from "react";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, Mail, MailCheck } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 function GoogleMark() {
   return (
@@ -26,6 +27,8 @@ function SignInForm() {
       ? search.callbackUrl
       : "/";
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailState, setEmailState] = useState<"idle" | "sending" | "sent" | "failed">("idle");
 
   // Redirect if already signed in
   useEffect(() => {
@@ -51,6 +54,18 @@ function SignInForm() {
     if (signInError) setIsLoading(false);
   };
 
+  // Members without Google get an emailed link; it only goes to addresses the club knows.
+  const handleEmailLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailState("sending");
+    const { error: linkError } = await authClient.signIn.magicLink({
+      email: email.trim(),
+      callbackURL: callbackUrl,
+      errorCallbackURL: "/signin",
+    });
+    setEmailState(linkError ? "failed" : "sent");
+  };
+
   const getErrorMessage = () => {
     switch (error) {
       case "OAuthSignin":
@@ -69,6 +84,9 @@ function SignInForm() {
         return "There was a problem sending the sign-in email. Please try again.";
       case "CredentialsSignin":
         return "Invalid credentials. Please check your details and try again.";
+      case "INVALID_TOKEN":
+      case "EXPIRED_TOKEN":
+        return "That sign-in link has expired or was already used. Ask for a new one below.";
       case "SessionRequired":
         return "Please sign in to access this page.";
       default:
@@ -111,7 +129,7 @@ function SignInForm() {
         <div className="rounded-2xl border border-border bg-card p-6 shadow-lg md:p-8">
           <h2 className="text-center text-lg font-semibold text-foreground">Welcome back</h2>
           <p className="mt-1 text-center text-sm text-muted-foreground">
-            Sign in with Google to see your results, the drams sheet and the AI sommelier.
+            Sign in to see your results, the drams sheet and the AI sommelier.
           </p>
 
           {error && (
@@ -140,6 +158,46 @@ function SignInForm() {
               </>
             )}
           </Button>
+
+          <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-wider text-subtle">
+            <span className="h-px flex-1 bg-border" />
+            or
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
+          {emailState === "sent" ? (
+            <div role="status" className="flex gap-2.5 rounded-lg border border-primary/40 bg-primary/10 p-3 text-sm text-foreground">
+              <MailCheck size={16} className="mt-0.5 shrink-0 text-primary" />
+              <p>
+                If <strong>{email.trim()}</strong> is on the club's list, a sign-in link is on its way. It expires in 15 minutes.{" "}
+                <button type="button" className="text-primary underline underline-offset-2" onClick={() => setEmailState("idle")}>
+                  Use a different email
+                </button>
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleEmailLink} className="space-y-3">
+              <label htmlFor="signin-email" className="block text-sm text-muted-foreground">
+                No Google account? We'll email you a sign-in link.
+              </label>
+              <Input
+                id="signin-email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              {emailState === "failed" && (
+                <p role="alert" className="text-sm text-destructive">The email couldn't be sent. Please try again in a minute.</p>
+              )}
+              <Button type="submit" variant="outline" size="lg" className="w-full" disabled={emailState === "sending" || !email.trim()}>
+                {emailState === "sending" ? <Loader2 className="h-5 w-5 animate-spin" /> : <Mail className="h-5 w-5" />}
+                Email me a sign-in link
+              </Button>
+            </form>
+          )}
         </div>
 
         <p className="mt-6 text-center text-xs text-subtle">
