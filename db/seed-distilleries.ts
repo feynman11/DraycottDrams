@@ -10,6 +10,11 @@
  *   pnpm db:seed:distilleries --file data/distilleries.wikidata.json --dry-run
  *   pnpm db:seed:distilleries --file data/distilleries.wikidata.json --threshold 0.92 --max-keep-distance-km 2
  *   pnpm db:seed:distilleries --file data/distilleries.wikidata.json --force-coordinates
+ *   pnpm db:seed:distilleries --file data/distilleries.curated.json --overwrite --dry-run
+ *
+ * --overwrite: every field present in a dataset row replaces the stored value (fields the row
+ * leaves out are untouched). Meant for hand-checked files such as data/distilleries.curated.json;
+ * without it, existing values are only filled in when empty/Unknown.
  *
  * Target D1: local by default; --persist-to <dir>, --env staging, --remote (see scripts/lib/d1.ts).
  */
@@ -40,6 +45,7 @@ type Args = {
   threshold: number;
   maxKeepDistanceKm: number;
   forceCoordinates: boolean;
+  overwrite: boolean;
 };
 
 function parseArgs(argv: string[]): Args {
@@ -49,6 +55,7 @@ function parseArgs(argv: string[]): Args {
     threshold: 0.92,
     maxKeepDistanceKm: 2,
     forceCoordinates: false,
+    overwrite: false,
   };
 
   for (let i = 2; i < argv.length; i++) {
@@ -58,6 +65,7 @@ function parseArgs(argv: string[]): Args {
     else if (a === "--threshold") args.threshold = Number(argv[++i]);
     else if (a === "--max-keep-distance-km") args.maxKeepDistanceKm = Number(argv[++i]);
     else if (a === "--force-coordinates") args.forceCoordinates = true;
+    else if (a === "--overwrite") args.overwrite = true;
   }
 
   if (!Number.isFinite(args.threshold) || args.threshold <= 0 || args.threshold > 1) {
@@ -97,7 +105,7 @@ async function main({ db }: D1Handle) {
   const args = parseArgs(process.argv);
   console.log("🏭 Distillery seed/upsert");
   console.log(`- file=${args.file} dryRun=${args.dryRun}`);
-  console.log(`- threshold=${args.threshold} maxKeepDistanceKm=${args.maxKeepDistanceKm} forceCoordinates=${args.forceCoordinates}`);
+  console.log(`- threshold=${args.threshold} maxKeepDistanceKm=${args.maxKeepDistanceKm} forceCoordinates=${args.forceCoordinates} overwrite=${args.overwrite}`);
 
   const raw = await readFile(args.file, "utf8");
   const parsed = JSON.parse(raw) as DatasetDistillery[];
@@ -110,6 +118,7 @@ async function main({ db }: D1Handle) {
       website: safeText(d.website),
       description: safeText(d.description),
       founded: safeNumber(d.founded),
+      provided: { country: !!safeText(d.country), region: !!safeText(d.region) },
     }))
     .filter((d) => d.name);
 
@@ -165,6 +174,7 @@ async function main({ db }: D1Handle) {
     if (!match) {
       // Insert new distillery
       inserts++;
+      if (args.overwrite) console.log(`  + ${d.name} (${d.country} / ${d.region})`);
       toInsert.push({
         name: d.name,
         country: d.country || "Unknown",
@@ -179,6 +189,28 @@ async function main({ db }: D1Handle) {
 
     // Merge/update existing.
     const patch: Partial<typeof distilleries.$inferInsert> = {};
+
+    if (args.overwrite) {
+      // Only fields the row actually provides (the dataset mapping defaults country/region to "Unknown").
+      const given = d.provided;
+      if (given.country && d.country !== match.country) patch.country = d.country;
+      if (given.region && d.region !== match.region) patch.region = d.region;
+      if (d.website && d.website !== match.website) patch.website = d.website;
+      if (d.description && d.description !== match.description) patch.description = d.description;
+      if (d.founded && d.founded !== match.founded) patch.founded = d.founded;
+      if (d.coordinates && haversineDistanceKm((match.coordinates ?? [0, 0]) as [number, number], d.coordinates) > 0.05) {
+        patch.coordinates = d.coordinates;
+        coordUpdates++;
+      }
+      if (Object.keys(patch).length === 0) {
+        skipped++;
+        continue;
+      }
+      updates++;
+      toUpdate.push({ id: match.id, patch });
+      console.log(`  ~ ${match.name}: ${Object.keys(patch).join(", ")}`);
+      continue;
+    }
 
     // Improve Unknown/empty country/region only (avoid clobbering admin edits)
     if ((!match.country || match.country === "Unknown") && d.country && d.country !== "Unknown") patch.country = d.country;
