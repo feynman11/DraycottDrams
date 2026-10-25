@@ -85,9 +85,9 @@ export default function MembersPage() {
           <EmptyState
             icon={<Lock />}
             title="Members only"
-            description="Sign in with your Google account to see your results and the drams sheet."
+            description="Sign in to see your results and the drams sheet."
             action={
-              <Button onClick={() => authClient.signIn.social({ provider: "google", callbackURL: window.location.href })}>
+              <Button onClick={() => navigate({ to: "/signin", search: { callbackUrl: "/members" } })}>
                 <LogIn size={16} /> Sign in
               </Button>
             }

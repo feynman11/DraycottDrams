@@ -17,10 +17,10 @@ import { NAV_ITEMS, isActivePath } from "./nav-items";
 export function Header() {
   const { data: session, isPending } = authClient.useSession();
   const pathname = useLocation({ select: (location) => location.pathname });
+  // Sign-in returns here afterwards (path, query and hash).
+  const here = useLocation({ select: (location) => location.href });
   const canSeeMembers = !!(session?.user?.admin || session?.user?.member);
 
-  const signIn = () =>
-    authClient.signIn.social({ provider: "google", callbackURL: window.location.href });
   const signOut = async () => {
     await authClient.signOut();
     window.location.reload();
@@ -97,9 +97,11 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="ghost" size="sm" onClick={() => signIn()}>
-              <LogIn size={16} />
-              <span>Sign in</span>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/signin" search={{ callbackUrl: pathname === "/signin" ? undefined : here }}>
+                <LogIn size={16} />
+                <span>Sign in</span>
+              </Link>
             </Button>
           )}
         </div>
