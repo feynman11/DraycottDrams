@@ -966,25 +966,9 @@ export const MapVisualization: React.FC<Props> = ({
 
   const legendPanel = (
     <div className="space-y-4">
-      <ul className="space-y-2">
-        {gatherings.map((gathering) => {
-          const color = getGatheringColor(gathering, colorMode, totalGatherings);
-          const theme = gatheringThemes.get(gathering);
-          return (
-            <li key={gathering} className="flex items-center gap-2.5">
-              <span className="h-3 w-3 shrink-0 rounded-full ring-1 ring-white/20" style={{ backgroundColor: color }} />
-              <span className="min-w-0 text-xs">
-                <span className="font-medium text-foreground">Gathering {gathering}</span>
-                {theme && <span className="block truncate text-muted-foreground">{theme}</span>}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-
       {/* Square, translucent swatches so the regions never read as pins */}
       {showRegions && (
-        <div className="border-t border-border pt-3">
+        <div className="border-b border-border pb-3">
           <h4 className="mb-2 text-xs font-medium text-subtle">Scotch regions</h4>
           <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5">
             {WHISKY_REGION_NAMES.map((name) => {
@@ -1002,6 +986,49 @@ export const MapVisualization: React.FC<Props> = ({
           </ul>
         </div>
       )}
+
+      <div>
+        <h4 className="mb-2 text-xs font-medium text-subtle">Gatherings</h4>
+        {colorMode === 'orange' ? (
+          // Shades run oldest → newest, so one stepped bar replaces a row per gathering
+          <div>
+            <div className="flex h-3 overflow-hidden rounded-full ring-1 ring-white/20">
+              {gatherings.map((gathering) => (
+                <span
+                  key={gathering}
+                  className="flex-1"
+                  style={{ backgroundColor: getGatheringColor(gathering, colorMode, totalGatherings) }}
+                  title={gatheringThemes.get(gathering) ? `Gathering ${gathering} · ${gatheringThemes.get(gathering)}` : `Gathering ${gathering}`}
+                />
+              ))}
+            </div>
+            <div className="mt-1.5 flex justify-between text-xs text-muted-foreground">
+              <span>{gatherings[0] ?? 1} · oldest</span>
+              <span>newest · {gatherings[gatherings.length - 1] ?? 1}</span>
+            </div>
+          </div>
+        ) : (
+          <ul className="grid grid-cols-5 gap-x-2 gap-y-1.5">
+            {gatherings.map((gathering) => {
+              const theme = gatheringThemes.get(gathering);
+              return (
+                <li
+                  key={gathering}
+                  className="flex items-center gap-1.5 text-xs tabular-nums text-foreground"
+                  title={theme ? `Gathering ${gathering} · ${theme}` : `Gathering ${gathering}`}
+                >
+                  <span
+                    className="h-3 w-3 shrink-0 rounded-full ring-1 ring-white/20"
+                    style={{ backgroundColor: getGatheringColor(gathering, colorMode, totalGatherings) }}
+                  />
+                  {gathering}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        <p className="mt-2 text-xs text-muted-foreground">Hover a colour for its theme; Filters lists every gathering.</p>
+      </div>
     </div>
   );
 
@@ -1044,7 +1071,7 @@ export const MapVisualization: React.FC<Props> = ({
       <MapPanel
         icon={<Info size={18} />}
         label="Legend"
-        title="Gathering colours"
+        title="Map key"
         position="bottom-left"
         open={showLegend}
         onOpenChange={setShowLegend}
