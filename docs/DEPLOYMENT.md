@@ -91,6 +91,7 @@ account to their existing row, so tastings, admin and member flags carry over.
 | `BETTER_AUTH_SECRET` | Worker secret | Signs session cookies. Use a different one per environment. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Worker secret | One OAuth client can serve every environment. |
 | `MAPTILER_API_KEY` | Worker secret | Optional. Map tiles. |
+| `RESEND_API_KEY` | Worker secret | Sends sign-in link emails from draycottdrams.co.uk (verified in Resend). |
 | `APP_URL`, `APP_ENV`, `AI_GATEWAY_ID` | `wrangler.jsonc` vars | Public. |
 | `APP_VERSION` | set by CI per deploy | The commit that `/api/health` reports. |
 

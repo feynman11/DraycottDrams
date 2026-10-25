@@ -8,3 +8,7 @@ GOOGLE_CLIENT_ID="123456789-abc.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 # Optional: map tiles (https://cloud.maptiler.com/account/keys/).
 MAPTILER_API_KEY=""
+
+# Optional: sign-in link emails (https://resend.com/api-keys, sending access). Empty = links are
+# printed to the dev server log instead.
+RESEND_API_KEY=""

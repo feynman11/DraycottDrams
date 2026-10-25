@@ -28,8 +28,6 @@
     }
   ],
   "ai": { "binding": "AI" },
-  // Sign-in link emails (Cloudflare Email Service). draycottdrams.co.uk must be onboarded for sending.
-  "send_email": [{ "name": "EMAIL" }],
   "vars": {
     "APP_ENV": "production",
     "APP_URL": "https://draycottdrams.co.uk",
@@ -50,7 +48,6 @@
         }
       ],
       "ai": { "binding": "AI" },
-      "send_email": [{ "name": "EMAIL" }],
       "vars": {
         "APP_ENV": "staging",
         // PR previews (pr-<n>-draycottdrams-staging.….workers.dev) send Google sign-in through this

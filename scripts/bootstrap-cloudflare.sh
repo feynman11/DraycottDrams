@@ -48,7 +48,7 @@ put_secrets() { # put_secrets <label> [--env staging]
   local have
   have=$(secret_names "$@")
   echo "== secrets for $label"
-  for name in BETTER_AUTH_SECRET GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET MAPTILER_API_KEY; do
+  for name in BETTER_AUTH_SECRET GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET MAPTILER_API_KEY RESEND_API_KEY; do
     if grep -qx "$name" <<< "$have"; then
       read -r -p "$name is set. Replace it? [y/N] " yn
       [[ "$yn" =~ ^[Yy]$ ]] || continue
